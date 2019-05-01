@@ -14,27 +14,7 @@ namespace MyPubgTelemetry
     class Program
     {
         static string APIKEY = File.ReadAllText("data/APIKEY.txt").Trim();
-        static bool ONLINE = true;
-
         readonly HttpClient httpClient = new HttpClient();
-
-        private string ApiGetPlayer(string player)
-        {
-            string result = httpClient.GetStringAsync("players?filter[playerNames]=" + player).Result;
-            Console.WriteLine(">>>>>>>>>>>>>>> ApiGetPlayer(" + player + ") >>>>>>>>>>>>>>>>>>>>");
-            Console.WriteLine(result);
-            Console.WriteLine("<<<<<<<<<<<<<<< ApiGetPlayer(" + player + ") <<<<<<<<<<<<<<<<<<<<");
-            return result;
-        }
-
-        private string ApiGetMatch(string matchId)
-        {
-            string result = httpClient.GetStringAsync("matches/" + matchId).Result;
-            Console.WriteLine(">>>>>>>>>>>>>>> ApiGetMatch(" + matchId + ") >>>>>>>>>>>>>>>>>>>>");
-            Console.WriteLine(result);
-            Console.WriteLine("<<<<<<<<<<<<<<< ApiGetMatch(" + matchId + ") <<<<<<<<<<<<<<<<<<<<");
-            return result;
-        }
 
         void MMain(string[] args)
         {
@@ -79,10 +59,22 @@ namespace MyPubgTelemetry
             }
         }
 
-        static void Main(string[] args)
+        private string ApiGetPlayer(string player)
         {
-            Program program = new Program();
-            program.MMain(args);
+            string result = httpClient.GetStringAsync("players?filter[playerNames]=" + player).Result;
+            Console.WriteLine(">>>>>>>>>>>>>>> ApiGetPlayer(" + player + ") >>>>>>>>>>>>>>>>>>>>");
+            Console.WriteLine(PrettyPrintJson(result));
+            Console.WriteLine("<<<<<<<<<<<<<<< ApiGetPlayer(" + player + ") <<<<<<<<<<<<<<<<<<<<");
+            return result;
+        }
+
+        private string ApiGetMatch(string matchId)
+        {
+            string result = httpClient.GetStringAsync("matches/" + matchId).Result;
+            Console.WriteLine(">>>>>>>>>>>>>>> ApiGetMatch(" + matchId + ") >>>>>>>>>>>>>>>>>>>>");
+            Console.WriteLine(PrettyPrintJson(result));
+            Console.WriteLine("<<<<<<<<<<<<<<< ApiGetMatch(" + matchId + ") <<<<<<<<<<<<<<<<<<<<");
+            return result;
         }
 
         public static string PrettyPrintJson(string json)
@@ -94,6 +86,12 @@ namespace MyPubgTelemetry
         public static void PrintJson(string json)
         {
             Console.WriteLine(PrettyPrintJson(json));
+        }
+
+        static void Main(string[] args)
+        {
+            Program program = new Program();
+            program.MMain(args);
         }
     }
 }
