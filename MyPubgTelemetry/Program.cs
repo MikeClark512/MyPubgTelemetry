@@ -13,6 +13,9 @@ namespace MyPubgTelemetry
 {
     class Program
     {
+        // Your username.
+        const string USERNAME = "wckd";
+
         static string APIKEY = File.ReadAllText("data/APIKEY.txt").Trim();
         readonly HttpClient httpClient = new HttpClient();
 
@@ -22,7 +25,7 @@ namespace MyPubgTelemetry
             httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
             httpClient.BaseAddress = new Uri("https://api.pubg.com/shards/steam/");
 
-            string playerJson = ApiGetPlayer("wckd");
+            string playerJson = ApiGetPlayer(USERNAME);
             JObject playerObj = JObject.Parse(playerJson);
             List<JToken> matches = playerObj.SelectToken("data[0].relationships.matches.data").ToList();//["data"][0]["relationships"]["matches"]["data"].ToList();
             //foreach (JToken item in matches)
