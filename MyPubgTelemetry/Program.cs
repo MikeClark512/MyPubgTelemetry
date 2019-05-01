@@ -15,13 +15,16 @@ namespace MyPubgTelemetry
     {
         // Your username.
         const string USERNAME = "wckd";
-
-        static string APIKEY = File.ReadAllText("data/APIKEY.txt").Trim();
+        const string APPNAME = "MyPubgTelemetry";
+        private string apiKey = null;
         readonly HttpClient httpClient = new HttpClient();
 
         void MMain(string[] args)
         {
-            httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + APIKEY);
+            // Reads API Key and initializes cache
+            InitAppData();
+
+            httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + apiKey);
             httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
             httpClient.BaseAddress = new Uri("https://api.pubg.com/shards/steam/");
 
@@ -60,6 +63,44 @@ namespace MyPubgTelemetry
                 string outputPath = Path.GetFullPath(outputFile);
                 Console.WriteLine("Saved telemetry file to:\n" + outputPath);
             }
+        }
+
+        private void InitAppData()
+        {
+            string appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), APPNAME);
+            Directory.CreateDirectory(appDir);
+            string apiKeyFile = Path.Combine(appDir, "pubg-apikey.txt");
+            if (!File.Exists(apiKeyFile))
+            {
+                Console.WriteLine("API key file not found: " + apiKeyFile);
+                CollectApiKey(apiKeyFile);
+            }
+
+            var content = File.ReadAllText(apiKeyFile);
+            if (string.IsNullOrEmpty(content))
+            {
+                Console.WriteLine("API key file is empty: " + apiKeyFile);
+                CollectApiKey(apiKeyFile);
+            }
+
+            content = File.ReadAllText(apiKeyFile);
+            if (string.IsNullOrEmpty(content))
+            {
+                Console.WriteLine("API key file is still empty. Giving up.");
+                Environment.Exit(1);
+            }
+
+            Console.WriteLine("API Key Filename: " + apiKeyFile);
+            Console.WriteLine("API Key Contents: " + content);
+
+            apiKey = content;
+        }
+
+        private static void CollectApiKey(string apiKeyFile)
+        {
+            Console.WriteLine("Paste your API key into this window and then press enter.");
+            string line = Console.ReadLine();
+            File.WriteAllText(apiKeyFile, line);
         }
 
         private string ApiGetPlayer(string player)
