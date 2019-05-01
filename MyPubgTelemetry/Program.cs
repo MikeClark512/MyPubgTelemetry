@@ -4,10 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MyPubgTelemetry
 {
@@ -16,17 +13,19 @@ namespace MyPubgTelemetry
         // Your username.
         const string USERNAME = "wckd";
         const string APPNAME = "MyPubgTelemetry";
-        private string apiKey = null;
-        readonly HttpClient httpClient = new HttpClient();
+
+        readonly HttpClient _httpClient = new HttpClient();
+        private string _apiKey = null;
+        private string _appDir;
 
         void MMain(string[] args)
         {
             // Reads API Key and initializes cache
             InitAppData();
 
-            httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + apiKey);
-            httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
-            httpClient.BaseAddress = new Uri("https://api.pubg.com/shards/steam/");
+            _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + _apiKey);
+            _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
+            _httpClient.BaseAddress = new Uri("https://api.pubg.com/shards/steam/");
 
             string playerJson = ApiGetPlayer(USERNAME);
             JObject playerObj = JObject.Parse(playerJson);
@@ -52,24 +51,27 @@ namespace MyPubgTelemetry
             Console.WriteLine("oAsset " + oAsset);
             var url = oAsset.SelectToken("attributes.URL").Value<string>();
             Console.WriteLine("Downloading telemetry from: " + url);
-
-            using (var stream = httpClient.GetStreamAsync(url).Result)
+            string teleDir = Path.Combine(_appDir, "telemetry_files");
+            Console.WriteLine(teleDir);
+            Directory.CreateDirectory(teleDir);
+            using (var stream = _httpClient.GetStreamAsync(url).Result)
             {
-                string outputFile = @"telem-" + telemetryId + ".json.gz";
-                using (var ostream = new FileStream(outputFile, FileMode.OpenOrCreate))
+                string outputFileName = @"telem-" + telemetryId + ".json.gz";
+                string outputFilePath = Path.Combine(teleDir, outputFileName);
+                using (var ostream = new FileStream(outputFilePath, FileMode.OpenOrCreate))
                 {
                     stream.CopyTo(ostream);
                 }
-                string outputPath = Path.GetFullPath(outputFile);
+                string outputPath = Path.GetFullPath(outputFilePath);
                 Console.WriteLine("Saved telemetry file to:\n" + outputPath);
             }
         }
 
         private void InitAppData()
         {
-            string appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), APPNAME);
-            Directory.CreateDirectory(appDir);
-            string apiKeyFile = Path.Combine(appDir, "pubg-apikey.txt");
+            _appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), APPNAME);
+            Directory.CreateDirectory(_appDir);
+            string apiKeyFile = Path.Combine(_appDir, "pubg-apikey.txt");
             if (!File.Exists(apiKeyFile))
             {
                 Console.WriteLine("API key file not found: " + apiKeyFile);
@@ -84,6 +86,7 @@ namespace MyPubgTelemetry
             }
 
             content = File.ReadAllText(apiKeyFile);
+            content = content.Trim();
             if (string.IsNullOrEmpty(content))
             {
                 Console.WriteLine("API key file is still empty. Giving up.");
@@ -93,7 +96,7 @@ namespace MyPubgTelemetry
             Console.WriteLine("API Key Filename: " + apiKeyFile);
             Console.WriteLine("API Key Contents: " + content);
 
-            apiKey = content;
+            _apiKey = content;
         }
 
         private static void CollectApiKey(string apiKeyFile)
@@ -105,7 +108,9 @@ namespace MyPubgTelemetry
 
         private string ApiGetPlayer(string player)
         {
-            string result = httpClient.GetStringAsync("players?filter[playerNames]=" + player).Result;
+            String url = "players?filter[playerNames]=" + player;
+            Console.WriteLine(new Uri(_httpClient.BaseAddress, url));
+            string result = _httpClient.GetStringAsync(url).Result;
             Console.WriteLine(">>>>>>>>>>>>>>> ApiGetPlayer(" + player + ") >>>>>>>>>>>>>>>>>>>>");
             Console.WriteLine(PrettyPrintJson(result));
             Console.WriteLine("<<<<<<<<<<<<<<< ApiGetPlayer(" + player + ") <<<<<<<<<<<<<<<<<<<<");
@@ -114,7 +119,7 @@ namespace MyPubgTelemetry
 
         private string ApiGetMatch(string matchId)
         {
-            string result = httpClient.GetStringAsync("matches/" + matchId).Result;
+            string result = _httpClient.GetStringAsync("matches/" + matchId).Result;
             Console.WriteLine(">>>>>>>>>>>>>>> ApiGetMatch(" + matchId + ") >>>>>>>>>>>>>>>>>>>>");
             Console.WriteLine(PrettyPrintJson(result));
             Console.WriteLine("<<<<<<<<<<<<<<< ApiGetMatch(" + matchId + ") <<<<<<<<<<<<<<<<<<<<");
