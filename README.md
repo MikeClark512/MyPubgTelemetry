@@ -12,4 +12,4 @@ This project is new and in development, and as such, not very useful or well-org
 
 ## Plans for the Future
 Eventually the program will allow incremental (e.g. daily) downloading and accumulation of telemetry data for a list of preset users (e.g. you and your friends). 
-Fascinating statistics can be generated from the accumulated statistics.
+Fascinating statistics can be generated from the accumulated aggregate data.
