@@ -20,11 +20,7 @@ namespace MyPubgTelemetry
 
         private string ApiGetPlayer(string player)
         {
-            string result;
-            if (ONLINE)
-                result = httpClient.GetStringAsync("players?filter[playerNames]=" + player).Result;
-            else
-                result = File.ReadAllText("data/player-wckd.json");
+            string result = httpClient.GetStringAsync("players?filter[playerNames]=" + player).Result;
             Console.WriteLine(">>>>>>>>>>>>>>> ApiGetPlayer(" + player + ") >>>>>>>>>>>>>>>>>>>>");
             Console.WriteLine(result);
             Console.WriteLine("<<<<<<<<<<<<<<< ApiGetPlayer(" + player + ") <<<<<<<<<<<<<<<<<<<<");
@@ -33,11 +29,7 @@ namespace MyPubgTelemetry
 
         private string ApiGetMatch(string matchId)
         {
-            string result;
-            if (ONLINE)
-                result = httpClient.GetStringAsync("matches/" + matchId).Result;
-            else
-                result = File.ReadAllText("data/match0.json");
+            string result = httpClient.GetStringAsync("matches/" + matchId).Result;
             Console.WriteLine(">>>>>>>>>>>>>>> ApiGetMatch(" + matchId + ") >>>>>>>>>>>>>>>>>>>>");
             Console.WriteLine(result);
             Console.WriteLine("<<<<<<<<<<<<<<< ApiGetMatch(" + matchId + ") <<<<<<<<<<<<<<<<<<<<");
@@ -77,11 +69,13 @@ namespace MyPubgTelemetry
 
             using (var stream = httpClient.GetStreamAsync(url).Result)
             {
-                string outputFile = @"c:\temp\telem-" + telemetryId + ".json.gz";
+                string outputFile = @"telem-" + telemetryId + ".json.gz";
                 using (var ostream = new FileStream(outputFile, FileMode.OpenOrCreate))
                 {
                     stream.CopyTo(ostream);
                 }
+                string outputPath = Path.GetFullPath(outputFile);
+                Console.WriteLine("Saved telemetry file to:\n" + outputPath);
             }
         }
 
