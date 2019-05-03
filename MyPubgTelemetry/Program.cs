@@ -3,8 +3,10 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -62,21 +64,19 @@ namespace MyPubgTelemetry
             string teleDir = Path.Combine(_appDir, "telemetry_files");
             Console.WriteLine(teleDir);
             Directory.CreateDirectory(teleDir);
-            using (var stream = _httpClient.GetStreamAsync(url).Result)
+            using (var stream = new GZipStream(_httpClient.GetStreamAsync(url).Result, CompressionMode.Decompress))
             {
-                
-                string outputFileName = @"telem-" + telemetryId + ".json.gz";
+
+                string outputFileName = @"telem-" + telemetryId + ".json";
                 string outputFilePath = Path.Combine(teleDir, outputFileName);
-                using (FileStream ostream = new FileStream(outputFilePath, FileMode.OpenOrCreate))
+                if (File.Exists(outputFilePath))
                 {
-                    Task task = stream.CopyToAsync(ostream);
-                    while (!task.IsCompleted)
-                    {
-                        Console.Write("\r" + ostream.Position);
-                        Thread.Sleep(10);
-                    }
-                    Console.WriteLine();
+                    Console.WriteLine("Skipping already downloaded telemetry:\n" + outputFilePath);
+                    return;
                 }
+                
+                string pJson = PrettyPrintJsonStream(stream);
+                File.WriteAllText(outputFilePath, pJson, Encoding.UTF8);
 
                 string outputPath = Path.GetFullPath(outputFilePath);
                 Console.WriteLine("Saved telemetry file to:\n" + outputPath);
@@ -142,9 +142,15 @@ namespace MyPubgTelemetry
             return result;
         }
 
+        public static string PrettyPrintJsonStream(Stream stream)
+        {
+            JToken jsonObject = JToken.Load(new JsonTextReader(new StreamReader(stream, Encoding.UTF8)));
+            return jsonObject.ToString(Formatting.Indented);
+        }
+
         public static string PrettyPrintJson(string json)
         {
-            JObject jsonObject = JObject.Parse(json);
+            JToken jsonObject = JToken.Parse(json);
             return jsonObject.ToString(Formatting.Indented);
         }
 
