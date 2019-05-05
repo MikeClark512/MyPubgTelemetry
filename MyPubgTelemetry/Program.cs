@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -14,15 +15,15 @@ namespace MyPubgTelemetry
 {
     class Program
     {
-        // Your username.
-        const string USERNAME = "wckd";
-        const string APPNAME = "MyPubgTelemetry";
+        // Change to your username
+        public const string USERNAME = "wckd";
 
-        readonly HttpClient _httpClient = new HttpClient(new HttpClientHandler()
+        private string _apiKey;
+        private string _appDir;
+        private string _telemetryFilesDir;
+        private readonly HttpClient _httpClient = new HttpClient(new HttpClientHandler()
         {
         });
-        private string _apiKey = null;
-        private string _appDir;
 
         void MMain(string[] args)
         {
@@ -36,56 +37,78 @@ namespace MyPubgTelemetry
             string playerJson = ApiGetPlayer(USERNAME);
             JObject playerObj = JObject.Parse(playerJson);
             List<JToken> matches = playerObj.SelectToken("data[0].relationships.matches.data").ToList();//["data"][0]["relationships"]["matches"]["data"].ToList();
+            int nApiMatches = 0;
+            int cApiMatches = matches.Count;
+            int nDownloaded = 0;
+            int nCacheHits = 0;
+            Console.WriteLine("\nChecking for new telemetry data ...");
             foreach (JToken match in matches)
             {
                 string matchId = match["id"].ToString();
-                //Console.WriteLine(match);
-                Console.WriteLine(matchId);
-                DownloadTelemetryForMatchId(matchId);
+                DownloadTelemetryForMatchId(matchId, ++nApiMatches, cApiMatches, ref nDownloaded, ref nCacheHits);
             }
+            Console.WriteLine("\n... telemetry data update complete.");
+            string[] teleFiles = Directory.GetFiles(_telemetryFilesDir, "*.json");
+            int nTeleFiles = teleFiles.Length;
+            Console.WriteLine($"\nSummary: MatchesOnline: {cApiMatches}, MatchesDownloaded: {nDownloaded}, AlreadyDownloaded: {nCacheHits}, TotalStored: {nTeleFiles}\n");
+
+            if (System.Diagnostics.Debugger.IsAttached)
+                Console.ReadKey();
         }
 
-        private void DownloadTelemetryForMatchId(string matchId)
+        private void DownloadTelemetryForMatchId(string matchId, int counter, int count, ref int nDownloaded, ref int nCacheHits)
         {
+            string mtOutputFileName = "mt-" + matchId + ".json";
+            string mtOutputFilePath = Path.Combine(_telemetryFilesDir, mtOutputFileName);
+            if (File.Exists(mtOutputFilePath))
+            {
+
+                ConsoleRewrite($"[{counter}/{count}] Telemetry {matchId} already downloaded. Skip.");
+                nCacheHits++;
+                return;
+            }
             string matchJson = ApiGetMatch(matchId);
             JObject oMatch = JObject.Parse(matchJson);
             string telemetryId = oMatch.SelectToken("data.relationships.assets.data[0].id").Value<string>();
-            //Console.WriteLine(matchId);
-            //Console.WriteLine("=================");
-            //Console.WriteLine("******telemetryId******");
-            //Console.WriteLine(telemetryId);
-            //Console.WriteLine("******telemetryId******");
             var oIncluded = oMatch["included"];
-            //Console.WriteLine(oIncluded);
             var oAsset = oIncluded.First(x => x["id"].Value<string>() == telemetryId);
-            //Console.WriteLine("oAsset " + oAsset);
             var url = oAsset.SelectToken("attributes.URL").Value<string>();
-            Console.WriteLine("Downloading telemetry from: " + url);
-            string teleDir = Path.Combine(_appDir, "telemetry_files");
-            Console.WriteLine(teleDir);
-            Directory.CreateDirectory(teleDir);
-            using (var stream = new GZipStream(_httpClient.GetStreamAsync(url).Result, CompressionMode.Decompress))
+            string outputFileName = @"telem-" + telemetryId + ".json";
+            string outputFilePath = Path.Combine(_telemetryFilesDir, outputFileName);
+            if (File.Exists(outputFilePath))
             {
-
-                string outputFileName = @"telem-" + telemetryId + ".json";
-                string outputFilePath = Path.Combine(teleDir, outputFileName);
-                if (File.Exists(outputFilePath))
-                {
-                    Console.WriteLine("Skipping already downloaded telemetry:\n" + outputFilePath);
-                    return;
-                }
-                
-                string pJson = PrettyPrintJsonStream(stream);
-                File.WriteAllText(outputFilePath, pJson, Encoding.UTF8);
-
-                string outputPath = Path.GetFullPath(outputFilePath);
-                Console.WriteLine("Saved telemetry file to:\n" + outputPath);
+                ConsoleRewrite($"[{counter}/{count}] Telemetry {matchId} already downloaded; skip.");
+                // Migrate old naming style to new naming style
+                File.Move(outputFilePath, mtOutputFilePath);
+                nCacheHits++;
             }
+            else
+            {
+                using (var stream = new GZipStream(_httpClient.GetStreamAsync(url).Result, CompressionMode.Decompress))
+                {
+                    Uri uri = new Uri(url);
+                    ConsoleRewrite($"[{counter}/{count}] DL {uri.AbsolutePath}");
+                    string pJson = PrettyPrintJsonStream(stream);
+                    File.WriteAllText(mtOutputFilePath, pJson, Encoding.UTF8);
+
+                    string outputPath = Path.GetFullPath(mtOutputFilePath);
+                    nDownloaded++;
+                }
+            }
+        }
+
+        private void ConsoleRewrite(string msg)
+        {
+            int remainder = Console.BufferWidth - msg.Length - 1;
+            if (remainder > 0) msg += new string(' ', remainder);
+            Console.CursorLeft = 0;
+            Console.Write(msg);
         }
 
         private void InitAppData()
         {
-            _appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), APPNAME);
+            string appname = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+            _appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appname);
             Directory.CreateDirectory(_appDir);
             string apiKeyFile = Path.Combine(_appDir, "pubg-apikey.txt");
             if (!File.Exists(apiKeyFile))
@@ -113,33 +136,35 @@ namespace MyPubgTelemetry
             Console.WriteLine("API Key Contents: " + content);
 
             _apiKey = content;
+
+            _telemetryFilesDir = Path.Combine(_appDir, "telemetry_files");
+            Console.WriteLine("Local Storage: " + _telemetryFilesDir);
+            Directory.CreateDirectory(_telemetryFilesDir);
+            if (!Directory.Exists(_telemetryFilesDir))
+            {
+                Console.WriteLine("Exiting because couldn't create storage dir: " + _telemetryFilesDir);
+                Environment.Exit(1);
+            }
         }
 
         private static void CollectApiKey(string apiKeyFile)
         {
             Console.WriteLine("Paste your API key into this window and then press enter.");
-            string line = Console.ReadLine();
+            string line = Console.ReadLine()?.Trim();
             File.WriteAllText(apiKeyFile, line);
         }
 
         private string ApiGetPlayer(string player)
         {
             String url = "players?filter[playerNames]=" + player;
-            Console.WriteLine(new Uri(_httpClient.BaseAddress, url));
+            //Console.WriteLine(new Uri(_httpClient.BaseAddress, url));
             string result = _httpClient.GetStringAsync(url).Result;
-            //Console.WriteLine(">>>>>>>>>>>>>>> ApiGetPlayer(" + player + ") >>>>>>>>>>>>>>>>>>>>");
-            //Console.WriteLine(PrettyPrintJson(result));
-            //Console.WriteLine("<<<<<<<<<<<<<<< ApiGetPlayer(" + player + ") <<<<<<<<<<<<<<<<<<<<");
             return result;
         }
 
         private string ApiGetMatch(string matchId)
         {
-            string result = _httpClient.GetStringAsync("matches/" + matchId).Result;
-            //Console.WriteLine(">>>>>>>>>>>>>>> ApiGetMatch(" + matchId + ") >>>>>>>>>>>>>>>>>>>>");
-            //Console.WriteLine(PrettyPrintJson(result));
-            //Console.WriteLine("<<<<<<<<<<<<<<< ApiGetMatch(" + matchId + ") <<<<<<<<<<<<<<<<<<<<");
-            return result;
+            return _httpClient.GetStringAsync("matches/" + matchId).Result;
         }
 
         public static string PrettyPrintJsonStream(Stream stream)
