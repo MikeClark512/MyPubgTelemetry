@@ -1,16 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28803.202
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.572
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPubgTelemetry", "MyPubgTelemetry\MyPubgTelemetry.csproj", "{6386D3C6-FD98-4769-97D7-4DF8F4B57C89}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryDownloader", "TelemetryDownloader\TelemetryDownloader.csproj", "{6386D3C6-FD98-4769-97D7-4DF8F4B57C89}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A956564C-AE8F-494B-AA33-A38DC1059C3B}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PubgTelemetryAnalyzer", "PubgTelemetryAnalyzer\PubgTelemetryAnalyzer.csproj", "{03450AA7-4B1B-4889-B979-33B7078BCBB4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryAnalyzer", "TelemetryAnalyzer\TelemetryAnalyzer.csproj", "{03450AA7-4B1B-4889-B979-33B7078BCBB4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryGUI", "TelemetryGUI\TelemetryGUI.csproj", "{21BF29CD-031E-47B7-A107-5457AB26A6D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +28,10 @@ Global
 		{03450AA7-4B1B-4889-B979-33B7078BCBB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03450AA7-4B1B-4889-B979-33B7078BCBB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03450AA7-4B1B-4889-B979-33B7078BCBB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21BF29CD-031E-47B7-A107-5457AB26A6D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21BF29CD-031E-47B7-A107-5457AB26A6D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21BF29CD-031E-47B7-A107-5457AB26A6D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21BF29CD-031E-47B7-A107-5457AB26A6D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
