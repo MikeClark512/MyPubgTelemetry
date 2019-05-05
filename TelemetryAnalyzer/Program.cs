@@ -4,16 +4,14 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace PubgTelemetryAnalyzer
+namespace MyPubgTelemetry.Analyzer
 {
     class Program
     {
         private string _appDir;
-        const string USERNAME = "wckd";
         const string APPNAME = "MyPubgTelemetry";
 
         static void Main(string[] args)

@@ -7,16 +7,17 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MyPubgTelemetry
+namespace MyPubgTelemetry.Downloader
 {
     class Program
     {
         // Change to your username
-        public const string USERNAME = "wckd";
+        public const string USERNAME = "wckd,Celaven,Giles333,Solunth";
 
         private string _apiKey;
         private string _appDir;
@@ -107,7 +108,8 @@ namespace MyPubgTelemetry
 
         private void InitAppData()
         {
-            string appname = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+            string appname = Assembly.GetExecutingAssembly().GetTypes().Select(x => x.Namespace).First().Split('.').First();
+            Console.WriteLine(appname);
             _appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appname);
             Directory.CreateDirectory(_appDir);
             string apiKeyFile = Path.Combine(_appDir, "pubg-apikey.txt");
