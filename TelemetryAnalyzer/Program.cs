@@ -75,14 +75,12 @@ namespace MyPubgTelemetry.Analyzer
 
                         if (attacker == null || attacker.Type == JTokenType.Null)
                         {
-                            attackerName = "<" + damageType + ">";
+                            //attackerName = "<" + damageType + ">";
                             // skip events that don't have information about who the attacker is
                             continue;
                         }
-                        else
-                        {
-                            attackerName = attacker.name;
-                        }
+
+                        attackerName = attacker.name;
 
                         // skip events that don't involve a squad member
                         if (!squad.Contains(victimName) && !squad.Contains(attackerName))
