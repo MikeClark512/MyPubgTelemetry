@@ -215,6 +215,14 @@ namespace MyPubgTelemetry.GUI
             Properties.Settings.Default.Squad = textBox1.Text;
             Properties.Settings.Default.Save();
         }
+
+        private void TextBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                button1.PerformClick();
+            }
+        }
     }
 
     public class TelFile
