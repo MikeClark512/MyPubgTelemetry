@@ -45,6 +45,11 @@ namespace MyPubgTelemetry.GUI
             UpdateTitlesAsync();
 
             chart1.Titles.Add("Hitpoints over time (one match)");
+
+            chart1.ChartAreas[0].CursorX.IsUserEnabled = true;
+            chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
+            chart1.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
+            chart1.ChartAreas[0].AxisX.ScrollBar.IsPositionedInside = true;
         }
 
         private async void UpdateTitlesAsync()
@@ -146,11 +151,14 @@ namespace MyPubgTelemetry.GUI
                 foreach (KeyValuePair<string, List<TelEvent>> kvp in dict)
                 {
                     Series series = chart1.Series.Add(kvp.Key);
+                    series.ChartType = SeriesChartType.FastLine;
                     foreach (TelEvent @event in kvp.Value)
                     {
                         series.Points.Add(@event.character.health);
+
                     }
                 }
+
             });
 
         }
