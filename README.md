@@ -2,10 +2,10 @@
 
 Use `TelemetryDownloader` to download and save all of the available telemetry for one or more players. For efficiency, the downloader will skip telemetry files that you have already downloaded. It also will not delete old telemetry that is no longer available online, so that you can aggregate historical data for yourself.
 
-Use `TelemetryGUI` to view charts and reported calculated from saved telemetry.  Use `TelemetryAnalyzer` to generate text reports.
+Use `TelemetryGUI` to view charts/reports calculated from saved telemetry.  Use `TelemetryAnalyzer` to generate text reports.
 
 ## How to use
-1. This project is new and in development. Using it will require Visual Studio, editing code, and recompiling.
+1. This project is new and in development. Using it will require Visual Studio and recompiling.
 1. Download the repo and open the .sln file in Visual Studio (2019).
 1. Edit MyPubgTelemetry\Program.cs to change the username you want to download telemetry for.
 1. Run the project (e.g. Debug (menu) -> Run)
