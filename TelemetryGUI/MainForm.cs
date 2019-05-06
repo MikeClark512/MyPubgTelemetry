@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -16,7 +17,7 @@ namespace MyPubgTelemetry.GUI
     {
         public TelemetryApp App { get; set; }
 
-        public HashSet<string> Squad { get; set; }
+        public HashSet<string> Squad { get;  } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         public JToken TeamId { get; set; }
 
@@ -24,83 +25,103 @@ namespace MyPubgTelemetry.GUI
         {
             InitializeComponent();
             App = new TelemetryApp();
-            Squad = new HashSet<string>();
-            Squad.Add("Celaven");
-            Squad.Add("wckd");
-            Squad.Add("Giles333");
-            Squad.Add("Solunth");
+            chart1.Titles.Add("Hitpoints over time (one match)");
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            Random r = new Random();
+            var path = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+            Debug.WriteLine("config path = " + path);
+            textBox1.Text = Properties.Settings.Default.Squad.Trim();
+            LoadMatches();
+        }
+
+        private void LoadMatches()
+        {
+            string[] squaddies = textBox1.Text.Split(',');
+            int sumLen = 0;
+            for (int i = 0; i < squaddies.Length; i++)
+            {
+                string squaddy = squaddies[i].Trim();
+                sumLen += squaddy.Length;
+            }
+            if (sumLen == 0)
+            {
+                return;
+            }
+            Squad.Clear();
+            Squad.UnionWith(squaddies);
             DirectoryInfo di = new DirectoryInfo(App.TelemetryDir);
-            List<TelFile> telFiles = di.GetFiles("*.json").Select(x => new TelFile { FileInfo = x, Title = x.Name }).ToList();
-            BindingSource binding = new BindingSource();
-            binding.DataSource = telFiles;
+            List<TelFile> telFiles = di.GetFiles("*.json").Select(x => new TelFile {FileInfo = x, Title = x.Name}).ToList();
+            BindingSource binding = new BindingSource {DataSource = telFiles};
 
-            listBox1.DisplayMember = "Title";
-            listBox1.DataSource = binding;
+            listBoxMatches.DisplayMember = "Title";
+            listBoxMatches.DataSource = binding;
 
-            UpdateTitlesAsync();
+            Task.Run(() => UpdateTitles(squaddies));
 
-            chart1.Titles.Add("Hitpoints over time (one match)");
 
             chart1.ChartAreas[0].CursorX.IsUserEnabled = true;
             chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
+            chart1.ChartAreas[0].CursorX.LineColor = Color.Black;
+            chart1.ChartAreas[0].CursorX.SelectionColor = Color.CornflowerBlue;
             chart1.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
             chart1.ChartAreas[0].AxisX.ScrollBar.IsPositionedInside = true;
         }
 
-        private async void UpdateTitlesAsync()
+        private void UpdateTitles(string[] squaddies)
         {
-            List<TelFile> telFiles = listBox1.Items.Cast<TelFile>().ToList();
-            int i = 0;
+            List<TelFile> telFiles = listBoxMatches.Items.Cast<TelFile>().ToList();
             foreach (TelFile file in telFiles)
             {
-                i++;
-                using (StreamReader sr = new StreamReader(file.FileInfo.FullName))
-                {
-                    Debug.WriteLine("hi2");
-                    SortedSet<string> squadTeam = new SortedSet<string>();
-                    JsonTextReader jtr = new JsonTextReader(sr);
-                    await jtr.ReadAsync();
-                    while (await jtr.ReadAsync())
-                    {
-                        JObject jti = await JObject.LoadAsync(jtr);
-                        string eventType = jti["_T"].Value<string>();
-                        if (eventType == "LogPlayerCreate")
-                        {
-                            string player = jti.SelectToken("character.name").ToString();
-                            if (Squad.Contains(player))
-                            {
-                                TeamId = jti.SelectToken("character.teamId");
-                                squadTeam.Add(player);
-                            }
-                        }
+                Task.Run(() => UpdateTitle(file, squaddies));
+            }
+        }
 
-                        if (eventType == "LogMatchStart")
+        private void UpdateTitle(TelFile file, string[] squaddies)
+        {
+            using (StreamReader sr = new StreamReader(file.FileInfo.FullName))
+            {
+                SortedSet<string> squadTeam = new SortedSet<string>();
+                JsonTextReader jtr = new JsonTextReader(sr);
+                jtr.Read();
+                while (jtr.Read())
+                {
+                    JObject jti = JObject.Load(jtr);
+                    string eventType = jti["_T"].Value<string>();
+                    if (eventType == "LogPlayerCreate")
+                    {
+                        string player = jti.SelectToken("character.name").ToString();
+                        if (Squad.Contains(player))
                         {
-                            break;
+                            TeamId = jti.SelectToken("character.teamId");
+                            squadTeam.Add(player);
                         }
                     }
 
-                    file.Title = string.Join(", ", squadTeam);
-                    listBox1.BeginUpdate();
-                    int topIdx = listBox1.TopIndex;
-                    int selIdx = listBox1.SelectedIndex;
-                    ((BindingSource)listBox1.DataSource).ResetBindings(false);
-                    listBox1.TopIndex = topIdx;
-                    listBox1.SelectedIndex = selIdx;
-                    listBox1.EndUpdate();
+                    if (eventType == "LogMatchStart")
+                    {
+                        break;
+                    }
                 }
+
+                this.Invoke((MethodInvoker) delegate()
+                {
+                    file.Title = string.Join(", ", squadTeam);
+                    listBoxMatches.BeginUpdate();
+                    int topIdx = listBoxMatches.TopIndex;
+                    int selIdx = listBoxMatches.SelectedIndex;
+                    ((BindingSource) listBoxMatches.DataSource).ResetBindings(false);
+                    listBoxMatches.TopIndex = topIdx;
+                    listBoxMatches.SelectedIndex = selIdx;
+                    listBoxMatches.EndUpdate();
+                });
             }
-            ((BindingSource)listBox1.DataSource).ResetBindings(false);
         }
 
         private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            TelFile file = (TelFile)listBox1.SelectedItem;
+            TelFile file = (TelFile)listBoxMatches.SelectedItem;
             Task.Run(() => SwitchMatch(file));
         }
 
@@ -155,7 +176,6 @@ namespace MyPubgTelemetry.GUI
                     foreach (TelEvent @event in kvp.Value)
                     {
                         series.Points.Add(@event.character.health);
-
                     }
                 }
 
@@ -176,6 +196,24 @@ namespace MyPubgTelemetry.GUI
         {
             public string name;
             public float health;
+        }
+
+        private void Button1_Click(object sender, EventArgs e)
+        {
+            if (ModifierKeys.HasFlag(Keys.Control))
+            {
+                Process.Start(App.AppDir);
+            }
+            else
+            { 
+                LoadMatches();
+            }
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Properties.Settings.Default.Squad = textBox1.Text;
+            Properties.Settings.Default.Save();
         }
     }
 
