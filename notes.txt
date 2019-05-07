@@ -1,4 +1,4 @@
-Telemetry event types:
+Telemetry event types
 
 LogArmorDestroy, LogCarePackageLand, LogCarePackageSpawn, LogGameStatePeriodic,
 LogHeal, LogItemAttach, LogItemDetach, LogItemDrop, LogItemEquip,
