@@ -18,7 +18,7 @@ namespace MyPubgTelemetry.GUI
     {
         public TelemetryApp App { get; set; }
 
-        public HashSet<string> Squad { get;  } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> Squad { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         public int TeamId { get; set; }
 
@@ -28,13 +28,6 @@ namespace MyPubgTelemetry.GUI
             App = new TelemetryApp();
             chart1.Titles.Add("Hitpoints over time (one match)");
 
-            chart1.ChartAreas[0].CursorX.IsUserEnabled = true;
-            chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
-            chart1.ChartAreas[0].CursorX.LineColor = Color.Black;
-            chart1.ChartAreas[0].CursorX.SelectionColor = Color.CornflowerBlue;
-            chart1.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
-            chart1.ChartAreas[0].AxisX.ScrollBar.IsPositionedInside = true;
-
             chart1.AxisViewChanged += delegate (object sender, ViewEventArgs args)
             {
                 RecalcPointLabels();
@@ -43,8 +36,9 @@ namespace MyPubgTelemetry.GUI
 
         private void RecalcPointLabels()
         {
-            double svs = chart1.ChartAreas[0].AxisX.ScaleView.Size;
-            bool zoomedIn = svs > 1;
+            double scaleViewSize = chart1.ChartAreas[0].AxisX.ScaleView.Size;
+            Debug.WriteLine("scaleViewSize " + scaleViewSize);
+            bool zoomedIn = scaleViewSize < 0.01;
             chart1.Series.ToList().ForEach(x => x.IsValueShownAsLabel = zoomedIn);
         }
 
@@ -79,8 +73,8 @@ namespace MyPubgTelemetry.GUI
             Squad.Clear();
             Squad.UnionWith(squaddies);
             DirectoryInfo di = new DirectoryInfo(App.TelemetryDir);
-            List<TelFile> telFiles = di.GetFiles("*.json").Select(x => new TelFile {FileInfo = x, Title = x.Name}).ToList();
-            BindingSource binding = new BindingSource {DataSource = telFiles};
+            List<TelFile> telFiles = di.GetFiles("*.json").Select(x => new TelFile { FileInfo = x, Title = x.Name }).ToList();
+            BindingSource binding = new BindingSource { DataSource = telFiles };
 
             listBoxMatches.DisplayMember = "Title";
             listBoxMatches.DataSource = binding;
@@ -102,6 +96,7 @@ namespace MyPubgTelemetry.GUI
             using (StreamReader sr = new StreamReader(file.FileInfo.FullName))
             {
                 var teams = new Dictionary<int, SortedSet<string>>();
+                int squadTeamId = -1;
                 JsonTextReader jtr = new JsonTextReader(sr);
                 jtr.Read();
                 while (jtr.Read())
@@ -113,28 +108,28 @@ namespace MyPubgTelemetry.GUI
                         string player = jti.SelectToken("character.name").ToString();
                         int teamId = jti.SelectToken("character.teamId").Value<int>();
                         teams.TryGetValue(teamId, out var team);
-                        if (team == null) team = new SortedSet<string>();
+                        if (team == null) teams[teamId] = team = new SortedSet<string>();
                         team.Add(player);
                         if (Squad.Contains(player))
-                            TeamId = teamId;
+                        {
+                            squadTeamId = teamId;
+                        }
                     }
-
-                    if (eventType == "LogMatchStart")
-                    {
-                        break;
-                    }
+                    if (eventType == "LogMatchStart") break;
                 }
-                var squadTeam = teams[TeamId];
-                this.Invoke((MethodInvoker) delegate()
+                if (squadTeamId == -1) return;
+                var squadTeam = teams[squadTeamId];
+                this.Invoke((MethodInvoker)delegate ()
                 {
                     file.Title = string.Join(", ", squadTeam);
                     listBoxMatches.BeginUpdate();
                     int topIdx = listBoxMatches.TopIndex;
                     int selIdx = listBoxMatches.SelectedIndex;
-                    ((BindingSource) listBoxMatches.DataSource).ResetBindings(false);
+                    ((BindingSource)listBoxMatches.DataSource).ResetBindings(false);
                     listBoxMatches.TopIndex = topIdx;
                     listBoxMatches.SelectedIndex = selIdx;
                     listBoxMatches.EndUpdate();
+                    TeamId = squadTeamId; // lazy code, race condition, oh well.
                 });
             }
         }
@@ -147,7 +142,9 @@ namespace MyPubgTelemetry.GUI
 
         private void SwitchMatch(TelFile file)
         {
-            var dict = new Dictionary<string, List<TelemetryEvent>>();
+            var playerToEvents = new Dictionary<string, List<TelemetryEvent>>();
+            var timeToPlayerToEvents = new Dictionary<DateTime, Dictionary<string, List<TelemetryEvent>>>();
+            var normalizedEvents = new List<TelemetryEvent>();
             using (StreamReader sr = new StreamReader(file.FileInfo.FullName))
             {
                 List<TelemetryEvent> events = JsonConvert.DeserializeObject<List<TelemetryEvent>>(sr.ReadToEnd());
@@ -155,56 +152,129 @@ namespace MyPubgTelemetry.GUI
                 {
                     if (@event._T == "LogPlayerTakeDamage")
                     {
-                        DateTime dt = @event._D;
-                        string playerName = @event.victim.name;
                         @event.character = @event.victim;
-                        if (!Squad.Contains(playerName))
-                            continue;
                         @event.victim.health = @event.victim.health - @event.damage;
-                        dict.TryGetValue(playerName, out List<TelemetryEvent> playerEvents);
-                        if (playerEvents == null)
-                            dict[playerName] = playerEvents = new List<TelemetryEvent>();
-                        playerEvents.Add(@event);
+                        normalizedEvents.Add(@event);
                     }
                     else if (@event._T == "LogPlayerPosition")
                     {
-                        DateTime dt = @event._D;
-                        string playerName = @event.character.name;
-                        if (!Squad.Contains(playerName))
-                            continue;
-                        dict.TryGetValue(playerName, out List<TelemetryEvent> playerEvents);
-                        if (playerEvents == null)
-                            dict[playerName] = playerEvents = new List<TelemetryEvent>();
-                        playerEvents.Add(@event);
+                        @event.victim = @event.character;
+                        normalizedEvents.Add(@event);
                     }
                 }
+            }
+            Debug.Write("a");
+            var squad = new HashSet<string>();
+            foreach (var @event in normalizedEvents)
+            {
+                DateTime dt = @event._D;
+                string name = @event.character.name;
+                if (!Squad.Contains(name))
+                    continue;
+                squad.Add(name);
+                var playerEvents = playerToEvents.GetOrAdd(name, () => new List<TelemetryEvent>());
+                playerEvents.Add(@event);
+                var timePlayerToEvents = timeToPlayerToEvents.GetOrAdd(@event._D, () => new Dictionary<string, List<TelemetryEvent>>());
+                var timePlayerEvents = timePlayerToEvents.GetOrAdd(name, () => new List<TelemetryEvent>());
+                timePlayerEvents.Add(@event);
             }
 
             this.Invoke((MethodInvoker)delegate ()
             {
+                chart1.ChartAreas[0].CursorX.IsUserEnabled = true;
+                chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
+                chart1.ChartAreas[0].CursorX.LineColor = Color.Black;
+                chart1.ChartAreas[0].CursorX.SelectionColor = Color.CornflowerBlue;
+                chart1.ChartAreas[0].CursorX.IntervalType = DateTimeIntervalType.Seconds;
+                chart1.ChartAreas[0].CursorX.Interval = 1;
+                chart1.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
+                chart1.ChartAreas[0].AxisX.ScrollBar.IsPositionedInside = true;
+                chart1.ChartAreas[0].AxisX.LabelStyle.Format = "HH:mm:ss";
+                chart1.ChartAreas[0].AxisX.IsLabelAutoFit = true;
+                chart1.ChartAreas[0].AxisX.LabelAutoFitStyle = LabelAutoFitStyles.LabelsAngleStep30;
+                chart1.ChartAreas[0].AxisX.IntervalType = DateTimeIntervalType.Minutes;
+                chart1.ChartAreas[0].AxisX.Interval = 2;
+
+                chart1.Series.ToList().ForEach(series => series.Points.Clear());
                 foreach (Series chart1Series in chart1.Series)
                 {
                     chart1Series.Points.Clear();
                 }
                 chart1.Series.Clear();
 
-                // Add series.
-                foreach (KeyValuePair<string, List<TelemetryEvent>> kvp in dict)
+                // Declare series first
+                foreach (string playerName in playerToEvents.Keys)
                 {
-                    Series series = chart1.Series.Add(kvp.Key);
-                    series.ChartType = SeriesChartType.StackedColumn;
+                    Series series = chart1.Series.Add(playerName);
+                    series.ChartType = SeriesChartType.StackedArea;
                     series.IsValueShownAsLabel = true;
                     series.SmartLabelStyle.Enabled = true;
-                    series.SmartLabelStyle.MaxMovingDistance = 0;
+                    //series.SmartLabelStyle.MaxMovingDistance = 0;
                     series.SmartLabelStyle.MovingDirection = LabelAlignmentStyles.Center;
                     series.LabelFormat = "#";
                     series.SmartLabelStyle.IsOverlappedHidden = true;
-                    foreach (TelemetryEvent @event in kvp.Value)
+                    series.XValueType = ChartValueType.DateTime;
+                }
+                // Track player's last known HP so we can fill in a reasonable value at missing time intervals
+                var lastHps = new Dictionary<string, float>();
+                // Then add data
+                foreach (var dt in timeToPlayerToEvents)
+                {
+                    DateTime k = dt.Key;
+                    Dictionary<string, List<TelemetryEvent>> v = dt.Value;
+                    foreach (string squadMember in squad)
                     {
-                        series.Points.Add(@event.character.health);
+                        v.TryGetValue(squadMember, out var squadEvents);
+                        if (squadEvents != null)
+                        {
+                            chart1.Series[squadMember].Points.AddXY(k, squadEvents.First().character.health);
+                            lastHps[squadMember] = squadEvents.First().character.health;
+                        }
+                        else
+                        {
+                            float lastHp = lastHps.GetValueOrDefault(squadMember, () => 100);
+                            chart1.Series[squadMember].Points.AddXY(k, lastHp);
+                        }
                     }
                 }
+
+                //foreach (string playerName in playerToEvents.Keys)
+                //{
+                //    var otherPlayers = squad.Where(x => x != playerName);
+                //    List<TelemetryEvent> playerEvents = playerToEvents[playerName];
+                //    foreach (TelemetryEvent @event in playerEvents)
+                //    {
+                //        if (@event.skip) continue;
+                //        Series series = chart1.Series[playerName];
+                //        series.Points.AddXY(@event._D, @event.character.health);
+                //        var timePlayerEvents = timeToPlayerToEvents[@event._D];
+                //        foreach (var otherPlayer in otherPlayers)
+                //        {
+                //            Series otherSeries = chart1.Series[otherPlayer];
+                //            timePlayerEvents.TryGetValue(otherPlayer, out var tpes);
+                //            if (tpes != null)
+                //            {
+                //                Debug.WriteLine("op " + otherPlayer + " tpes" + tpes.Count);
+                //                otherSeries.Points.AddXY(@event._D, tpes.First().character.health);
+                //                tpes.First().skip = true;
+                //            }
+                //            else
+                //            {
+                //                series.Points.AddXY(@event._D, 1);
+                //            }
+                //        }
+                //        //series.Points.Add(@event.character.health);
+                //    }
+                //}
+
                 RecalcPointLabels();
+
+                foreach (Series chart1Series in chart1.Series)
+                {
+                    //chart1.DataManipulator.InsertEmptyPoints(1, IntervalType.Milliseconds, chart1Series);
+                }
+                //chart1.DataManipulator.InsertEmptyPoints(100, IntervalType.Milliseconds, string.Join(", ", squad));
+                //chart1.Series.ToList().ForEach(series => series.ChartType = SeriesChartType.StackedArea);
             });
 
         }
@@ -216,7 +286,7 @@ namespace MyPubgTelemetry.GUI
                 Process.Start(App.AppDir);
             }
             else
-            { 
+            {
                 LoadMatches();
             }
         }
