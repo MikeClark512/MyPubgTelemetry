@@ -45,4 +45,19 @@ namespace MyPubgTelemetry
             }
         }
     }
+
+    public class TelemetryEvent
+    {
+        public DateTime _D;
+        public string _T;
+        public float damage;
+        public TelemetryPlayer victim;
+        public TelemetryPlayer character;
+    }
+
+    public class TelemetryPlayer
+    {
+        public string name;
+        public float health;
+    }
 }
