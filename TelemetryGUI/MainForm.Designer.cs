@@ -34,6 +34,7 @@
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.listBoxMatches = new System.Windows.Forms.ListBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.buttonOptions = new System.Windows.Forms.Button();
             this.buttonRefresh = new System.Windows.Forms.Button();
             this.textBoxSquad = new System.Windows.Forms.TextBox();
             this.labelSquad = new System.Windows.Forms.Label();
@@ -68,8 +69,8 @@
             this.listBoxMatches.IntegralHeight = false;
             this.listBoxMatches.Location = new System.Drawing.Point(0, 52);
             this.listBoxMatches.Name = "listBoxMatches";
-            this.listBoxMatches.Size = new System.Drawing.Size(258, 374);
-            this.listBoxMatches.TabIndex = 1;
+            this.listBoxMatches.Size = new System.Drawing.Size(258, 345);
+            this.listBoxMatches.TabIndex = 2;
             this.listBoxMatches.SelectedIndexChanged += new System.EventHandler(this.ListBox1_SelectedIndexChanged);
             // 
             // splitContainer1
@@ -82,6 +83,7 @@
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.buttonOptions);
             this.splitContainer1.Panel1.Controls.Add(this.buttonRefresh);
             this.splitContainer1.Panel1.Controls.Add(this.textBoxSquad);
             this.splitContainer1.Panel1.Controls.Add(this.labelSquad);
@@ -95,6 +97,18 @@
             this.splitContainer1.SplitterDistance = 258;
             this.splitContainer1.TabIndex = 2;
             // 
+            // buttonOptions
+            // 
+            this.buttonOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOptions.Location = new System.Drawing.Point(0, 403);
+            this.buttonOptions.Name = "buttonOptions";
+            this.buttonOptions.Size = new System.Drawing.Size(256, 23);
+            this.buttonOptions.TabIndex = 3;
+            this.buttonOptions.Text = "&Options...";
+            this.buttonOptions.UseVisualStyleBackColor = true;
+            this.buttonOptions.Click += new System.EventHandler(this.ButtonOptions_Click);
+            // 
             // buttonRefresh
             // 
             this.buttonRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -102,7 +116,7 @@
             this.buttonRefresh.Location = new System.Drawing.Point(232, 2);
             this.buttonRefresh.Name = "buttonRefresh";
             this.buttonRefresh.Size = new System.Drawing.Size(23, 22);
-            this.buttonRefresh.TabIndex = 6;
+            this.buttonRefresh.TabIndex = 1;
             this.buttonRefresh.Text = "Q";
             this.buttonRefresh.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.toolTip1.SetToolTip(this.buttonRefresh, "Refresh/Reload");
@@ -116,7 +130,7 @@
             this.textBoxSquad.Location = new System.Drawing.Point(50, 3);
             this.textBoxSquad.Name = "textBoxSquad";
             this.textBoxSquad.Size = new System.Drawing.Size(176, 20);
-            this.textBoxSquad.TabIndex = 5;
+            this.textBoxSquad.TabIndex = 0;
             this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBox1_KeyDown);
             // 
             // labelSquad
@@ -169,6 +183,7 @@
         private System.Windows.Forms.Button buttonRefresh;
         private System.Windows.Forms.TextBox textBoxSquad;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button buttonOptions;
     }
 }
 

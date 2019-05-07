@@ -233,6 +233,13 @@ namespace MyPubgTelemetry.GUI
                 buttonRefresh.PerformClick();
             }
         }
+
+        private void ButtonOptions_Click(object sender, EventArgs e)
+        {
+            OptionsForm optionsForm = new OptionsForm();
+            optionsForm.StartPosition = FormStartPosition.CenterParent;
+            optionsForm.ShowDialog(this);
+        }
     }
 
     public class TelFile
