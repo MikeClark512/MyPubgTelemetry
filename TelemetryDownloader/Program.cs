@@ -22,6 +22,7 @@ namespace MyPubgTelemetry.Downloader
 
         void MMain(string[] args)
         {
+            Console.SetIn(new StreamReader(Console.OpenStandardInput(1024), Console.InputEncoding, false, 1024)); // Increase Console.ReadLine character limit
             TelemetryDownloader td = new TelemetryDownloader();
             TelemetryApp app = td.App;
 

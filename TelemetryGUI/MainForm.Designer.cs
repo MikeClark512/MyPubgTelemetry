@@ -33,6 +33,8 @@
             System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.listBoxMatches = new System.Windows.Forms.ListBox();
+            this.contextMenuMatches = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.openInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.buttonOptions = new System.Windows.Forms.Button();
             this.buttonRefresh = new System.Windows.Forms.Button();
@@ -40,7 +42,9 @@
             this.labelSquad = new System.Windows.Forms.Label();
             this.labelMatches = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.copyPathToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
+            this.contextMenuMatches.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -65,6 +69,7 @@
             this.listBoxMatches.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.listBoxMatches.ContextMenuStrip = this.contextMenuMatches;
             this.listBoxMatches.FormattingEnabled = true;
             this.listBoxMatches.IntegralHeight = false;
             this.listBoxMatches.Location = new System.Drawing.Point(0, 52);
@@ -72,6 +77,22 @@
             this.listBoxMatches.Size = new System.Drawing.Size(258, 345);
             this.listBoxMatches.TabIndex = 2;
             this.listBoxMatches.SelectedIndexChanged += new System.EventHandler(this.ListBox1_SelectedIndexChanged);
+            this.listBoxMatches.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ListBoxMatches_MouseDown);
+            // 
+            // contextMenuMatches
+            // 
+            this.contextMenuMatches.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openInExplorerToolStripMenuItem,
+            this.copyPathToolStripMenuItem});
+            this.contextMenuMatches.Name = "contextMenuMatches";
+            this.contextMenuMatches.Size = new System.Drawing.Size(181, 70);
+            // 
+            // openInExplorerToolStripMenuItem
+            // 
+            this.openInExplorerToolStripMenuItem.Name = "openInExplorerToolStripMenuItem";
+            this.openInExplorerToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.openInExplorerToolStripMenuItem.Text = "Open in Explorer";
+            this.openInExplorerToolStripMenuItem.Click += new System.EventHandler(this.OpenInExplorerToolStripMenuItem_Click);
             // 
             // splitContainer1
             // 
@@ -152,6 +173,13 @@
             this.labelMatches.TabIndex = 3;
             this.labelMatches.Text = "Matches:";
             // 
+            // copyPathToolStripMenuItem
+            // 
+            this.copyPathToolStripMenuItem.Name = "copyPathToolStripMenuItem";
+            this.copyPathToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.copyPathToolStripMenuItem.Text = "Copy Path";
+            this.copyPathToolStripMenuItem.Click += new System.EventHandler(this.CopyPathToolStripMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -164,6 +192,7 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
+            this.contextMenuMatches.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);
@@ -184,6 +213,9 @@
         private System.Windows.Forms.TextBox textBoxSquad;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button buttonOptions;
+        private System.Windows.Forms.ContextMenuStrip contextMenuMatches;
+        private System.Windows.Forms.ToolStripMenuItem openInExplorerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem copyPathToolStripMenuItem;
     }
 }
 
