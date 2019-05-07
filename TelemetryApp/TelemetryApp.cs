@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -53,11 +54,38 @@ namespace MyPubgTelemetry
         public float damage;
         public TelemetryPlayer victim;
         public TelemetryPlayer character;
+        public bool skip;
     }
 
     public class TelemetryPlayer
     {
         public string name;
         public float health;
+    }
+
+    public static class TelemetryAppExtensions
+    {
+        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dict, K key)
+        {
+            return dict.GetValueOrDefault(key, default(V));
+        }
+
+        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dict, K key, V defVal)
+        {
+            return dict.GetValueOrDefault(key, () => defVal);
+        }
+
+        public static V GetOrAdd<K, V>(this IDictionary<K, V> dict, K key, Func<V> defValSelector)
+        {
+            V value;
+            if (!dict.TryGetValue(key, out value))
+                dict.Add(key, value = defValSelector());
+            return value;
+        }
+        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dict, K key, Func<V> defValSelector)
+        {
+            V value;
+            return dict.TryGetValue(key, out value) ? value : defValSelector();
+        }
     }
 }
