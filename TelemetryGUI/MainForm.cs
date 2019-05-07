@@ -20,7 +20,7 @@ namespace MyPubgTelemetry.GUI
 
         public HashSet<string> Squad { get;  } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        public JToken TeamId { get; set; }
+        public int TeamId { get; set; }
 
         public MainForm()
         {
@@ -101,7 +101,7 @@ namespace MyPubgTelemetry.GUI
         {
             using (StreamReader sr = new StreamReader(file.FileInfo.FullName))
             {
-                SortedSet<string> squadTeam = new SortedSet<string>();
+                var teams = new Dictionary<int, SortedSet<string>>();
                 JsonTextReader jtr = new JsonTextReader(sr);
                 jtr.Read();
                 while (jtr.Read())
@@ -111,11 +111,12 @@ namespace MyPubgTelemetry.GUI
                     if (eventType == "LogPlayerCreate")
                     {
                         string player = jti.SelectToken("character.name").ToString();
+                        int teamId = jti.SelectToken("character.teamId").Value<int>();
+                        teams.TryGetValue(teamId, out var team);
+                        if (team == null) team = new SortedSet<string>();
+                        team.Add(player);
                         if (Squad.Contains(player))
-                        {
-                            TeamId = jti.SelectToken("character.teamId");
-                            squadTeam.Add(player);
-                        }
+                            TeamId = teamId;
                     }
 
                     if (eventType == "LogMatchStart")
@@ -123,7 +124,7 @@ namespace MyPubgTelemetry.GUI
                         break;
                     }
                 }
-
+                var squadTeam = teams[TeamId];
                 this.Invoke((MethodInvoker) delegate()
                 {
                     file.Title = string.Join(", ", squadTeam);
@@ -239,6 +240,23 @@ namespace MyPubgTelemetry.GUI
             OptionsForm optionsForm = new OptionsForm();
             optionsForm.StartPosition = FormStartPosition.CenterParent;
             optionsForm.ShowDialog(this);
+        }
+
+        private void OpenInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TelFile tfile = (TelFile)listBoxMatches.SelectedItem;
+            Process.Start("explorer.exe", "/select," + tfile.FileInfo.FullName);
+        }
+
+        private void ListBoxMatches_MouseDown(object sender, MouseEventArgs e)
+        {
+            listBoxMatches.SelectedIndex = listBoxMatches.IndexFromPoint(e.Location);
+        }
+
+        private void CopyPathToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TelFile tfile = (TelFile)listBoxMatches.SelectedItem;
+            Clipboard.SetText(tfile.FileInfo.FullName);
         }
     }
 
