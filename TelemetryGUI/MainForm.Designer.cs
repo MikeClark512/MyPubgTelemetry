@@ -34,8 +34,8 @@
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.listBoxMatches = new System.Windows.Forms.ListBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.button1 = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.buttonRefresh = new System.Windows.Forms.Button();
+            this.textBoxSquad = new System.Windows.Forms.TextBox();
             this.labelSquad = new System.Windows.Forms.Label();
             this.labelMatches = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -82,8 +82,8 @@
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.button1);
-            this.splitContainer1.Panel1.Controls.Add(this.textBox1);
+            this.splitContainer1.Panel1.Controls.Add(this.buttonRefresh);
+            this.splitContainer1.Panel1.Controls.Add(this.textBoxSquad);
             this.splitContainer1.Panel1.Controls.Add(this.labelSquad);
             this.splitContainer1.Panel1.Controls.Add(this.labelMatches);
             this.splitContainer1.Panel1.Controls.Add(this.listBoxMatches);
@@ -95,34 +95,34 @@
             this.splitContainer1.SplitterDistance = 258;
             this.splitContainer1.TabIndex = 2;
             // 
-            // button1
+            // buttonRefresh
             // 
-            this.button1.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.button1.Font = new System.Drawing.Font("Wingdings 3", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(2)));
-            this.button1.Location = new System.Drawing.Point(232, 2);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(23, 22);
-            this.button1.TabIndex = 6;
-            this.button1.Text = "Q";
-            this.button1.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.toolTip1.SetToolTip(this.button1, "Refresh/Reload");
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.Button1_Click);
+            this.buttonRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonRefresh.Font = new System.Drawing.Font("Wingdings 3", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(2)));
+            this.buttonRefresh.Location = new System.Drawing.Point(232, 2);
+            this.buttonRefresh.Name = "buttonRefresh";
+            this.buttonRefresh.Size = new System.Drawing.Size(23, 22);
+            this.buttonRefresh.TabIndex = 6;
+            this.buttonRefresh.Text = "Q";
+            this.buttonRefresh.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.toolTip1.SetToolTip(this.buttonRefresh, "Refresh/Reload");
+            this.buttonRefresh.UseVisualStyleBackColor = true;
+            this.buttonRefresh.Click += new System.EventHandler(this.Button1_Click);
             // 
-            // textBox1
+            // textBoxSquad
             // 
-            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.textBoxSquad.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.Location = new System.Drawing.Point(46, 3);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(180, 20);
-            this.textBox1.TabIndex = 5;
-            this.textBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBox1_KeyDown);
+            this.textBoxSquad.Location = new System.Drawing.Point(50, 3);
+            this.textBoxSquad.Name = "textBoxSquad";
+            this.textBoxSquad.Size = new System.Drawing.Size(176, 20);
+            this.textBoxSquad.TabIndex = 5;
+            this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBox1_KeyDown);
             // 
             // labelSquad
             // 
             this.labelSquad.AutoSize = true;
-            this.labelSquad.Location = new System.Drawing.Point(3, 6);
+            this.labelSquad.Location = new System.Drawing.Point(0, 6);
             this.labelSquad.Name = "labelSquad";
             this.labelSquad.Size = new System.Drawing.Size(44, 13);
             this.labelSquad.TabIndex = 4;
@@ -132,7 +132,7 @@
             // labelMatches
             // 
             this.labelMatches.AutoSize = true;
-            this.labelMatches.Location = new System.Drawing.Point(3, 36);
+            this.labelMatches.Location = new System.Drawing.Point(0, 36);
             this.labelMatches.Name = "labelMatches";
             this.labelMatches.Size = new System.Drawing.Size(51, 13);
             this.labelMatches.TabIndex = 3;
@@ -166,8 +166,8 @@
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Label labelMatches;
         private System.Windows.Forms.Label labelSquad;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Button buttonRefresh;
+        private System.Windows.Forms.TextBox textBoxSquad;
         private System.Windows.Forms.ToolTip toolTip1;
     }
 }

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
@@ -26,19 +27,45 @@ namespace MyPubgTelemetry.GUI
             InitializeComponent();
             App = new TelemetryApp();
             chart1.Titles.Add("Hitpoints over time (one match)");
+
+            chart1.ChartAreas[0].CursorX.IsUserEnabled = true;
+            chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
+            chart1.ChartAreas[0].CursorX.LineColor = Color.Black;
+            chart1.ChartAreas[0].CursorX.SelectionColor = Color.CornflowerBlue;
+            chart1.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
+            chart1.ChartAreas[0].AxisX.ScrollBar.IsPositionedInside = true;
+
+            chart1.AxisViewChanged += delegate (object sender, ViewEventArgs args)
+            {
+                RecalcPointLabels();
+            };
+        }
+
+        private void RecalcPointLabels()
+        {
+            double svs = chart1.ChartAreas[0].AxisX.ScaleView.Size;
+            bool zoomedIn = svs > 1;
+            chart1.Series.ToList().ForEach(x => x.IsValueShownAsLabel = zoomedIn);
+        }
+
+        private static object GetField(object instance, string fieldName)
+        {
+            const BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+            FieldInfo field = instance.GetType().GetField(fieldName, bindFlags);
+            return field?.GetValue(instance);
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
             var path = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
             Debug.WriteLine("config path = " + path);
-            textBox1.Text = Properties.Settings.Default.Squad.Trim();
+            textBoxSquad.Text = Properties.Settings.Default.Squad.Trim();
             LoadMatches();
         }
 
         private void LoadMatches()
         {
-            string[] squaddies = textBox1.Text.Split(',');
+            string[] squaddies = textBoxSquad.Text.Split(',');
             int sumLen = 0;
             for (int i = 0; i < squaddies.Length; i++)
             {
@@ -59,14 +86,6 @@ namespace MyPubgTelemetry.GUI
             listBoxMatches.DataSource = binding;
 
             Task.Run(() => UpdateTitles(squaddies));
-
-
-            chart1.ChartAreas[0].CursorX.IsUserEnabled = true;
-            chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
-            chart1.ChartAreas[0].CursorX.LineColor = Color.Black;
-            chart1.ChartAreas[0].CursorX.SelectionColor = Color.CornflowerBlue;
-            chart1.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
-            chart1.ChartAreas[0].AxisX.ScrollBar.IsPositionedInside = true;
         }
 
         private void UpdateTitles(string[] squaddies)
@@ -127,11 +146,11 @@ namespace MyPubgTelemetry.GUI
 
         private void SwitchMatch(TelFile file)
         {
-            var dict = new Dictionary<string, List<TelEvent>>();
+            var dict = new Dictionary<string, List<TelemetryEvent>>();
             using (StreamReader sr = new StreamReader(file.FileInfo.FullName))
             {
-                List<TelEvent> events = JsonConvert.DeserializeObject<List<TelEvent>>(sr.ReadToEnd());
-                foreach (TelEvent @event in events)
+                List<TelemetryEvent> events = JsonConvert.DeserializeObject<List<TelemetryEvent>>(sr.ReadToEnd());
+                foreach (TelemetryEvent @event in events)
                 {
                     if (@event._T == "LogPlayerTakeDamage")
                     {
@@ -141,9 +160,9 @@ namespace MyPubgTelemetry.GUI
                         if (!Squad.Contains(playerName))
                             continue;
                         @event.victim.health = @event.victim.health - @event.damage;
-                        dict.TryGetValue(playerName, out List<TelEvent> playerEvents);
+                        dict.TryGetValue(playerName, out List<TelemetryEvent> playerEvents);
                         if (playerEvents == null)
-                            dict[playerName] = playerEvents = new List<TelEvent>();
+                            dict[playerName] = playerEvents = new List<TelemetryEvent>();
                         playerEvents.Add(@event);
                     }
                     else if (@event._T == "LogPlayerPosition")
@@ -152,9 +171,9 @@ namespace MyPubgTelemetry.GUI
                         string playerName = @event.character.name;
                         if (!Squad.Contains(playerName))
                             continue;
-                        dict.TryGetValue(playerName, out List<TelEvent> playerEvents);
+                        dict.TryGetValue(playerName, out List<TelemetryEvent> playerEvents);
                         if (playerEvents == null)
-                            dict[playerName] = playerEvents = new List<TelEvent>();
+                            dict[playerName] = playerEvents = new List<TelemetryEvent>();
                         playerEvents.Add(@event);
                     }
                 }
@@ -169,33 +188,24 @@ namespace MyPubgTelemetry.GUI
                 chart1.Series.Clear();
 
                 // Add series.
-                foreach (KeyValuePair<string, List<TelEvent>> kvp in dict)
+                foreach (KeyValuePair<string, List<TelemetryEvent>> kvp in dict)
                 {
                     Series series = chart1.Series.Add(kvp.Key);
-                    series.ChartType = SeriesChartType.FastLine;
-                    foreach (TelEvent @event in kvp.Value)
+                    series.ChartType = SeriesChartType.StackedColumn;
+                    series.IsValueShownAsLabel = true;
+                    series.SmartLabelStyle.Enabled = true;
+                    series.SmartLabelStyle.MaxMovingDistance = 0;
+                    series.SmartLabelStyle.MovingDirection = LabelAlignmentStyles.Center;
+                    series.LabelFormat = "#";
+                    series.SmartLabelStyle.IsOverlappedHidden = true;
+                    foreach (TelemetryEvent @event in kvp.Value)
                     {
                         series.Points.Add(@event.character.health);
                     }
                 }
-
+                RecalcPointLabels();
             });
 
-        }
-
-        public class TelEvent
-        {
-            public DateTime _D;
-            public string _T;
-            public float damage;
-            public TelPlayer victim;
-            public TelPlayer character;
-        }
-
-        public class TelPlayer
-        {
-            public string name;
-            public float health;
         }
 
         private void Button1_Click(object sender, EventArgs e)
@@ -212,7 +222,7 @@ namespace MyPubgTelemetry.GUI
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Properties.Settings.Default.Squad = textBox1.Text;
+            Properties.Settings.Default.Squad = textBoxSquad.Text;
             Properties.Settings.Default.Save();
         }
 
@@ -220,7 +230,7 @@ namespace MyPubgTelemetry.GUI
         {
             if (e.KeyCode == Keys.Enter)
             {
-                button1.PerformClick();
+                buttonRefresh.PerformClick();
             }
         }
     }
