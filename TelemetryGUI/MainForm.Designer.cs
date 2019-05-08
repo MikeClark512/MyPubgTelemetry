@@ -29,14 +29,15 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend5 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.listBoxMatches = new System.Windows.Forms.ListBox();
             this.contextMenuMatches = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.openInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyPathToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.buttonSearch = new System.Windows.Forms.Button();
             this.buttonOptions = new System.Windows.Forms.Button();
             this.buttonRefresh = new System.Windows.Forms.Button();
             this.textBoxSquad = new System.Windows.Forms.TextBox();
@@ -53,15 +54,15 @@
             // 
             // chart1
             // 
-            chartArea1.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea1);
+            chartArea5.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea5);
             this.chart1.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend1.Alignment = System.Drawing.StringAlignment.Center;
-            legend1.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend1.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
-            legend1.Name = "Legend1";
-            legend1.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
-            this.chart1.Legends.Add(legend1);
+            legend5.Alignment = System.Drawing.StringAlignment.Center;
+            legend5.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend5.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
+            legend5.Name = "Legend1";
+            legend5.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
+            this.chart1.Legends.Add(legend5);
             this.chart1.Location = new System.Drawing.Point(0, 0);
             this.chart1.Name = "chart1";
             this.chart1.Size = new System.Drawing.Size(514, 426);
@@ -76,10 +77,10 @@
             this.listBoxMatches.ContextMenuStrip = this.contextMenuMatches;
             this.listBoxMatches.FormattingEnabled = true;
             this.listBoxMatches.IntegralHeight = false;
-            this.listBoxMatches.Location = new System.Drawing.Point(0, 52);
+            this.listBoxMatches.Location = new System.Drawing.Point(0, 68);
             this.listBoxMatches.Name = "listBoxMatches";
-            this.listBoxMatches.Size = new System.Drawing.Size(258, 345);
-            this.listBoxMatches.TabIndex = 2;
+            this.listBoxMatches.Size = new System.Drawing.Size(255, 329);
+            this.listBoxMatches.TabIndex = 0;
             this.listBoxMatches.SelectedIndexChanged += new System.EventHandler(this.ListBox1_SelectedIndexChanged);
             this.listBoxMatches.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ListBoxMatches_MouseDown);
             // 
@@ -110,11 +111,13 @@
             this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer1.Location = new System.Drawing.Point(12, 12);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.buttonSearch);
             this.splitContainer1.Panel1.Controls.Add(this.buttonOptions);
             this.splitContainer1.Panel1.Controls.Add(this.buttonRefresh);
             this.splitContainer1.Panel1.Controls.Add(this.textBoxSquad);
@@ -129,6 +132,17 @@
             this.splitContainer1.SplitterDistance = 258;
             this.splitContainer1.TabIndex = 2;
             // 
+            // buttonSearch
+            // 
+            this.buttonSearch.Image = global::MyPubgTelemetry.GUI.Properties.Resources.Search_16x;
+            this.buttonSearch.Location = new System.Drawing.Point(0, 40);
+            this.buttonSearch.Name = "buttonSearch";
+            this.buttonSearch.Size = new System.Drawing.Size(23, 22);
+            this.buttonSearch.TabIndex = 5;
+            this.buttonSearch.Text = " ";
+            this.toolTip1.SetToolTip(this.buttonSearch, "Search match metadata\r\nShortcut = Ctrl+F\r\nFind Next = F3");
+            this.buttonSearch.Click += new System.EventHandler(this.ButtonSearch_Click);
+            // 
             // buttonOptions
             // 
             this.buttonOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
@@ -136,49 +150,47 @@
             this.buttonOptions.Location = new System.Drawing.Point(0, 403);
             this.buttonOptions.Name = "buttonOptions";
             this.buttonOptions.Size = new System.Drawing.Size(256, 23);
-            this.buttonOptions.TabIndex = 3;
+            this.buttonOptions.TabIndex = 1;
             this.buttonOptions.Text = "&Options...";
             this.buttonOptions.UseVisualStyleBackColor = true;
             this.buttonOptions.Click += new System.EventHandler(this.ButtonOptions_Click);
             // 
             // buttonRefresh
             // 
-            this.buttonRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonRefresh.Font = new System.Drawing.Font("Wingdings 3", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(2)));
-            this.buttonRefresh.Location = new System.Drawing.Point(232, 2);
+            this.buttonRefresh.Image = global::MyPubgTelemetry.GUI.Properties.Resources.Refresh_greyThin_16x;
+            this.buttonRefresh.Location = new System.Drawing.Point(0, 2);
             this.buttonRefresh.Name = "buttonRefresh";
             this.buttonRefresh.Size = new System.Drawing.Size(23, 22);
-            this.buttonRefresh.TabIndex = 1;
-            this.buttonRefresh.Text = "Q";
+            this.buttonRefresh.TabIndex = 4;
+            this.buttonRefresh.Text = " ";
             this.buttonRefresh.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.toolTip1.SetToolTip(this.buttonRefresh, "Refresh/Reload");
-            this.buttonRefresh.UseVisualStyleBackColor = true;
+            this.toolTip1.SetToolTip(this.buttonRefresh, "Refresh matches list using squad");
             this.buttonRefresh.Click += new System.EventHandler(this.Button1_Click);
             // 
             // textBoxSquad
             // 
             this.textBoxSquad.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxSquad.Location = new System.Drawing.Point(50, 3);
+            this.textBoxSquad.Location = new System.Drawing.Point(63, 3);
             this.textBoxSquad.Name = "textBoxSquad";
-            this.textBoxSquad.Size = new System.Drawing.Size(176, 20);
-            this.textBoxSquad.TabIndex = 0;
+            this.textBoxSquad.Size = new System.Drawing.Size(192, 20);
+            this.textBoxSquad.TabIndex = 3;
             this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBox1_KeyDown);
             // 
             // labelSquad
             // 
             this.labelSquad.AutoSize = true;
-            this.labelSquad.Location = new System.Drawing.Point(0, 6);
+            this.labelSquad.Location = new System.Drawing.Point(22, 6);
             this.labelSquad.Name = "labelSquad";
             this.labelSquad.Size = new System.Drawing.Size(44, 13);
-            this.labelSquad.TabIndex = 4;
+            this.labelSquad.TabIndex = 2;
             this.labelSquad.Text = "Squad: ";
             this.toolTip1.SetToolTip(this.labelSquad, "Comma separated list of player names");
             // 
             // labelMatches
             // 
             this.labelMatches.AutoSize = true;
-            this.labelMatches.Location = new System.Drawing.Point(0, 36);
+            this.labelMatches.Location = new System.Drawing.Point(22, 45);
             this.labelMatches.Name = "labelMatches";
             this.labelMatches.Size = new System.Drawing.Size(51, 13);
             this.labelMatches.TabIndex = 3;
@@ -190,11 +202,13 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.splitContainer1);
+            this.KeyPreview = true;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "PUBG Telemetry Analyzer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainForm_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
             this.contextMenuMatches.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -220,6 +234,7 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuMatches;
         private System.Windows.Forms.ToolStripMenuItem openInExplorerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copyPathToolStripMenuItem;
+        private System.Windows.Forms.Button buttonSearch;
     }
 }
 
