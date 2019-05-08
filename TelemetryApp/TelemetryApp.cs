@@ -82,10 +82,18 @@ namespace MyPubgTelemetry
                 dict.Add(key, value = defValSelector());
             return value;
         }
+
         public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dict, K key, Func<V> defValSelector)
         {
             V value;
             return dict.TryGetValue(key, out value) ? value : defValSelector();
         }
+    }
+
+    public class TelemetryFile
+    {
+        public FileInfo FileInfo { set; get; }
+        public string Title { set; get; }
+        public DateTime Date { get; set; }
     }
 }

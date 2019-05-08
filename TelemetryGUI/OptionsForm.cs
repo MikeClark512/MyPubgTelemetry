@@ -24,23 +24,17 @@ namespace MyPubgTelemetry.GUI
         {
             App = new TelemetryApp();
             textBox1.Text = App.ApiKey;
-            this.AcceptButton = buttonOK;
         }
 
         private void ButtonCancel_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void ButtonOK_Click(object sender, EventArgs e)
         {
             File.WriteAllText(App.DefaultApiKeyFile, textBox1.Text);
-            this.Close();
-        }
-
-        private void OptionsForm_KeyDown(object sender, KeyEventArgs e)
-        {
-
+            Close();
         }
     }
 }
