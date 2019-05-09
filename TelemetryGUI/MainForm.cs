@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
@@ -23,8 +24,9 @@ namespace MyPubgTelemetry.GUI
         private const string XAxisDateFormat = "h:mm:ss tt";
         public TelemetryApp App { get; set; }
         public HashSet<string> Squad { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        public int TeamId { get; set; }
         public Regex RegexCsv { get; } = new Regex(@"\s*,\s*", RegexOptions.IgnoreCase);
+        public BlockingCollection<PreparedData> PreparedDataQ { get;  } = new BlockingCollection<PreparedData>();
+        public CancellationTokenSource CancelMatchSwitch { get; set; }
 
         public MainForm()
         {
@@ -60,12 +62,20 @@ namespace MyPubgTelemetry.GUI
                 bool zoomed = chart1.ChartAreas[0].AxisX.ScaleView.IsZoomed;
                 chart1.ChartAreas[0].AxisX.Interval = zoomed ? delta * 100 : 0;
             };
+            //chart1.ChartAreas[0].Area3DStyle.Enable3D = true;
+            //chart1.ChartAreas[0].Area3DStyle.IsRightAngleAxes = false;
+            //chart1.ChartAreas["Default"].Area3DStyle.Inclination = 40;
+            //chart1.ChartAreas["Default"].Area3DStyle.Rotation = 15;
+            //chart1.ChartAreas["Default"].Area3DStyle.LightStyle = LightStyle.Realistic;
+            //chart1.ChartAreas["Default"].Area3DStyle.Perspective = 5;
+            //chart1.ChartAreas["Default"].Area3DStyle.PointGapDepth = 1000;
+            //chart1.ChartAreas["Default"].Area3DStyle.PointDepth = 1000;
         }
 
         private void RecalcPointLabels()
         {
             double scaleViewSize = chart1.ChartAreas[0].AxisX.ScaleView.Size;
-            Debug.WriteLine("scaleViewSize " + scaleViewSize);
+            DebugThreadWriteLine("scaleViewSize " + scaleViewSize);
             bool zoomedIn = scaleViewSize < 0.01;
             chart1.Series.ToList().ForEach(x => x.IsValueShownAsLabel = zoomedIn);
         }
@@ -80,7 +90,7 @@ namespace MyPubgTelemetry.GUI
         private void MainForm_Load(object sender, EventArgs e)
         {
             var path = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
-            Debug.WriteLine("config path = " + path);
+            DebugThreadWriteLine("config path = " + path);
             textBoxSquad.Text = Properties.Settings.Default.Squad.Trim();
             LoadMatches();
         }
@@ -102,7 +112,7 @@ namespace MyPubgTelemetry.GUI
 
             foreach (var file in telFiles)
             {
-                Task.Run(() => UpdateTitle(file, squaddies));
+                Task.Run(() => UpdateMatchListTitle(file, squaddies));
             }
         }
 
@@ -120,7 +130,7 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
-        private void UpdateTitle(TelemetryFile file, string[] squaddies)
+        private void UpdateMatchListTitle(TelemetryFile file, string[] squaddies)
         {
             using (var sr = new StreamReader(file.FileInfo.FullName))
             {
@@ -128,14 +138,15 @@ namespace MyPubgTelemetry.GUI
                 int squadTeamId = -1;
                 var jtr = new JsonTextReader(sr);
                 jtr.Read();
+                DateTime? matchDate = null;
                 while (jtr.Read())
                 {
-                    var jti = JObject.Load(jtr);
-                    string eventType = jti["_T"].Value<string>();
-                    if (eventType == "LogPlayerCreate")
+                    var serializer = new JsonSerializer();
+                    var @event = serializer.Deserialize<TelemetryEvent>(jtr);
+                    if (@event._T == "LogPlayerCreate")
                     {
-                        string player = jti.SelectToken("character.name").ToString();
-                        int teamId = jti.SelectToken("character.teamId").Value<int>();
+                        string player = @event.character.name;
+                        int teamId = @event.character.teamId;
                         teams.TryGetValue(teamId, out var team);
                         if (team == null) teams[teamId] = team = new SortedSet<string>();
                         team.Add(player);
@@ -144,13 +155,27 @@ namespace MyPubgTelemetry.GUI
                             squadTeamId = teamId;
                         }
                     }
-                    if (eventType == "LogMatchStart") break;
+                    else if (@event._T == "LogMatchStart")
+                    {
+                        matchDate = @event._D;
+                        break;
+                    }
                 }
-                if (squadTeamId == -1) return;
-                var squadTeam = teams[squadTeamId];
                 BeginInvoke((MethodInvoker)delegate ()
                 {
-                    file.Title = string.Join(", ", squadTeam);
+                    if (squadTeamId != -1)
+                    {
+                        var squadTeam = teams[squadTeamId];
+                        file.Title = string.Join(", ", squadTeam);
+                    }
+                    else
+                    {
+                        file.Title = "[no squad members in match]";
+                    }
+                    if (matchDate.HasValue)
+                    {
+                        file.Title += " - " + matchDate.Value.ToString(ChartTitleDateFormat);
+                    }
                     listBoxMatches.BeginUpdate();
                     int topIdx = listBoxMatches.TopIndex;
                     int selIdx = listBoxMatches.SelectedIndex;
@@ -158,7 +183,6 @@ namespace MyPubgTelemetry.GUI
                     listBoxMatches.TopIndex = topIdx;
                     listBoxMatches.SelectedIndex = selIdx;
                     listBoxMatches.EndUpdate();
-                    TeamId = squadTeamId; // lazy code, race condition, oh well.
                 });
             }
         }
@@ -171,115 +195,177 @@ namespace MyPubgTelemetry.GUI
             chart1.Titles[0].Font = new Font(chart1.Titles[0].Font.FontFamily, 12, FontStyle.Bold);
             CancelMatchSwitch?.Cancel();
             CancelMatchSwitch = new CancellationTokenSource();
+            ClearChart(chart1);
             Task.Run(() => SwitchMatch(file, CancelMatchSwitch.Token));
-
         }
-
-        public CancellationTokenSource CancelMatchSwitch { get; set; }
 
         private void SwitchMatch(TelemetryFile file, CancellationToken cancellationToken)
         {
-            var playerToEvents = new Dictionary<string, List<TelemetryEvent>>();
-            var timeToPlayerToEvents = new Dictionary<DateTime, Dictionary<string, List<TelemetryEvent>>>();
-            var normalizedEvents = new List<TelemetryEvent>();
-            using (var sr = new StreamReader(file.FileInfo.FullName))
+            try
             {
-                var events = JsonConvert.DeserializeObject<List<TelemetryEvent>>(sr.ReadToEnd());
-                foreach (var @event in events)
+                PreparedData pd = new PreparedData() { File = file};
+                using (var sr = new StreamReader(file.FileInfo.FullName))
+                {
+                    var events = JsonConvert.DeserializeObject<List<TelemetryEvent>>(sr.ReadToEnd());
+                    foreach (var @event in events)
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            DebugThreadWriteLine("Cancelling in foreach (TelemetryEvent @event in events)");
+                            return;
+                        }
+                        if (@event._T == "LogPlayerTakeDamage")
+                        {
+                            @event.character = @event.victim;
+                            @event.victim.health -= @event.damage;
+                            pd.NormalizedEvents.Add(@event);
+                        }
+                        else if (@event._T == "LogPlayerPosition")
+                        {
+                            @event.victim = @event.character;
+                            pd.NormalizedEvents.Add(@event);
+                        }
+                    }
+                }
+
+                foreach (var @event in pd.NormalizedEvents)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        Debug.WriteLine("Cancelling in foreach (TelemetryEvent @event in events)");
+                        DebugThreadWriteLine("Cancelling in foreach (var @event in normalizedEvents)");
                         return;
                     }
-                    if (@event._T == "LogPlayerTakeDamage")
-                    {
-                        @event.character = @event.victim;
-                        @event.victim.health -= @event.damage;
-                        normalizedEvents.Add(@event);
-                    }
-                    else if (@event._T == "LogPlayerPosition")
-                    {
-                        @event.victim = @event.character;
-                        normalizedEvents.Add(@event);
-                    }
+                    string name = @event.character.name;
+                    // Skip events that are about players that aren't in our squad.
+                    // When we start doing enemy interaction reports, might want to skip non-squad events
+                    if (!Squad.Contains(name))
+                        continue;
+                    pd.Squad.Add(name);
+                    var playerEvents = pd.PlayerToEvents.GetOrAdd(name, () => new List<TelemetryEvent>());
+                    playerEvents.Add(@event);
+                    var timePlayerToEvents = pd.TimeToPlayerToEvents.GetOrAdd(@event._D, () => new Dictionary<string, List<TelemetryEvent>>());
+                    var timePlayerEvents = timePlayerToEvents.GetOrAdd(name, () => new List<TelemetryEvent>());
+                    timePlayerEvents.Add(@event);
+                }
+
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    PreparedDataQ.Add(pd, cancellationToken);
+                }
+                else
+                {
+                    DebugThreadWriteLine("Not publishing prepared data due to cancellation.");
                 }
             }
-            var squad = new HashSet<string>();
-            foreach (var @event in normalizedEvents)
+            finally
+            {
+                BeginInvoke((MethodInvoker)delegate ()
+                {
+                    ConsumePreparedDataQ(cancellationToken);
+                });
+            }
+        }
+
+        private static void DebugThreadWriteLine(string msg)
+        {
+            var t = Thread.CurrentThread;
+            Debug.WriteLine($"T:{t.ManagedThreadId} {msg}");
+        }
+
+        private void ConsumePreparedDataQ(CancellationToken cancellationToken)
+        {
+            while (PreparedDataQ.Count > 0)
+            {
+                var preparedData = PreparedDataQ.Take();
+                DebugThreadWriteLine("ConsumePreparedDataQ loop");
+                if (preparedData.File == listBoxMatches.SelectedItem)
+                {
+                    DebugThreadWriteLine("ConsumePreparedDataQ inner");
+                    ConsumePreparedData(preparedData, cancellationToken);
+                }
+            }
+        }
+
+        private void ConsumePreparedData(PreparedData pd, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                DebugThreadWriteLine("Cancelling in ConsumePreparedData");
+                return;
+            }
+
+            ClearChart(chart1);
+
+            // Declare series first
+            foreach (string playerName in pd.PlayerToEvents.Keys)
+            {
+                var series = chart1.Series.Add(playerName);
+                series.BorderWidth = 4;
+                //series.ChartType = SeriesChartType.Line;
+                // Set SplineArea chart type
+                series.ChartType = SeriesChartType.Line;
+                // Set spline line tension 
+                chart1.ChartAreas[0].AxisX.IsMarginVisible = false;
+                //series.IsValueShownAsLabel = true;
+                series.SmartLabelStyle.Enabled = true;
+                //series.SmartLabelStyle.MaxMovingDistance = 0;
+                series.SmartLabelStyle.MovingDirection = LabelAlignmentStyles.Center;
+                series.LabelFormat = "#";
+                series.SmartLabelStyle.IsOverlappedHidden = true;
+                series.XValueType = ChartValueType.DateTime;
+            }
+            // Track player's last known HP so we can fill in a reasonable value at missing time intervals
+            var lastHps = new Dictionary<string, float>();
+            // Then add data
+            DebugThreadWriteLine("About to render " + pd.File.FileInfo.Name);
+            foreach (var kv in pd.TimeToPlayerToEvents)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    Debug.WriteLine("Cancelling in foreach (var @event in normalizedEvents)");
+                    DebugThreadWriteLine("Cancelling in foreach (var kv in timeToPlayerToEvents)");
                     return;
                 }
-                string name = @event.character.name;
-                // Skip events that are about players that aren't in our squad.
-                // When we start doing enemy interaction reports, might want to skip non-squad events
-                if (!Squad.Contains(name))
-                    continue;
-                squad.Add(name);
-                var playerEvents = playerToEvents.GetOrAdd(name, () => new List<TelemetryEvent>());
-                playerEvents.Add(@event);
-                var timePlayerToEvents = timeToPlayerToEvents.GetOrAdd(@event._D, () => new Dictionary<string, List<TelemetryEvent>>());
-                var timePlayerEvents = timePlayerToEvents.GetOrAdd(name, () => new List<TelemetryEvent>());
-                timePlayerEvents.Add(@event);
+                var eventGroupTime = kv.Key.ToLocalTime();
+                var timePlayerToEvents = kv.Value;
+                foreach (string squadMember in pd.Squad)
+                {
+                    timePlayerToEvents.TryGetValue(squadMember, out var squadEvents);
+                    if (squadEvents != null)
+                    {
+                        chart1.Series[squadMember].Points.AddXY(eventGroupTime, squadEvents.First().character.health);
+                        float minHp = squadEvents.Select(x => x.character.health).Min();
+                        lastHps[squadMember] = minHp;
+                    }
+                    else
+                    {
+                        float lastHp = lastHps.GetValueOrDefault(squadMember, () => 100);
+                        chart1.Series[squadMember].Points.AddXY(eventGroupTime, lastHp);
+                    }
+                }
             }
-            BeginInvoke((MethodInvoker)delegate ()
+            RecalcPointLabels();
+        }
+
+        private void ClearChart(Chart chart)
+        {
+            chart.Series.ToList().ForEach(series => series.Points.Clear());
+            foreach (var chart1Series in chart1.Series)
             {
-                chart1.Series.ToList().ForEach(series => series.Points.Clear());
-                foreach (var chart1Series in chart1.Series)
-                {
-                    chart1Series.Points.Clear();
-                }
-                chart1.Series.Clear();
+                chart1Series.Points.Clear();
+            }
 
-                // Declare series first
-                foreach (string playerName in playerToEvents.Keys)
-                {
-                    var series = chart1.Series.Add(playerName);
-                    series.BorderWidth = 4;
-                    series.ChartType = SeriesChartType.Line;
-                    //series.IsValueShownAsLabel = true;
-                    series.SmartLabelStyle.Enabled = true;
-                    //series.SmartLabelStyle.MaxMovingDistance = 0;
-                    series.SmartLabelStyle.MovingDirection = LabelAlignmentStyles.Center;
-                    series.LabelFormat = "#";
-                    series.SmartLabelStyle.IsOverlappedHidden = true;
-                    series.XValueType = ChartValueType.DateTime;
-                }
-                // Track player's last known HP so we can fill in a reasonable value at missing time intervals
-                var lastHps = new Dictionary<string, float>();
-                // Then add data
-                Debug.WriteLine("About to render " + file.FileInfo.Name);
-                foreach (var kv in timeToPlayerToEvents)
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        Debug.WriteLine("Cancelling in foreach (var kv in timeToPlayerToEvents)");
-                        return;
-                    }
-                    var eventGroupTime = kv.Key.ToLocalTime();
-                    var timePlayerToEvents = kv.Value;
-                    foreach (string squadMember in squad)
-                    {
-                        timePlayerToEvents.TryGetValue(squadMember, out var squadEvents);
-                        if (squadEvents != null)
-                        {
-                            chart1.Series[squadMember].Points.AddXY(eventGroupTime, squadEvents.First().character.health);
-                            float minHp = squadEvents.Select(x => x.character.health).Min();
-                            lastHps[squadMember] = minHp;
-                        }
-                        else
-                        {
-                            float lastHp = lastHps.GetValueOrDefault(squadMember, () => 100);
-                            chart1.Series[squadMember].Points.AddXY(eventGroupTime, lastHp);
-                        }
-                    }
-                }
-                RecalcPointLabels();
-            });
+            chart.Series.Clear();
+        }
 
+        public class PreparedData
+        {
+            public Dictionary<string, List<TelemetryEvent>> PlayerToEvents { get; } = 
+                new Dictionary<string, List<TelemetryEvent>>();
+            public Dictionary<DateTime, Dictionary<string, List<TelemetryEvent>>> TimeToPlayerToEvents { get; } =
+                new Dictionary<DateTime, Dictionary<string, List<TelemetryEvent>>>();
+            public List<TelemetryEvent> NormalizedEvents { get; } = new List<TelemetryEvent>();
+            public HashSet<string> Squad { get; } = new HashSet<string>();
+            public TelemetryFile File { get; set; }
         }
 
         private void Button1_Click(object sender, EventArgs e)
@@ -300,7 +386,7 @@ namespace MyPubgTelemetry.GUI
             Properties.Settings.Default.Save();
         }
 
-        private void TextBox1_KeyDown(object sender, KeyEventArgs e)
+        private void TextBoxSquad_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
@@ -386,6 +472,13 @@ namespace MyPubgTelemetry.GUI
                 var tf = (TelemetryFile) listBoxMatches.Items[i];
                 if (Find(tf)) return;
             }
+        }
+
+        private void ButtonNext_Click(object sender, EventArgs e)
+        {
+            int rot = chart1.ChartAreas["Default"].Area3DStyle.Rotation;
+            rot = (rot + 5) % 180;
+            chart1.ChartAreas["Default"].Area3DStyle.Rotation = rot;
         }
     }
 

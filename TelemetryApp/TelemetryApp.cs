@@ -54,6 +54,7 @@ namespace MyPubgTelemetry
         public float damage;
         public TelemetryPlayer victim;
         public TelemetryPlayer character;
+        public TelemetryPlayer attacker;
         public bool skip;
     }
 
@@ -61,6 +62,7 @@ namespace MyPubgTelemetry
     {
         public string name;
         public float health;
+        public int teamId = -1;
     }
 
     public static class TelemetryAppExtensions
