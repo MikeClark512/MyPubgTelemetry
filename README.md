@@ -1,6 +1,6 @@
 # MyPubgTelemetry
 
-Use `TelemetryDownloader` to download and save all of the available telemetry for one or more players. For efficiency, the downloader will skip telemetry files that you have already downloaded. It also will not delete old telemetry that is no longer available online, so that you can aggregate historical data for yourself.
+Use `TelemetryDownloader` to download and save all of the available telemetry for one or more players. For efficiency, the downloader will skip telemetry files that you have already downloaded. It also will not delete old telemetry that is no longer available online, so that you can accumulate historical data on your computer.
 
 Use `TelemetryGUI` to view charts/reports calculated from saved telemetry.  Use `TelemetryAnalyzer` to generate text reports.
 
