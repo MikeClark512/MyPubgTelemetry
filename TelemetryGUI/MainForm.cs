@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
@@ -6,7 +7,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,8 +28,9 @@ namespace MyPubgTelemetry.GUI
         public TelemetryApp App { get; set; }
         public HashSet<string> Squad { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public Regex RegexCsv { get; } = new Regex(@"\s*,\s*", RegexOptions.IgnoreCase);
+        public ConcurrentDictionary<string, string> AccountIds = new ConcurrentDictionary<string, string>();
         public BlockingCollection<PreparedData> PreparedDataQ { get;  } = new BlockingCollection<PreparedData>();
-        public CancellationTokenSource CancelMatchSwitch { get; set; }
+        public CancellationTokenSource CancellationTokenSourceMatchSwitch { get; set; }
 
         public MainForm()
         {
@@ -77,6 +81,7 @@ namespace MyPubgTelemetry.GUI
             double scaleViewSize = chart1.ChartAreas[0].AxisX.ScaleView.Size;
             DebugThreadWriteLine("scaleViewSize " + scaleViewSize);
             bool zoomedIn = scaleViewSize < 0.01;
+            //series.SmartLabelStyle.MaxMovingDistance = 0;
             chart1.Series.ToList().ForEach(x => x.IsValueShownAsLabel = zoomedIn);
         }
 
@@ -148,12 +153,14 @@ namespace MyPubgTelemetry.GUI
                         string player = @event.character.name;
                         int teamId = @event.character.teamId;
                         teams.TryGetValue(teamId, out var team);
+                        ArrayList als = new ArrayList();
                         if (team == null) teams[teamId] = team = new SortedSet<string>();
                         team.Add(player);
                         if (Squad.Contains(player))
                         {
                             squadTeamId = teamId;
                         }
+                        AccountIds[player] = @event.character.accountId;
                     }
                     else if (@event._T == "LogMatchStart")
                     {
@@ -165,8 +172,9 @@ namespace MyPubgTelemetry.GUI
                 {
                     if (squadTeamId != -1)
                     {
-                        var squadTeam = teams[squadTeamId];
+                        SortedSet<string> squadTeam = teams[squadTeamId];
                         file.Title = string.Join(", ", squadTeam);
+                        file.Squad = squadTeam;
                     }
                     else
                     {
@@ -187,16 +195,33 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
+        private void PubgLookup(TelemetryFile file, string user)
+        {
+            string fname = file.FileInfo.Name;
+            fname = Path.GetFileNameWithoutExtension(fname);
+            const string pfx = "mt-";
+            if (fname.StartsWith(pfx))
+                fname = fname.Substring(pfx.Length);
+            AccountIds.TryGetValue(user, out string accountId);
+            if (accountId == null)
+                return;
+            Task.Run(() =>
+            {
+                string matchId = fname;
+                Process.Start($"https://pubglookup.com/players/find/{accountId}/{matchId}");
+            });
+        }
+
         private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             var file = (TelemetryFile)listBoxMatches.SelectedItem;
             string sdt = file.Date.ToLocalTime().ToString(ChartTitleDateFormat);
             chart1.Titles[0].Text = $"{sdt} - HP over time";
             chart1.Titles[0].Font = new Font(chart1.Titles[0].Font.FontFamily, 12, FontStyle.Bold);
-            CancelMatchSwitch?.Cancel();
-            CancelMatchSwitch = new CancellationTokenSource();
+            CancellationTokenSourceMatchSwitch?.Cancel();
+            CancellationTokenSourceMatchSwitch = new CancellationTokenSource();
             ClearChart(chart1);
-            Task.Run(() => SwitchMatch(file, CancelMatchSwitch.Token));
+            Task.Run(() => SwitchMatch(file, CancellationTokenSourceMatchSwitch.Token));
         }
 
         private void SwitchMatch(TelemetryFile file, CancellationToken cancellationToken)
@@ -293,22 +318,15 @@ namespace MyPubgTelemetry.GUI
                 DebugThreadWriteLine("Cancelling in ConsumePreparedData");
                 return;
             }
-
             ClearChart(chart1);
-
             // Declare series first
             foreach (string playerName in pd.PlayerToEvents.Keys)
             {
                 var series = chart1.Series.Add(playerName);
                 series.BorderWidth = 4;
-                //series.ChartType = SeriesChartType.Line;
-                // Set SplineArea chart type
                 series.ChartType = SeriesChartType.Line;
-                // Set spline line tension 
                 chart1.ChartAreas[0].AxisX.IsMarginVisible = false;
-                //series.IsValueShownAsLabel = true;
                 series.SmartLabelStyle.Enabled = true;
-                //series.SmartLabelStyle.MaxMovingDistance = 0;
                 series.SmartLabelStyle.MovingDirection = LabelAlignmentStyles.Center;
                 series.LabelFormat = "#";
                 series.SmartLabelStyle.IsOverlappedHidden = true;
@@ -400,21 +418,9 @@ namespace MyPubgTelemetry.GUI
             optionsForm.ShowDialog(this);
         }
 
-        private void OpenInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var file = (TelemetryFile)listBoxMatches.SelectedItem;
-            Process.Start("explorer.exe", "/select," + file.FileInfo.FullName);
-        }
-
         private void ListBoxMatches_MouseDown(object sender, MouseEventArgs e)
         {
             listBoxMatches.SelectedIndex = listBoxMatches.IndexFromPoint(e.Location);
-        }
-
-        private void CopyPathToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var file = (TelemetryFile)listBoxMatches.SelectedItem;
-            Clipboard.SetText(file.FileInfo.FullName);
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
@@ -479,6 +485,33 @@ namespace MyPubgTelemetry.GUI
             int rot = chart1.ChartAreas["Default"].Area3DStyle.Rotation;
             rot = (rot + 5) % 180;
             chart1.ChartAreas["Default"].Area3DStyle.Rotation = rot;
+        }
+
+        private void TsmiCopyPath_Click(object sender, EventArgs e)
+        {
+            var file = (TelemetryFile)listBoxMatches.SelectedItem;
+            Clipboard.SetText(file.FileInfo.FullName);
+        }
+
+        private void TsmiOpenInFileExplorer_Click(object sender, EventArgs e)
+        {
+            var file = (TelemetryFile)listBoxMatches.SelectedItem;
+            Process.Start("explorer.exe", "/select," + file.FileInfo.FullName);
+        }
+
+        private void ContextMenuMatches_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            var file = (TelemetryFile)listBoxMatches.SelectedItem;
+            if (file.Squad == null || file.Squad.Count == 0) return;
+            tsmiPubgLookup.DropDownItems.Clear();
+            foreach (string squadTeamMember in file.Squad)
+            {
+                ToolStripMenuItem tsmi = new ToolStripMenuItem(squadTeamMember, null, (_, __) =>
+                {
+                    PubgLookup(file, squadTeamMember);
+                });
+                tsmiPubgLookup.DropDownItems.Add(tsmi);
+            }
         }
     }
 

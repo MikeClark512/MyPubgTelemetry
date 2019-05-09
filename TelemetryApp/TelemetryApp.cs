@@ -63,6 +63,7 @@ namespace MyPubgTelemetry
         public string name;
         public float health;
         public int teamId = -1;
+        public string accountId;
     }
 
     public static class TelemetryAppExtensions
@@ -97,5 +98,6 @@ namespace MyPubgTelemetry
         public FileInfo FileInfo { set; get; }
         public string Title { set; get; }
         public DateTime Date { get; set; }
+        public ISet<string> Squad { get; set; }
     }
 }
