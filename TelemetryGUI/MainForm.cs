@@ -182,7 +182,7 @@ namespace MyPubgTelemetry.GUI
                     }
                     if (matchDate.HasValue)
                     {
-                        file.Title += " - " + matchDate.Value.ToString(ChartTitleDateFormat);
+                        file.Title += " - " + matchDate.Value.ToLocalTime().ToString(ChartTitleDateFormat);
                     }
                     listBoxMatches.BeginUpdate();
                     int topIdx = listBoxMatches.TopIndex;
