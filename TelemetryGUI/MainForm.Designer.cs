@@ -29,8 +29,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend5 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.listBoxMatches = new System.Windows.Forms.ListBox();
             this.contextMenuMatches = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -43,6 +43,7 @@
             this.textBoxSquad = new System.Windows.Forms.TextBox();
             this.labelSquad = new System.Windows.Forms.Label();
             this.labelMatches = new System.Windows.Forms.Label();
+            this.buttonNext = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.contextMenuMatches.SuspendLayout();
@@ -54,18 +55,20 @@
             // 
             // chart1
             // 
-            chartArea5.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea5);
-            this.chart1.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend5.Alignment = System.Drawing.StringAlignment.Center;
-            legend5.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend5.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
-            legend5.Name = "Legend1";
-            legend5.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
-            this.chart1.Legends.Add(legend5);
+            this.chart1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            chartArea2.Name = "Default";
+            this.chart1.ChartAreas.Add(chartArea2);
+            legend2.Alignment = System.Drawing.StringAlignment.Center;
+            legend2.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend2.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
+            legend2.Name = "Legend1";
+            legend2.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
+            this.chart1.Legends.Add(legend2);
             this.chart1.Location = new System.Drawing.Point(0, 0);
             this.chart1.Name = "chart1";
-            this.chart1.Size = new System.Drawing.Size(514, 426);
+            this.chart1.Size = new System.Drawing.Size(514, 397);
             this.chart1.TabIndex = 0;
             this.chart1.Text = "chart1";
             // 
@@ -127,6 +130,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.buttonNext);
             this.splitContainer1.Panel2.Controls.Add(this.chart1);
             this.splitContainer1.Size = new System.Drawing.Size(776, 426);
             this.splitContainer1.SplitterDistance = 258;
@@ -175,7 +179,7 @@
             this.textBoxSquad.Name = "textBoxSquad";
             this.textBoxSquad.Size = new System.Drawing.Size(192, 20);
             this.textBoxSquad.TabIndex = 3;
-            this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBox1_KeyDown);
+            this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSquad_KeyDown);
             // 
             // labelSquad
             // 
@@ -196,6 +200,17 @@
             this.labelMatches.TabIndex = 3;
             this.labelMatches.Text = "Matches:";
             // 
+            // buttonNext
+            // 
+            this.buttonNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonNext.Location = new System.Drawing.Point(431, 403);
+            this.buttonNext.Name = "buttonNext";
+            this.buttonNext.Size = new System.Drawing.Size(83, 23);
+            this.buttonNext.TabIndex = 1;
+            this.buttonNext.Text = "Next";
+            this.buttonNext.UseVisualStyleBackColor = true;
+            this.buttonNext.Click += new System.EventHandler(this.ButtonNext_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -204,6 +219,7 @@
             this.Controls.Add(this.splitContainer1);
             this.KeyPreview = true;
             this.Name = "MainForm";
+            this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Show;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "PUBG Telemetry Analyzer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
@@ -235,6 +251,7 @@
         private System.Windows.Forms.ToolStripMenuItem openInExplorerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copyPathToolStripMenuItem;
         private System.Windows.Forms.Button buttonSearch;
+        private System.Windows.Forms.Button buttonNext;
     }
 }
 

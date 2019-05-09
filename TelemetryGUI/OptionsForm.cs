@@ -24,6 +24,7 @@ namespace MyPubgTelemetry.GUI
         {
             App = new TelemetryApp();
             textBox1.Text = App.ApiKey;
+            MinimumSize = Size;
         }
 
         private void ButtonCancel_Click(object sender, EventArgs e)
