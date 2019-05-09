@@ -29,13 +29,14 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea10 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend10 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.listBoxMatches = new System.Windows.Forms.ListBox();
             this.contextMenuMatches = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.openInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.copyPathToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsmiPubgLookup = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsmiOpenInFileExplorer = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsmiCopyPath = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.buttonSearch = new System.Windows.Forms.Button();
             this.buttonOptions = new System.Windows.Forms.Button();
@@ -45,6 +46,7 @@
             this.labelMatches = new System.Windows.Forms.Label();
             this.buttonNext = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.contextMenuMatches.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -58,14 +60,14 @@
             this.chart1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea2.Name = "Default";
-            this.chart1.ChartAreas.Add(chartArea2);
-            legend2.Alignment = System.Drawing.StringAlignment.Center;
-            legend2.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend2.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
-            legend2.Name = "Legend1";
-            legend2.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
-            this.chart1.Legends.Add(legend2);
+            chartArea10.Name = "Default";
+            this.chart1.ChartAreas.Add(chartArea10);
+            legend10.Alignment = System.Drawing.StringAlignment.Center;
+            legend10.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend10.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
+            legend10.Name = "Legend1";
+            legend10.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
+            this.chart1.Legends.Add(legend10);
             this.chart1.Location = new System.Drawing.Point(0, 0);
             this.chart1.Name = "chart1";
             this.chart1.Size = new System.Drawing.Size(514, 397);
@@ -90,24 +92,33 @@
             // contextMenuMatches
             // 
             this.contextMenuMatches.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openInExplorerToolStripMenuItem,
-            this.copyPathToolStripMenuItem});
+            this.tsmiPubgLookup,
+            this.toolStripSeparator1,
+            this.tsmiOpenInFileExplorer,
+            this.tsmiCopyPath});
             this.contextMenuMatches.Name = "contextMenuMatches";
-            this.contextMenuMatches.Size = new System.Drawing.Size(162, 48);
+            this.contextMenuMatches.Size = new System.Drawing.Size(212, 98);
+            this.contextMenuMatches.Opening += new System.ComponentModel.CancelEventHandler(this.ContextMenuMatches_Opening);
             // 
-            // openInExplorerToolStripMenuItem
+            // tsmiPubgLookup
             // 
-            this.openInExplorerToolStripMenuItem.Name = "openInExplorerToolStripMenuItem";
-            this.openInExplorerToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
-            this.openInExplorerToolStripMenuItem.Text = "Open in Explorer";
-            this.openInExplorerToolStripMenuItem.Click += new System.EventHandler(this.OpenInExplorerToolStripMenuItem_Click);
+            this.tsmiPubgLookup.Name = "tsmiPubgLookup";
+            this.tsmiPubgLookup.Size = new System.Drawing.Size(211, 22);
+            this.tsmiPubgLookup.Text = "Open in pubglookup.com";
             // 
-            // copyPathToolStripMenuItem
+            // tsmiOpenInFileExplorer
             // 
-            this.copyPathToolStripMenuItem.Name = "copyPathToolStripMenuItem";
-            this.copyPathToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
-            this.copyPathToolStripMenuItem.Text = "Copy Path";
-            this.copyPathToolStripMenuItem.Click += new System.EventHandler(this.CopyPathToolStripMenuItem_Click);
+            this.tsmiOpenInFileExplorer.Name = "tsmiOpenInFileExplorer";
+            this.tsmiOpenInFileExplorer.Size = new System.Drawing.Size(211, 22);
+            this.tsmiOpenInFileExplorer.Text = "Open in File Explorer";
+            this.tsmiOpenInFileExplorer.Click += new System.EventHandler(this.TsmiOpenInFileExplorer_Click);
+            // 
+            // tsmiCopyPath
+            // 
+            this.tsmiCopyPath.Name = "tsmiCopyPath";
+            this.tsmiCopyPath.Size = new System.Drawing.Size(211, 22);
+            this.tsmiCopyPath.Text = "Copy Path";
+            this.tsmiCopyPath.Click += new System.EventHandler(this.TsmiCopyPath_Click);
             // 
             // splitContainer1
             // 
@@ -211,6 +222,11 @@
             this.buttonNext.UseVisualStyleBackColor = true;
             this.buttonNext.Click += new System.EventHandler(this.ButtonNext_Click);
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(208, 6);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -248,10 +264,12 @@
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button buttonOptions;
         private System.Windows.Forms.ContextMenuStrip contextMenuMatches;
-        private System.Windows.Forms.ToolStripMenuItem openInExplorerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem copyPathToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem tsmiOpenInFileExplorer;
+        private System.Windows.Forms.ToolStripMenuItem tsmiCopyPath;
         private System.Windows.Forms.Button buttonSearch;
         private System.Windows.Forms.Button buttonNext;
+        private System.Windows.Forms.ToolStripMenuItem tsmiPubgLookup;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }
 
