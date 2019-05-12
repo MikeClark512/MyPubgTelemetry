@@ -57,7 +57,9 @@ namespace MyPubgTelemetry.Downloader
             }
             //List<JToken> matches = playerObj.SelectToken("data[0].relationships.matches.data").ToList();//["data"][0]["relationships"]["matches"]["data"].ToList();
             if (System.Diagnostics.Debugger.IsAttached)
+            {
                 Console.ReadKey();
+            }
         }
 
 
