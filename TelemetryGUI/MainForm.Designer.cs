@@ -29,8 +29,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.contextMenuMatches = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tsmiPubgLookup = new System.Windows.Forms.ToolStripMenuItem();
@@ -65,18 +65,18 @@
             this.chart1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea1.Name = "Default";
-            this.chart1.ChartAreas.Add(chartArea1);
-            legend1.Alignment = System.Drawing.StringAlignment.Center;
-            legend1.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend1.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
-            legend1.Name = "Legend1";
-            legend1.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
-            this.chart1.Legends.Add(legend1);
+            chartArea2.Name = "Default";
+            this.chart1.ChartAreas.Add(chartArea2);
+            legend2.Alignment = System.Drawing.StringAlignment.Center;
+            legend2.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend2.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
+            legend2.Name = "Legend1";
+            legend2.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
+            this.chart1.Legends.Add(legend2);
             this.chart1.Location = new System.Drawing.Point(0, 0);
             this.chart1.Name = "chart1";
-            this.chart1.Size = new System.Drawing.Size(655, 515);
-            this.chart1.TabIndex = 0;
+            this.chart1.Size = new System.Drawing.Size(621, 515);
+            this.chart1.TabIndex = 6;
             this.chart1.Text = "chart1";
             // 
             // contextMenuMatches
@@ -139,8 +139,8 @@
             this.splitContainer1.Panel2.Controls.Add(this.buttonNext);
             this.splitContainer1.Panel2.Controls.Add(this.chart1);
             this.splitContainer1.Size = new System.Drawing.Size(982, 557);
-            this.splitContainer1.SplitterDistance = 323;
-            this.splitContainer1.TabIndex = 2;
+            this.splitContainer1.SplitterDistance = 357;
+            this.splitContainer1.TabIndex = 5;
             // 
             // dataGridView1
             // 
@@ -151,11 +151,13 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.ContextMenuStrip = this.contextMenuMatches;
             this.dataGridView1.Location = new System.Drawing.Point(0, 68);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(320, 447);
-            this.dataGridView1.TabIndex = 0;
+            this.dataGridView1.Size = new System.Drawing.Size(354, 447);
+            this.dataGridView1.StandardTab = true;
+            this.dataGridView1.TabIndex = 1;
             this.dataGridView1.SelectionChanged += new System.EventHandler(this.DataGridView1_SelectionChanged);
             // 
             // buttonSearch
@@ -164,7 +166,7 @@
             this.buttonSearch.Location = new System.Drawing.Point(0, 40);
             this.buttonSearch.Name = "buttonSearch";
             this.buttonSearch.Size = new System.Drawing.Size(23, 22);
-            this.buttonSearch.TabIndex = 2;
+            this.buttonSearch.TabIndex = 3;
             this.buttonSearch.Text = " ";
             this.toolTip1.SetToolTip(this.buttonSearch, "Search match metadata\r\nShortcut = Ctrl+F\r\nFind Next = F3");
             this.buttonSearch.Click += new System.EventHandler(this.ButtonSearch_Click);
@@ -175,8 +177,8 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOptions.Location = new System.Drawing.Point(0, 521);
             this.buttonOptions.Name = "buttonOptions";
-            this.buttonOptions.Size = new System.Drawing.Size(321, 23);
-            this.buttonOptions.TabIndex = 1;
+            this.buttonOptions.Size = new System.Drawing.Size(355, 23);
+            this.buttonOptions.TabIndex = 2;
             this.buttonOptions.Text = "&Options...";
             this.buttonOptions.UseVisualStyleBackColor = true;
             this.buttonOptions.Click += new System.EventHandler(this.ButtonOptions_Click);
@@ -187,7 +189,7 @@
             this.buttonRefresh.Location = new System.Drawing.Point(0, 2);
             this.buttonRefresh.Name = "buttonRefresh";
             this.buttonRefresh.Size = new System.Drawing.Size(23, 22);
-            this.buttonRefresh.TabIndex = 3;
+            this.buttonRefresh.TabIndex = 4;
             this.buttonRefresh.Text = " ";
             this.buttonRefresh.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.toolTip1.SetToolTip(this.buttonRefresh, "Refresh matches list using squad");
@@ -199,7 +201,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxSquad.Location = new System.Drawing.Point(63, 4);
             this.textBoxSquad.Name = "textBoxSquad";
-            this.textBoxSquad.Size = new System.Drawing.Size(257, 20);
+            this.textBoxSquad.Size = new System.Drawing.Size(291, 20);
             this.textBoxSquad.TabIndex = 0;
             this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSquad_KeyDown);
             // 
@@ -225,10 +227,10 @@
             // buttonNext
             // 
             this.buttonNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonNext.Location = new System.Drawing.Point(569, 521);
+            this.buttonNext.Location = new System.Drawing.Point(535, 521);
             this.buttonNext.Name = "buttonNext";
             this.buttonNext.Size = new System.Drawing.Size(83, 23);
-            this.buttonNext.TabIndex = 0;
+            this.buttonNext.TabIndex = 7;
             this.buttonNext.Text = "Next";
             this.buttonNext.UseVisualStyleBackColor = true;
             this.buttonNext.Click += new System.EventHandler(this.ButtonNext_Click);
