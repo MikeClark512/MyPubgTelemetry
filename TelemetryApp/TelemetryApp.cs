@@ -43,6 +43,7 @@ namespace MyPubgTelemetry
             DefaultApiKeyFile = Path.Combine(AppDir, "pubg-apikey.txt");
             Directory.CreateDirectory(AppDir);
             Directory.CreateDirectory(TelemetryDir);
+            Directory.CreateDirectory(MatchDir);
             if (File.Exists(DefaultApiKeyFile))
             {
                 ApiKey = File.ReadAllText(DefaultApiKeyFile)?.Trim();

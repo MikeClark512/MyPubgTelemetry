@@ -67,7 +67,21 @@ namespace MyPubgTelemetry.Downloader
             ref int nDownloaded, ref int nCacheHits)
         {
             string mtOutputFileName = "mt-" + matchId + ".json";
+            string mmOutputFileName = "mm-" + matchId + ".json";
             string mtOutputFilePath = Path.Combine(app.TelemetryDir, mtOutputFileName);
+            string mmOutputFilePath = Path.Combine(app.MatchDir, mmOutputFileName);
+
+            string matchJson = null;
+            if (!File.Exists(mmOutputFilePath))
+            {
+                matchJson = PrettyPrintJson(ApiGetMatch(app, matchId));
+                File.WriteAllText(mmOutputFilePath, matchJson);
+                ConsoleRewrite($"[{counter}/{count}] Downloading match metadata.");
+            }
+            else
+            {
+                matchJson = File.ReadAllText(mmOutputFilePath);
+            }
             if (File.Exists(mtOutputFilePath))
             {
 
@@ -75,7 +89,6 @@ namespace MyPubgTelemetry.Downloader
                 nCacheHits++;
                 return;
             }
-            string matchJson = ApiGetMatch(app, matchId);
             JObject oMatch = JObject.Parse(matchJson);
             string telemetryId = oMatch.SelectToken("data.relationships.assets.data[0].id").Value<string>();
             JToken oIncluded = oMatch["included"];

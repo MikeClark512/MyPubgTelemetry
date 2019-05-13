@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -40,6 +41,7 @@ namespace MyPubgTelemetry.GUI
         public MainForm()
         {
             InitializeComponent();
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             App = new TelemetryApp();
             InitChart();
             InitMatchesList();
@@ -85,9 +87,20 @@ namespace MyPubgTelemetry.GUI
             //dataGridView1.DataSource = _dataTable;
             dataGridView1.KeyDown += delegate (object sender, KeyEventArgs args)
             {
-                if (args.KeyCode != Keys.Tab) return;
-                bool forward = !args.Modifiers.HasFlag(Keys.Shift);
-                SelectNextControl((Control)sender, forward, true, false, true);
+                switch (args.KeyCode)
+                {
+                    case Keys.Enter:
+                        args.Handled = true;
+                        break;
+                }
+            };
+            dataGridView1.MouseDown += delegate(object sender, MouseEventArgs args)
+            {
+                DataGridView.HitTestInfo hti = dataGridView1.HitTest(args.X, args.Y);
+                if (hti.RowIndex >= 0)
+                {
+                    dataGridView1.Rows[hti.RowIndex].Selected = true;
+                }
             };
 
             dataGridView1.ColumnCount = 2;
@@ -172,13 +185,6 @@ namespace MyPubgTelemetry.GUI
             var di = new DirectoryInfo(App.TelemetryDir);
             var telFiles = di.GetFiles("*.json").Select(x => new TelemetryFile { FileInfo = x, Title = "" }).ToList();
             telFiles.Sort((x, y) => y.FileInfo.CreationTime.CompareTo(x.FileInfo.CreationTime));
-            //foreach (TelemetryFile tf in telFiles)
-            //{
-            //    _dataTable.Rows.Add(tf.Title, tf.FileInfo.LastWriteTime);
-            //}
-            //var binding = new BindingSource { DataSource = telFiles };
-            //listBoxMatches.DisplayMember = "Title";
-            //listBoxMatches.DataSource = binding;
             BindingListView<TelemetryFile> blv = new BindingListView<TelemetryFile>(telFiles);
             dataGridView1.DataSource = blv;
             DataGridViewColumn c0 = dataGridView1.Columns[0];
@@ -187,17 +193,17 @@ namespace MyPubgTelemetry.GUI
             c1.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
             toolStripProgressBar1.Maximum = telFiles.Count;
             toolStripProgressBar1.Visible = true;
-            Task.Run(() => UpdateMatchListTitles(telFiles, squaddies));
+            Task.Run(() => UpdateMatchListMetaData(telFiles, squaddies));
         }
 
-        private void UpdateMatchListTitles(List<TelemetryFile> telFiles, string[] squaddies)
+        private void UpdateMatchListMetaData(List<TelemetryFile> telFiles, string[] squaddies)
         {
             List<Task> tasks = new List<Task>();
             for (int i = 0; i < telFiles.Count; i++)
             {
                 TelemetryFile file = telFiles[i];
                 file.Index = i;
-                Task task = _taskFactory.StartNew(() => UpdateMatchListTitle(file, squaddies, () =>
+                Task task = _taskFactory.StartNew(() => ReadTelemetryMetaData(file, () =>
                 {
                     file.MetaDataLoaded = true;
                     BeginInvoke((MethodInvoker) delegate()
@@ -207,7 +213,6 @@ namespace MyPubgTelemetry.GUI
                 }));
                 tasks.Add(task);
             }
-
             _taskFactory.ContinueWhenAny(tasks.ToArray(), (_) =>
             {
                 BeginInvoke((MethodInvoker) delegate()
@@ -217,17 +222,16 @@ namespace MyPubgTelemetry.GUI
             });
             _taskFactory.ContinueWhenAll(tasks.ToArray(), (_) =>
             {
-                DebugThreadWriteLine("Done loading metadata.");
+                DebugThreadWriteLine("Done loading metadata (worker).");
                 BeginInvoke((MethodInvoker) delegate()
                 {
-                    DebugThreadWriteLine("Done loading metadata.");
+                    DebugThreadWriteLine("Done loading metadata (UI).");
                     ReloadingMetaData = false;
                     dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
                     toolStripProgressBar1.Visible = false;
                     dataGridView1.Sort(dataGridView1.Columns[1], ListSortDirection.Descending);
                 });
             });
-
             void UiUpdateOneFile(TelemetryFile telemetryFile)
             {
                 int loadedCount = telFiles.Count(x => x.MetaDataLoaded);
@@ -260,7 +264,7 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
-        private void UpdateMatchListTitle(TelemetryFile file, string[] squaddies, Action after)
+        private void ReadTelemetryMetaData(TelemetryFile file, Action after)
         {
             using (var sr = new StreamReader(file.FileInfo.FullName))
             {
@@ -320,10 +324,16 @@ namespace MyPubgTelemetry.GUI
             fname = Path.GetFileNameWithoutExtension(fname);
             const string pfx = "mt-";
             if (fname.StartsWith(pfx))
+            {
                 fname = fname.Substring(pfx.Length);
+            }
             AccountIds.TryGetValue(user, out string accountId);
-            if (accountId == null)
-                return;
+            if (accountId == null) return;
+            WebClient wc = new WebClient();
+            var values = new System.Collections.Specialized.NameValueCollection();
+            values.Add("region", "pc-na");
+            values.Add("player_name", user);
+            wc.UploadValues("https://pubglookup.com/search", "POST", values);
             Task.Run(() =>
             {
                 string matchId = fname;
@@ -526,12 +536,6 @@ namespace MyPubgTelemetry.GUI
             optionsForm.ShowDialog(this);
         }
 
-        //TODO
-        private void ListBoxMatches_MouseDown(object sender, MouseEventArgs e)
-        {
-            //listBoxMatches.SelectedIndex = listBoxMatches.IndexFromPoint(e.Location);
-        }
-
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (ModifierKeys.HasFlag(Keys.Control))
@@ -612,41 +616,37 @@ namespace MyPubgTelemetry.GUI
 
         private void ButtonNext_Click(object sender, EventArgs e)
         {
-            int rot = chart1.ChartAreas["Default"].Area3DStyle.Rotation;
+            int rot = chart1.ChartAreas[0].Area3DStyle.Rotation;
             rot = (rot + 5) % 180;
-            chart1.ChartAreas["Default"].Area3DStyle.Rotation = rot;
+            chart1.ChartAreas[0].Area3DStyle.Rotation = rot;
         }
 
         private void TsmiCopyPath_Click(object sender, EventArgs e)
         {
-            //TODO
-            //var file = (TelemetryFile)listBoxMatches.SelectedItem;
-            //Clipboard.SetText(file.FileInfo.FullName);
+            var file = GetSelectedMatch();
+            Clipboard.SetText(file.FileInfo.FullName);
         }
 
         private void TsmiOpenInFileExplorer_Click(object sender, EventArgs e)
         {
-            //TODO
-            //var file = (TelemetryFile)listBoxMatches.SelectedItem;
-            //Process.Start("explorer.exe", "/select," + file.FileInfo.FullName);
+            var file = GetSelectedMatch();
+            Process.Start("explorer.exe", "/select," + file.FileInfo.FullName);
         }
 
         private void ContextMenuMatches_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            //TODO
-            //var file = (TelemetryFile)listBoxMatches.SelectedItem;
-            //if (file.Squad == null || file.Squad.Count == 0) return;
-            //tsmiPubgLookup.DropDownItems.Clear();
-            //foreach (string squadTeamMember in file.Squad)
-            //{
-            //    ToolStripMenuItem tsmi = new ToolStripMenuItem(squadTeamMember, null, (_, __) =>
-            //    {
-            //        PubgLookup(file, squadTeamMember);
-            //    });
-            //    tsmiPubgLookup.DropDownItems.Add(tsmi);
-            //}
+            var file = GetSelectedMatch();
+            if (file.Squad == null || file.Squad.Count == 0) return;
+            tsmiPubgLookup.DropDownItems.Clear();
+            foreach (string squadTeamMember in file.Squad)
+            {
+                ToolStripMenuItem tsmi = new ToolStripMenuItem(squadTeamMember, null, (_, __) =>
+                {
+                    PubgLookup(file, squadTeamMember);
+                });
+                tsmiPubgLookup.DropDownItems.Add(tsmi);
+            }
         }
-
 
         private static TelemetryFile GetPrimarySelectedValue3(DataGridView dgv)
         {
@@ -701,7 +701,6 @@ namespace MyPubgTelemetry.GUI
             ClearChart(chart1);
             Task.Run(() => SwitchMatch(file, CancellationTokenSourceMatchSwitch.Token));
         }
-
     }
 
 }
