@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -66,6 +67,14 @@ namespace MyPubgTelemetry
         public string accountId;
     }
 
+    public class TelemetryFile
+    {
+        public FileInfo FileInfo { set; get; }
+        public string Title { set; get; }
+        public DateTime? Date { get; set; }
+        public ISet<string> Squad { get; set; }
+    }
+
     public static class TelemetryAppExtensions
     {
         public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dict, K key)
@@ -93,11 +102,4 @@ namespace MyPubgTelemetry
         }
     }
 
-    public class TelemetryFile
-    {
-        public FileInfo FileInfo { set; get; }
-        public string Title { set; get; }
-        public DateTime Date { get; set; }
-        public ISet<string> Squad { get; set; }
-    }
 }
