@@ -15,6 +15,7 @@ namespace MyPubgTelemetry
         public string AppName { get; }
         public string AppDir { get; }
         public string TelemetryDir { get; }
+        public string MatchDir { get; }
         public HttpClient HttpClient { get; }
         private string _apiKey;
 
@@ -37,6 +38,7 @@ namespace MyPubgTelemetry
             HttpClient.BaseAddress = new Uri("https://api.pubg.com/shards/steam/");
             AppName = Assembly.GetExecutingAssembly().GetTypes().Select(x => x.Namespace).First().Split('.').First();
             AppDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppName);
+            MatchDir = Path.Combine(AppDir, "match_files");
             TelemetryDir = Path.Combine(AppDir, "telemetry_files");
             DefaultApiKeyFile = Path.Combine(AppDir, "pubg-apikey.txt");
             Directory.CreateDirectory(AppDir);
@@ -46,6 +48,16 @@ namespace MyPubgTelemetry
                 ApiKey = File.ReadAllText(DefaultApiKeyFile)?.Trim();
             }
         }
+    }
+
+    public class TelemetryFile
+    {
+        public FileInfo FileInfo { set; get; }
+        public string Title { set; get; }
+        public DateTime? MatchDate { get; set; }
+        public ISet<string> Squad { get; set; }
+        public bool MetaDataLoaded { get; set; }
+        public int Index { get; set; }
     }
 
     public class TelemetryEvent
@@ -65,14 +77,6 @@ namespace MyPubgTelemetry
         public float health;
         public int teamId = -1;
         public string accountId;
-    }
-
-    public class TelemetryFile
-    {
-        public FileInfo FileInfo { set; get; }
-        public string Title { set; get; }
-        public DateTime? Date { get; set; }
-        public ISet<string> Squad { get; set; }
     }
 
     public static class TelemetryAppExtensions
