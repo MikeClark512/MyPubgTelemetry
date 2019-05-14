@@ -66,7 +66,7 @@ namespace MyPubgTelemetry.Downloader
         public void DownloadTelemetryForMatchId(TelemetryApp app, string matchId, int counter, int count,
             ref int nDownloaded, ref int nCacheHits)
         {
-            string mtOutputFileName = "mt-" + matchId + ".json";
+            string mtOutputFileName = "mt-" + matchId + ".json.gz";
             string mmOutputFileName = "mm-" + matchId + ".json";
             string mtOutputFilePath = Path.Combine(app.TelemetryDir, mtOutputFileName);
             string mmOutputFilePath = Path.Combine(app.MatchDir, mmOutputFileName);
@@ -99,8 +99,18 @@ namespace MyPubgTelemetry.Downloader
                 Uri uri = new Uri(url);
                 ConsoleRewrite($"[{counter}/{count}] Downloading {uri.AbsolutePath}");
                 string pJson = PrettyPrintJsonStream(stream);
-                File.WriteAllText(mtOutputFilePath, pJson, Encoding.UTF8);
+                WriteStringToGzFile(mtOutputFilePath, pJson);
                 nDownloaded++;
+            }
+        }
+
+        private void WriteStringToGzFile(string outputFilePath, string pJson)
+        {
+            using (var fs = new FileStream(outputFilePath, FileMode.OpenOrCreate))
+            using (var gz = new GZipStream(fs, CompressionLevel.Optimal))
+            using (var sw = new StreamWriter(gz, Encoding.UTF8))
+            {
+                sw.Write(pJson);
             }
         }
 

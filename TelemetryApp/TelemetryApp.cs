@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -57,8 +58,42 @@ namespace MyPubgTelemetry
         public string Title { set; get; }
         public DateTime? MatchDate { get; set; }
         public ISet<string> Squad { get; set; }
-        public bool MetaDataLoaded { get; set; }
+        public bool TelemetryMetaDataLoaded { get; set; }
         public int Index { get; set; }
+        public int SquadKills { get; set; }
+        public PreparedData PreparedData { get; set; }
+
+        public StreamReader NewTelemetryReader()
+        {
+            Stream stream = new BufferedStream(FileInfo.OpenRead(), 1024 * 10);
+            if (FileInfo.Name.EndsWith(".gz", StringComparison.CurrentCultureIgnoreCase))
+            {
+                stream = new GZipStream(stream, CompressionMode.Decompress);
+            }
+            var streamReader = new StreamReader(stream);
+            return streamReader;
+        }
+
+        public Stream NewMatchMetaDataReader()
+        {
+            BufferedStream bufferedStream = new BufferedStream(FileInfo.OpenRead(), 1024 * 10);
+            if (FileInfo.Name.EndsWith(".gz", StringComparison.CurrentCultureIgnoreCase))
+            {
+                return new GZipStream(bufferedStream, CompressionMode.Decompress);
+            }
+            return bufferedStream;
+        }
+    }
+
+    public class PreparedData
+    {
+        public Dictionary<string, List<TelemetryEvent>> PlayerToEvents { get; } =
+            new Dictionary<string, List<TelemetryEvent>>();
+        public Dictionary<DateTime, Dictionary<string, List<TelemetryEvent>>> TimeToPlayerToEvents { get; } =
+            new Dictionary<DateTime, Dictionary<string, List<TelemetryEvent>>>();
+        public List<TelemetryEvent> NormalizedEvents { get; } = new List<TelemetryEvent>();
+        public HashSet<string> Squad { get; } = new HashSet<string>();
+        public TelemetryFile File { get; set; }
     }
 
     public class TelemetryEvent
@@ -69,6 +104,7 @@ namespace MyPubgTelemetry
         public TelemetryPlayer victim;
         public TelemetryPlayer character;
         public TelemetryPlayer attacker;
+        public TelemetryPlayer killer;
         public bool skip;
     }
 
@@ -82,28 +118,26 @@ namespace MyPubgTelemetry
 
     public static class TelemetryAppExtensions
     {
-        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dict, K key)
+        public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key)
         {
-            return dict.GetValueOrDefault(key, default(V));
+            return dict.GetValueOrDefault(key, default(TValue));
         }
 
-        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dict, K key, V defVal)
+        public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue defVal)
         {
             return dict.GetValueOrDefault(key, () => defVal);
         }
 
-        public static V GetOrAdd<K, V>(this IDictionary<K, V> dict, K key, Func<V> defValSelector)
+        public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, Func<TValue> defValSelector)
         {
-            V value;
-            if (!dict.TryGetValue(key, out value))
+            if (!dict.TryGetValue(key, out TValue value))
                 dict.Add(key, value = defValSelector());
             return value;
         }
 
         public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dict, K key, Func<V> defValSelector)
         {
-            V value;
-            return dict.TryGetValue(key, out value) ? value : defValSelector();
+            return dict.TryGetValue(key, out V value) ? value : defValSelector();
         }
     }
 
