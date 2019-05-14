@@ -98,13 +98,13 @@ namespace MyPubgTelemetry.Downloader
             {
                 Uri uri = new Uri(url);
                 ConsoleRewrite($"[{counter}/{count}] Downloading {uri.AbsolutePath}");
-                string pJson = PrettyPrintJsonStream(stream);
-                WriteStringToGzFile(mtOutputFilePath, pJson);
+                string pJson = PrettyPrintTelemetryJson(stream, out DateTime matchDateTime);
+                WriteStringToGzFile(mtOutputFilePath, pJson, matchDateTime);
                 nDownloaded++;
             }
         }
 
-        private void WriteStringToGzFile(string outputFilePath, string pJson)
+        private static void WriteStringToGzFile(string outputFilePath, string pJson, DateTime matchDateTime)
         {
             using (var fs = new FileStream(outputFilePath, FileMode.OpenOrCreate))
             using (var gz = new GZipStream(fs, CompressionLevel.Optimal))
@@ -112,6 +112,7 @@ namespace MyPubgTelemetry.Downloader
             {
                 sw.Write(pJson);
             }
+            File.SetCreationTime(outputFilePath, matchDateTime);
         }
 
         private void ConsoleRewrite(string msg)
@@ -135,10 +136,11 @@ namespace MyPubgTelemetry.Downloader
             return app.HttpClient.GetStringAsync("matches/" + matchId).Result;
         }
 
-        public static string PrettyPrintJsonStream(Stream stream)
+        public static string PrettyPrintTelemetryJson(Stream stream, out DateTime dt)
         {
-            JToken jsonObject = JToken.Load(new JsonTextReader(new StreamReader(stream, Encoding.UTF8)));
-            return jsonObject.ToString(Formatting.Indented);
+            JArray json = JArray.Load(new JsonTextReader(new StreamReader(stream, Encoding.UTF8)));
+            dt = json[0]["_D"].Value<DateTime>();
+            return json.ToString(Formatting.Indented);
         }
 
         public static string PrettyPrintJson(string json)

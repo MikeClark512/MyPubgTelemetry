@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace MyPubgTelemetry
 {
@@ -14,7 +16,7 @@ namespace MyPubgTelemetry
     {
         public string DefaultApiKeyFile { get; }
         public string AppName { get; }
-        public string AppDir { get; }
+        public string DataDir { get; }
         public string TelemetryDir { get; }
         public string MatchDir { get; }
         public HttpClient HttpClient { get; }
@@ -38,17 +40,33 @@ namespace MyPubgTelemetry
             HttpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
             HttpClient.BaseAddress = new Uri("https://api.pubg.com/shards/steam/");
             AppName = Assembly.GetExecutingAssembly().GetTypes().Select(x => x.Namespace).First().Split('.').First();
-            AppDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppName);
-            MatchDir = Path.Combine(AppDir, "match_files");
-            TelemetryDir = Path.Combine(AppDir, "telemetry_files");
-            DefaultApiKeyFile = Path.Combine(AppDir, "pubg-apikey.txt");
-            Directory.CreateDirectory(AppDir);
+            DataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppName);
+            MatchDir = Path.Combine(DataDir, "match_files");
+            TelemetryDir = Path.Combine(DataDir, "telemetry_files");
+            DefaultApiKeyFile = Path.Combine(DataDir, "pubg-apikey.txt");
+            Directory.CreateDirectory(DataDir);
             Directory.CreateDirectory(TelemetryDir);
             Directory.CreateDirectory(MatchDir);
             if (File.Exists(DefaultApiKeyFile))
             {
                 ApiKey = File.ReadAllText(DefaultApiKeyFile)?.Trim();
             }
+        }
+
+        public static void OpenFolderInFileExplorer(string path)
+        {
+            Process.Start("explorer.exe", path);
+        }
+
+        public static void SelectFileInFileExplorer(string dir)
+        {
+            Process.Start("explorer.exe", "/select," + dir);
+        }
+
+        public static void OpenUrlInWebBrowser(string url)
+        {
+            ProcessStartInfo psi = new ProcessStartInfo(url) {UseShellExecute = true};
+            Process.Start(psi);
         }
     }
 

@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.Configuration;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace MyPubgTelemetry.GUI
 {
@@ -23,8 +19,15 @@ namespace MyPubgTelemetry.GUI
         private void OptionsForm_Load(object sender, EventArgs e)
         {
             App = new TelemetryApp();
-            textBox1.Text = App.ApiKey;
+            textBoxApiKey.Text = App.ApiKey;
             MinimumSize = Size;
+            textBoxSettingsDir.Text = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+            textBoxDataDir.Text = App.DataDir;
+            int linksCount = labelApiKey.Links.Count;
+            foreach (LinkLabel.Link link in labelApiKey.Links)
+            {
+                Debug.WriteLine($"link {link.Name} {link.Start} {link.Length}");
+            }
         }
 
         private void ButtonCancel_Click(object sender, EventArgs e)
@@ -34,8 +37,36 @@ namespace MyPubgTelemetry.GUI
 
         private void ButtonOK_Click(object sender, EventArgs e)
         {
-            File.WriteAllText(App.DefaultApiKeyFile, textBox1.Text);
+            File.WriteAllText(App.DefaultApiKeyFile, textBoxApiKey.Text);
             Close();
+        }
+
+        private void ButtonSettingsDirOpenInFileExplorer_Click(object sender, EventArgs e)
+        {
+            TelemetryApp.SelectFileInFileExplorer(textBoxSettingsDir.Text);
+        }
+
+        private void ButtonDataDirOpenInFileExplorer_Click(object sender, EventArgs e)
+        {
+            TelemetryApp.OpenFolderInFileExplorer(textBoxDataDir.Text);
+        }
+
+        private void ButtonDataDirBrowse_Click(object sender, EventArgs e)
+        {
+            var dlg = new CommonOpenFileDialog();
+            dlg.IsFolderPicker = true;
+            dlg.InitialDirectory = textBoxDataDir.Text;
+            //dlg.RootFolder = Environment.SpecialFolder.MyComputer;
+            CommonFileDialogResult result = dlg.ShowDialog();
+            if (result == CommonFileDialogResult.Ok)
+            {
+                textBoxDataDir.Text = dlg.FileName;
+            }
+        }
+
+        private void LabelApiKey_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            TelemetryApp.OpenUrlInWebBrowser("https://developer.pubg.com/");
         }
     }
 }
