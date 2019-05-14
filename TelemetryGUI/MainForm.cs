@@ -109,20 +109,22 @@ namespace MyPubgTelemetry.GUI
             dataGridView1.Columns[0].DataPropertyName = "Title";
             dataGridView1.Columns[0].ValueType = typeof(string);
             dataGridView1.Columns[0].SortMode = DataGridViewColumnSortMode.NotSortable;
-            dataGridView1.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-
+            dataGridView1.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            dataGridView1.Columns[0].Frozen = false;
 
             dataGridView1.Columns[1].Name = "Date";
             dataGridView1.Columns[1].DataPropertyName = "MatchDate";
             dataGridView1.Columns[1].ValueType = typeof(DateTime);
             dataGridView1.Columns[1].SortMode = DataGridViewColumnSortMode.NotSortable;
             dataGridView1.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            dataGridView1.Columns[1].Frozen = false;
 
             dataGridView1.Columns[2].Name = "SquadKills";
             dataGridView1.Columns[2].DataPropertyName = "SquadKills";
             dataGridView1.Columns[2].ValueType = typeof(DateTime);
             dataGridView1.Columns[2].SortMode = DataGridViewColumnSortMode.NotSortable;
-            dataGridView1.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            dataGridView1.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            dataGridView1.Columns[2].Frozen = false;
         }
 
         private void InitChart()
@@ -245,7 +247,7 @@ namespace MyPubgTelemetry.GUI
                 {
                     DebugThreadWriteLine("Done loading metadata (UI).");
                     ReloadingMetaData = false;
-                    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                    //dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
                     toolStripProgressBar1.Visible = false;
                     for (int col = 0; col < dataGridView1.ColumnCount; col++)
                     {
@@ -339,11 +341,6 @@ namespace MyPubgTelemetry.GUI
                             }
                         }
                     }
-
-                    //else if (@event._T == "LogMatchEnd")
-                    //{
-                    //    break;
-                    //}
                 }
 
                 foreach (var @event in pd.NormalizedEvents)
@@ -399,7 +396,7 @@ namespace MyPubgTelemetry.GUI
             Task.Run(() =>
             {
                 string matchId = fname;
-                Process.Start($"https://pubglookup.com/players/find/{accountId}/{matchId}");
+                TelemetryApp.OpenUrlInWebBrowser($"https://pubglookup.com/players/find/{accountId}/{matchId}");
             });
         }
 
@@ -584,7 +581,7 @@ namespace MyPubgTelemetry.GUI
         {
             if (ModifierKeys.HasFlag(Keys.Control))
             {
-                Process.Start(App.AppDir);
+                Process.Start(App.DataDir);
             }
             else
             {
@@ -642,6 +639,7 @@ namespace MyPubgTelemetry.GUI
                 if (ovtf.Object == path)
                 {
                     row.Selected = true;
+                    dataGridView1.FirstDisplayedScrollingRowIndex = row.Index;
                     break;
                 }
             }

@@ -63,6 +63,36 @@ namespace MyPubgTelemetry.GUI.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap FindinFiles_16x {
+            get {
+                object obj = ResourceManager.GetObject("FindinFiles_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap OpenFolder_16x {
+            get {
+                object obj = ResourceManager.GetObject("OpenFolder_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap OpeninFileExplorer_16x {
+            get {
+                object obj = ResourceManager.GetObject("OpeninFileExplorer_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Refresh_greyThin_16x {
             get {
                 object obj = ResourceManager.GetObject("Refresh_greyThin_16x", resourceCulture);

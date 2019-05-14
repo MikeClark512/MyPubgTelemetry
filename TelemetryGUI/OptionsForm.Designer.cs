@@ -28,10 +28,25 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOk = new System.Windows.Forms.Button();
-            this.labelApiKey = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.labelApiKey = new System.Windows.Forms.LinkLabel();
+            this.textBoxApiKey = new System.Windows.Forms.TextBox();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabPageGeneral = new System.Windows.Forms.TabPage();
+            this.tabPagePaths = new System.Windows.Forms.TabPage();
+            this.buttonSettingsDirOpenInFileExplorer = new System.Windows.Forms.Button();
+            this.buttonDataDirOpenInFileExplorer = new System.Windows.Forms.Button();
+            this.buttonDataDirBrowse = new System.Windows.Forms.Button();
+            this.textBoxSettingsDir = new System.Windows.Forms.TextBox();
+            this.labelSettingsDir = new System.Windows.Forms.Label();
+            this.textBoxDataDir = new System.Windows.Forms.TextBox();
+            this.labelDataDir = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.tabControl1.SuspendLayout();
+            this.tabPageGeneral.SuspendLayout();
+            this.tabPagePaths.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonCancel
@@ -60,22 +75,141 @@
             // labelApiKey
             // 
             this.labelApiKey.AutoSize = true;
-            this.labelApiKey.Location = new System.Drawing.Point(12, 9);
+            this.labelApiKey.Location = new System.Drawing.Point(6, 3);
             this.labelApiKey.Name = "labelApiKey";
-            this.labelApiKey.Size = new System.Drawing.Size(45, 13);
+            this.labelApiKey.Size = new System.Drawing.Size(70, 13);
             this.labelApiKey.TabIndex = 2;
-            this.labelApiKey.Text = "&API Key";
+            this.labelApiKey.TabStop = true;
+            this.labelApiKey.Text = "PUB API Key";
+            this.toolTip1.SetToolTip(this.labelApiKey, "https://developer.pubg.com\r\n\r\nFor information on how to obtain a free API key.");
+            this.labelApiKey.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LabelApiKey_LinkClicked);
             // 
-            // textBox1
+            // textBoxApiKey
             // 
-            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.textBoxApiKey.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.Location = new System.Drawing.Point(12, 25);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(497, 65);
-            this.textBox1.TabIndex = 3;
+            this.textBoxApiKey.Location = new System.Drawing.Point(9, 19);
+            this.textBoxApiKey.Multiline = true;
+            this.textBoxApiKey.Name = "textBoxApiKey";
+            this.textBoxApiKey.Size = new System.Drawing.Size(474, 58);
+            this.textBoxApiKey.TabIndex = 3;
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl1.Controls.Add(this.tabPageGeneral);
+            this.tabControl1.Controls.Add(this.tabPagePaths);
+            this.tabControl1.Location = new System.Drawing.Point(12, 12);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(497, 267);
+            this.tabControl1.TabIndex = 4;
+            // 
+            // tabPageGeneral
+            // 
+            this.tabPageGeneral.Controls.Add(this.textBoxApiKey);
+            this.tabPageGeneral.Controls.Add(this.labelApiKey);
+            this.tabPageGeneral.Location = new System.Drawing.Point(4, 22);
+            this.tabPageGeneral.Name = "tabPageGeneral";
+            this.tabPageGeneral.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageGeneral.Size = new System.Drawing.Size(489, 241);
+            this.tabPageGeneral.TabIndex = 0;
+            this.tabPageGeneral.Text = "General";
+            this.tabPageGeneral.UseVisualStyleBackColor = true;
+            // 
+            // tabPagePaths
+            // 
+            this.tabPagePaths.Controls.Add(this.buttonSettingsDirOpenInFileExplorer);
+            this.tabPagePaths.Controls.Add(this.buttonDataDirOpenInFileExplorer);
+            this.tabPagePaths.Controls.Add(this.buttonDataDirBrowse);
+            this.tabPagePaths.Controls.Add(this.textBoxSettingsDir);
+            this.tabPagePaths.Controls.Add(this.labelSettingsDir);
+            this.tabPagePaths.Controls.Add(this.textBoxDataDir);
+            this.tabPagePaths.Controls.Add(this.labelDataDir);
+            this.tabPagePaths.Location = new System.Drawing.Point(4, 22);
+            this.tabPagePaths.Name = "tabPagePaths";
+            this.tabPagePaths.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPagePaths.Size = new System.Drawing.Size(489, 241);
+            this.tabPagePaths.TabIndex = 1;
+            this.tabPagePaths.Text = "Paths";
+            this.tabPagePaths.UseVisualStyleBackColor = true;
+            // 
+            // buttonSettingsDirOpenInFileExplorer
+            // 
+            this.buttonSettingsDirOpenInFileExplorer.Image = global::MyPubgTelemetry.GUI.Properties.Resources.OpeninFileExplorer_16x;
+            this.buttonSettingsDirOpenInFileExplorer.Location = new System.Drawing.Point(459, 31);
+            this.buttonSettingsDirOpenInFileExplorer.Name = "buttonSettingsDirOpenInFileExplorer";
+            this.buttonSettingsDirOpenInFileExplorer.Size = new System.Drawing.Size(24, 22);
+            this.buttonSettingsDirOpenInFileExplorer.TabIndex = 6;
+            this.toolTip1.SetToolTip(this.buttonSettingsDirOpenInFileExplorer, "Open in File Explorer");
+            this.buttonSettingsDirOpenInFileExplorer.UseVisualStyleBackColor = true;
+            this.buttonSettingsDirOpenInFileExplorer.Click += new System.EventHandler(this.ButtonSettingsDirOpenInFileExplorer_Click);
+            // 
+            // buttonDataDirOpenInFileExplorer
+            // 
+            this.buttonDataDirOpenInFileExplorer.Image = global::MyPubgTelemetry.GUI.Properties.Resources.OpeninFileExplorer_16x;
+            this.buttonDataDirOpenInFileExplorer.Location = new System.Drawing.Point(459, 5);
+            this.buttonDataDirOpenInFileExplorer.Name = "buttonDataDirOpenInFileExplorer";
+            this.buttonDataDirOpenInFileExplorer.Size = new System.Drawing.Size(24, 22);
+            this.buttonDataDirOpenInFileExplorer.TabIndex = 5;
+            this.toolTip1.SetToolTip(this.buttonDataDirOpenInFileExplorer, "Open in File Explorer");
+            this.buttonDataDirOpenInFileExplorer.UseVisualStyleBackColor = true;
+            this.buttonDataDirOpenInFileExplorer.Click += new System.EventHandler(this.ButtonDataDirOpenInFileExplorer_Click);
+            // 
+            // buttonDataDirBrowse
+            // 
+            this.buttonDataDirBrowse.Location = new System.Drawing.Point(429, 5);
+            this.buttonDataDirBrowse.Name = "buttonDataDirBrowse";
+            this.buttonDataDirBrowse.Size = new System.Drawing.Size(24, 22);
+            this.buttonDataDirBrowse.TabIndex = 4;
+            this.buttonDataDirBrowse.Text = "...";
+            this.toolTip1.SetToolTip(this.buttonDataDirBrowse, "Browse...");
+            this.buttonDataDirBrowse.UseVisualStyleBackColor = true;
+            this.buttonDataDirBrowse.Click += new System.EventHandler(this.ButtonDataDirBrowse_Click);
+            // 
+            // textBoxSettingsDir
+            // 
+            this.textBoxSettingsDir.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxSettingsDir.Location = new System.Drawing.Point(63, 32);
+            this.textBoxSettingsDir.Name = "textBoxSettingsDir";
+            this.textBoxSettingsDir.ReadOnly = true;
+            this.textBoxSettingsDir.Size = new System.Drawing.Size(360, 20);
+            this.textBoxSettingsDir.TabIndex = 3;
+            // 
+            // labelSettingsDir
+            // 
+            this.labelSettingsDir.AutoSize = true;
+            this.labelSettingsDir.Location = new System.Drawing.Point(6, 35);
+            this.labelSettingsDir.Name = "labelSettingsDir";
+            this.labelSettingsDir.Size = new System.Drawing.Size(51, 13);
+            this.labelSettingsDir.TabIndex = 2;
+            this.labelSettingsDir.Text = "Settings: ";
+            this.toolTip1.SetToolTip(this.labelSettingsDir, "Most application preferences are stored in this file.");
+            // 
+            // textBoxDataDir
+            // 
+            this.textBoxDataDir.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxDataDir.Location = new System.Drawing.Point(63, 6);
+            this.textBoxDataDir.Name = "textBoxDataDir";
+            this.textBoxDataDir.Size = new System.Drawing.Size(360, 20);
+            this.textBoxDataDir.TabIndex = 1;
+            // 
+            // labelDataDir
+            // 
+            this.labelDataDir.AutoSize = true;
+            this.labelDataDir.Location = new System.Drawing.Point(6, 9);
+            this.labelDataDir.Name = "labelDataDir";
+            this.labelDataDir.Size = new System.Drawing.Size(33, 13);
+            this.labelDataDir.TabIndex = 0;
+            this.labelDataDir.Text = "Data:";
+            this.toolTip1.SetToolTip(this.labelDataDir, "Telemetry data files will be stored and and read from this directory.");
             // 
             // OptionsForm
             // 
@@ -85,16 +219,19 @@
             this.CancelButton = this.buttonCancel;
             this.ClientSize = new System.Drawing.Size(521, 320);
             this.ControlBox = false;
-            this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.labelApiKey);
+            this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.buttonOk);
             this.Controls.Add(this.buttonCancel);
             this.Name = "OptionsForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Options";
             this.Load += new System.EventHandler(this.OptionsForm_Load);
+            this.tabControl1.ResumeLayout(false);
+            this.tabPageGeneral.ResumeLayout(false);
+            this.tabPageGeneral.PerformLayout();
+            this.tabPagePaths.ResumeLayout(false);
+            this.tabPagePaths.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -102,7 +239,18 @@
 
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Button buttonOk;
-        private System.Windows.Forms.Label labelApiKey;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox textBoxApiKey;
+        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabPage tabPageGeneral;
+        private System.Windows.Forms.TabPage tabPagePaths;
+        private System.Windows.Forms.Label labelDataDir;
+        private System.Windows.Forms.TextBox textBoxDataDir;
+        private System.Windows.Forms.TextBox textBoxSettingsDir;
+        private System.Windows.Forms.Label labelSettingsDir;
+        private System.Windows.Forms.Button buttonDataDirBrowse;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button buttonDataDirOpenInFileExplorer;
+        private System.Windows.Forms.Button buttonSettingsDirOpenInFileExplorer;
+        private System.Windows.Forms.LinkLabel labelApiKey;
     }
 }
