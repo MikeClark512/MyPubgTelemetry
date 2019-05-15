@@ -48,7 +48,7 @@ namespace MyPubgTelemetry.GUI
             {
                 toolStripStatusLabel1.Text = toolStripProgressBar1.Text;
             };
-            var qts = new QueuedTaskScheduler(Environment.ProcessorCount, "QTS", false, ThreadPriority.BelowNormal);
+            var qts = new QueuedTaskScheduler(Environment.ProcessorCount, "QTS", false, ThreadPriority.Lowest);
             _taskFactory = new TaskFactory(qts);
         }
 
@@ -389,7 +389,10 @@ namespace MyPubgTelemetry.GUI
         private void PubgLookup(TelemetryFile file, string user)
         {
             string fname = file.FileInfo.Name;
-            fname = Path.GetFileNameWithoutExtension(fname);
+
+            do { fname = Path.GetFileNameWithoutExtension(fname); }
+            while (fname != Path.GetFileNameWithoutExtension(fname));
+            
             const string pfx = "mt-";
             if (fname.StartsWith(pfx))
             {
@@ -404,7 +407,12 @@ namespace MyPubgTelemetry.GUI
             Task.Run(() =>
             {
                 string matchId = fname;
-                TelemetryApp.App.OpenUrlInWebBrowser($"https://pubglookup.com/players/find/{accountId}/{matchId}");
+                //
+                //TelemetryApp.App.OpenUrlInWebBrowser($"https://pubglookup.com/players/find/{accountId}/{matchId}");
+                //                                     https://pubglookup.com/players/steam/celaven/matches/b1065fd9-eaaf-4bf9-aedc-3fec6947f7a8
+                string url = $"https://pubglookup.com/players/steam/{user}/matches/{matchId}";
+                DebugThreadWriteLine("url=" + url);
+                TelemetryApp.App.OpenUrlInWebBrowser($"https://pubglookup.com/players/steam/{user}/matches/{matchId}");
             });
         }
 
