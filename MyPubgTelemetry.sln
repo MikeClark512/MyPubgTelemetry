@@ -15,14 +15,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryAnalyzer", "Teleme
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryGUI", "TelemetryGUI\TelemetryGUI.csproj", "{21BF29CD-031E-47B7-A107-5457AB26A6D5}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TelemetryApp", "TelemetryApp\TelemetryApp.shproj", "{1DED58F2-731E-414F-B2D9-7839E655A0B9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchAnalyzer", "MatchAnalyzer\MatchAnalyzer.csproj", "{669B8C07-9493-4025-B07E-E02E3F950851}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryApp", "TelemetryApp\TelemetryApp.csproj", "{573CAAC6-5626-4009-9712-9C674F4BDE56}"
 EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		TelemetryApp\TelemetryApp.projitems*{1ded58f2-731e-414f-b2d9-7839e655a0b9}*SharedItemsImports = 13
-		TelemetryApp\TelemetryApp.projitems*{21bf29cd-031e-47b7-a107-5457ab26a6d5}*SharedItemsImports = 4
-		TelemetryApp\TelemetryApp.projitems*{6386d3c6-fd98-4769-97d7-4df8f4b57c89}*SharedItemsImports = 4
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -40,6 +37,14 @@ Global
 		{21BF29CD-031E-47B7-A107-5457AB26A6D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21BF29CD-031E-47B7-A107-5457AB26A6D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{21BF29CD-031E-47B7-A107-5457AB26A6D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{669B8C07-9493-4025-B07E-E02E3F950851}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{669B8C07-9493-4025-B07E-E02E3F950851}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{669B8C07-9493-4025-B07E-E02E3F950851}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{669B8C07-9493-4025-B07E-E02E3F950851}.Release|Any CPU.Build.0 = Release|Any CPU
+		{573CAAC6-5626-4009-9712-9C674F4BDE56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{573CAAC6-5626-4009-9712-9C674F4BDE56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{573CAAC6-5626-4009-9712-9C674F4BDE56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{573CAAC6-5626-4009-9712-9C674F4BDE56}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

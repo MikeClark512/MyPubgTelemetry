@@ -27,7 +27,6 @@ namespace MyPubgTelemetry.GUI
         private InputBox MatchSearchInputBox { get; }
         private const string ChartTitleDateFormat = "M/d/yy h:mm tt";
         private const string XAxisDateFormat = "h:mm:ss tt";
-        private TelemetryApp App { get; }
         private HashSet<string> Squad { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private Regex RegexCsv { get; } = new Regex(@"\s*,\s*", RegexOptions.IgnoreCase);
         private ConcurrentDictionary<string, string> AccountIds { get; } = new ConcurrentDictionary<string, string>();
@@ -42,7 +41,6 @@ namespace MyPubgTelemetry.GUI
         {
             InitializeComponent();
             Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-            App = new TelemetryApp();
             InitChart();
             InitMatchesList();
             MatchSearchInputBox = new InputBox {InputText = Clipboard.GetText(), Text = @"Search match IDs, dates, and player names"};
@@ -194,7 +192,7 @@ namespace MyPubgTelemetry.GUI
             if (sumLen == 0) return; // nothin' but whitespace and commas.
             Squad.Clear();
             Squad.UnionWith(squaddies);
-            var di = new DirectoryInfo(App.TelemetryDir);
+            var di = new DirectoryInfo(TelemetryApp.App.TelemetryDir);
             List<FileInfo> jsonFiles = di.GetFiles("*.json").ToList();
             jsonFiles.AddRange(di.GetFiles("*.json.gz"));
             List<TelemetryFile> telFiles = jsonFiles.Select(jsonFile => new TelemetryFile {FileInfo = jsonFile, Title = ""}).ToList();
@@ -396,7 +394,7 @@ namespace MyPubgTelemetry.GUI
             Task.Run(() =>
             {
                 string matchId = fname;
-                TelemetryApp.OpenUrlInWebBrowser($"https://pubglookup.com/players/find/{accountId}/{matchId}");
+                TelemetryApp.App.OpenUrlInWebBrowser($"https://pubglookup.com/players/find/{accountId}/{matchId}");
             });
         }
 
@@ -581,7 +579,7 @@ namespace MyPubgTelemetry.GUI
         {
             if (ModifierKeys.HasFlag(Keys.Control))
             {
-                Process.Start(App.DataDir);
+                Process.Start(TelemetryApp.App.DataDir);
             }
             else
             {
@@ -692,8 +690,14 @@ namespace MyPubgTelemetry.GUI
 
         private void TsmiCopyPath_Click(object sender, EventArgs e)
         {
-            var file = GetSelectedMatch();
-            Clipboard.SetText(file.FileInfo.FullName);
+            TelemetryFile file = GetSelectedMatch();
+            string filename = file.FileInfo.Name;
+            Regex regex = new Regex(@"^(..-)?(?<id>[^.]+)\.json(\.gz)?$", RegexOptions.Multiline);
+            Match match = regex.Match(filename);
+            if (match.Success)
+            {
+                Clipboard.SetText(match.Groups["id"].Value);
+            }
         }
 
         private void TsmiOpenInFileExplorer_Click(object sender, EventArgs e)
