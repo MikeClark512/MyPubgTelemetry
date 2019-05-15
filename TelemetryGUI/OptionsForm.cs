@@ -9,8 +9,6 @@ namespace MyPubgTelemetry.GUI
 {
     public partial class OptionsForm : Form
     {
-        public TelemetryApp App { get; set; }
-
         public OptionsForm()
         {
             InitializeComponent();
@@ -18,11 +16,10 @@ namespace MyPubgTelemetry.GUI
 
         private void OptionsForm_Load(object sender, EventArgs e)
         {
-            App = new TelemetryApp();
-            textBoxApiKey.Text = App.ApiKey;
+            textBoxApiKey.Text = TelemetryApp.App.ApiKey;
             MinimumSize = Size;
             textBoxSettingsDir.Text = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
-            textBoxDataDir.Text = App.DataDir;
+            textBoxDataDir.Text = TelemetryApp.App.DataDir;
             int linksCount = labelApiKey.Links.Count;
             foreach (LinkLabel.Link link in labelApiKey.Links)
             {
@@ -37,18 +34,18 @@ namespace MyPubgTelemetry.GUI
 
         private void ButtonOK_Click(object sender, EventArgs e)
         {
-            File.WriteAllText(App.DefaultApiKeyFile, textBoxApiKey.Text);
+            File.WriteAllText(TelemetryApp.App.DefaultApiKeyFile, textBoxApiKey.Text);
             Close();
         }
 
         private void ButtonSettingsDirOpenInFileExplorer_Click(object sender, EventArgs e)
         {
-            TelemetryApp.SelectFileInFileExplorer(textBoxSettingsDir.Text);
+            TelemetryApp.App.SelectFileInFileExplorer(textBoxSettingsDir.Text);
         }
 
         private void ButtonDataDirOpenInFileExplorer_Click(object sender, EventArgs e)
         {
-            TelemetryApp.OpenFolderInFileExplorer(textBoxDataDir.Text);
+            TelemetryApp.App.OpenFolderInFileExplorer(textBoxDataDir.Text);
         }
 
         private void ButtonDataDirBrowse_Click(object sender, EventArgs e)
@@ -66,7 +63,7 @@ namespace MyPubgTelemetry.GUI
 
         private void LabelApiKey_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            TelemetryApp.OpenUrlInWebBrowser("https://developer.pubg.com/");
+            TelemetryApp.App.OpenUrlInWebBrowser("https://developer.pubg.com/");
         }
     }
 }

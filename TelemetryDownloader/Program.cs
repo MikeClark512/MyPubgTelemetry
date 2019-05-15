@@ -17,14 +17,14 @@ namespace MyPubgTelemetry.Downloader
 {
     class Program
     {
-        // Change to your username
+        // Change to your username(s)
         public const string USERNAME = "wckd,Celaven,Giles333,Solunth";
 
         void MMain(string[] args)
         {
-            Console.SetIn(new StreamReader(Console.OpenStandardInput(1024), Console.InputEncoding, false, 1024)); // Increase Console.ReadLine character limit
-            TelemetryDownloader td = new TelemetryDownloader();
-            TelemetryApp app = td.App;
+            // Increase Console.ReadLine character limit
+            Console.SetIn(new StreamReader(Console.OpenStandardInput(1024), Console.InputEncoding, false, 1024));
+            TelemetryApp app = TelemetryApp.App;
 
             if (string.IsNullOrEmpty(app.ApiKey))
             {
@@ -33,7 +33,7 @@ namespace MyPubgTelemetry.Downloader
             Console.WriteLine("API Key Filename: " + app.DefaultApiKeyFile);
             Console.WriteLine("API Key Contents: " + app.ApiKey);
 
-            List<JToken> players = td.ApiGetPlayersByNames(USERNAME);
+            List<JToken> players = app.ApiGetPlayersByNames(USERNAME);
             foreach (JToken player in players)
             {
                 string name = player.SelectToken("attributes.name").ToString();
@@ -46,35 +46,33 @@ namespace MyPubgTelemetry.Downloader
                 foreach (JToken match in matches)
                 {
                     string matchId = match["id"].ToString();
-                    DownloadTelemetryForMatchId(app, matchId, ++nApiMatches, cApiMatches, ref nDownloaded, ref nCacheHits);
+                    DownloadTelemetryForMatchId(matchId, ++nApiMatches, cApiMatches, ref nDownloaded, ref nCacheHits,
+                        (_) => { });
                 }
                 Console.WriteLine("\n... telemetry data update complete.");
                 string[] teleFiles = Directory.GetFiles(app.TelemetryDir, "*.json");
                 int nTeleFiles = teleFiles.Length;
                 Console.WriteLine(
                     $"\nSummary: MatchesOnline: {cApiMatches}, MatchesDownloaded: {nDownloaded}, AlreadyDownloaded: {nCacheHits}, TotalStored: {nTeleFiles}\n");
-                //List<JToken> matches = playerObj.SelectToken("data[0].relationships.matches.data").ToList();//["data"][0]["relationships"]["matches"]["data"].ToList();
             }
-            //List<JToken> matches = playerObj.SelectToken("data[0].relationships.matches.data").ToList();//["data"][0]["relationships"]["matches"]["data"].ToList();
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (Debugger.IsAttached)
             {
                 Console.ReadKey();
             }
         }
 
-
-        public void DownloadTelemetryForMatchId(TelemetryApp app, string matchId, int counter, int count,
-            ref int nDownloaded, ref int nCacheHits)
+        public void DownloadTelemetryForMatchId(string matchId, int counter, int count,
+            ref int nDownloaded, ref int nCacheHits, Action<string> progress)
         {
             string mtOutputFileName = "mt-" + matchId + ".json.gz";
             string mmOutputFileName = "mm-" + matchId + ".json";
-            string mtOutputFilePath = Path.Combine(app.TelemetryDir, mtOutputFileName);
-            string mmOutputFilePath = Path.Combine(app.MatchDir, mmOutputFileName);
+            string mtOutputFilePath = Path.Combine(TelemetryApp.App.TelemetryDir, mtOutputFileName);
+            string mmOutputFilePath = Path.Combine(TelemetryApp.App.MatchDir, mmOutputFileName);
 
             string matchJson = null;
             if (!File.Exists(mmOutputFilePath))
             {
-                matchJson = PrettyPrintJson(ApiGetMatch(app, matchId));
+                matchJson = PrettyPrintJson(TelemetryApp.App.ApiGetMatch(matchId));
                 File.WriteAllText(mmOutputFilePath, matchJson);
                 ConsoleRewrite($"[{counter}/{count}] Downloading match metadata.");
             }
@@ -94,7 +92,8 @@ namespace MyPubgTelemetry.Downloader
             JToken oIncluded = oMatch["included"];
             JToken oAsset = oIncluded.First(x => x["id"].Value<string>() == telemetryId);
             string url = oAsset.SelectToken("attributes.URL").Value<string>();
-            using (GZipStream stream = new GZipStream(app.HttpClient.GetStreamAsync(url).Result, CompressionMode.Decompress))
+            using (Stream result = TelemetryApp.App.HttpClient.GetStreamAsync(url).Result)
+            using (var stream = new GZipStream(result, CompressionMode.Decompress))
             {
                 Uri uri = new Uri(url);
                 ConsoleRewrite($"[{counter}/{count}] Downloading {uri.AbsolutePath}");
@@ -129,11 +128,6 @@ namespace MyPubgTelemetry.Downloader
             string line = Console.ReadLine()?.Trim();
             File.WriteAllText(app.DefaultApiKeyFile, line);
             return line;
-        }
-
-        private string ApiGetMatch(TelemetryApp app, string matchId)
-        {
-            return app.HttpClient.GetStringAsync("matches/" + matchId).Result;
         }
 
         public static string PrettyPrintTelemetryJson(Stream stream, out DateTime dt)

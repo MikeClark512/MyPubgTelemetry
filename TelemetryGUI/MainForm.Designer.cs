@@ -36,7 +36,7 @@
             this.tsmiPubgLookup = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.tsmiOpenInFileExplorer = new System.Windows.Forms.ToolStripMenuItem();
-            this.tsmiCopyPath = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsmiCopyMatchId = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.buttonSearch = new System.Windows.Forms.Button();
@@ -85,9 +85,9 @@
             this.tsmiPubgLookup,
             this.toolStripSeparator1,
             this.tsmiOpenInFileExplorer,
-            this.tsmiCopyPath});
+            this.tsmiCopyMatchId});
             this.contextMenuMatches.Name = "contextMenuMatches";
-            this.contextMenuMatches.Size = new System.Drawing.Size(212, 76);
+            this.contextMenuMatches.Size = new System.Drawing.Size(212, 98);
             this.contextMenuMatches.Opening += new System.ComponentModel.CancelEventHandler(this.ContextMenuMatches_Opening);
             // 
             // tsmiPubgLookup
@@ -108,12 +108,12 @@
             this.tsmiOpenInFileExplorer.Text = "Open in File Explorer";
             this.tsmiOpenInFileExplorer.Click += new System.EventHandler(this.TsmiOpenInFileExplorer_Click);
             // 
-            // tsmiCopyPath
+            // tsmiCopyMatchId
             // 
-            this.tsmiCopyPath.Name = "tsmiCopyPath";
-            this.tsmiCopyPath.Size = new System.Drawing.Size(211, 22);
-            this.tsmiCopyPath.Text = "Copy Path";
-            this.tsmiCopyPath.Click += new System.EventHandler(this.TsmiCopyPath_Click);
+            this.tsmiCopyMatchId.Name = "tsmiCopyMatchId";
+            this.tsmiCopyMatchId.Size = new System.Drawing.Size(211, 22);
+            this.tsmiCopyMatchId.Text = "Copy Match ID";
+            this.tsmiCopyMatchId.Click += new System.EventHandler(this.TsmiCopyPath_Click);
             // 
             // splitContainer1
             // 
@@ -303,7 +303,7 @@
         private System.Windows.Forms.Button buttonOptions;
         private System.Windows.Forms.ContextMenuStrip contextMenuMatches;
         private System.Windows.Forms.ToolStripMenuItem tsmiOpenInFileExplorer;
-        private System.Windows.Forms.ToolStripMenuItem tsmiCopyPath;
+        private System.Windows.Forms.ToolStripMenuItem tsmiCopyMatchId;
         private System.Windows.Forms.Button buttonSearch;
         private System.Windows.Forms.Button buttonNext;
         private System.Windows.Forms.ToolStripMenuItem tsmiPubgLookup;

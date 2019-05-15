@@ -83,9 +83,9 @@ namespace MyPubgTelemetry
             return playersObject["data"].ToList();
         }
 
-        public string ApiGetMatch(string matchId)
+        public string ApiGetMatch(TelemetryApp app, string matchId)
         {
-            return HttpClient.GetStringAsync("matches/" + matchId).Result;
+            return app.HttpClient.GetStringAsync("matches/" + matchId).Result;
         }
     }
 
