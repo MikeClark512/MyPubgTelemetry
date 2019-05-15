@@ -187,6 +187,7 @@ namespace MyPubgTelemetry.GUI
 
         private void LoadMatches()
         {
+
             var squaddies = RegexCsv.Split(textBoxSquad.Text);
             int sumLen = squaddies.Sum(s => s.Length);
             if (sumLen == 0) return; // nothin' but whitespace and commas.
@@ -195,6 +196,15 @@ namespace MyPubgTelemetry.GUI
             var di = new DirectoryInfo(TelemetryApp.App.TelemetryDir);
             List<FileInfo> jsonFiles = di.GetFiles("*.json").ToList();
             jsonFiles.AddRange(di.GetFiles("*.json.gz"));
+            if (jsonFiles.Count == 0)
+            {
+                BeginInvoke((MethodInvoker)delegate ()
+                {
+                    MessageBox.Show("No telemetry files found.\nUse the separate TelemetryDownloader program to download." +
+                                    "\nEventually the GUI will have support for downloading!");
+                });
+                return;
+            }
             List<TelemetryFile> telFiles = jsonFiles.Select(jsonFile => new TelemetryFile {FileInfo = jsonFile, Title = ""}).ToList();
             telFiles.Sort((x, y) => y.FileInfo.CreationTime.CompareTo(x.FileInfo.CreationTime));
             var blv = new BindingListView<TelemetryFile>(telFiles);
@@ -424,16 +434,16 @@ namespace MyPubgTelemetry.GUI
 
         private PreparedData PrepareData(TelemetryFile file, CancellationToken cancellationToken)
         {
-            if (file?.PreparedData != null)
+            if (file.PreparedData != null)
             {
                 return file.PreparedData;
             }
 
-            PreparedData pd = new PreparedData() {File = file};
-            using (var sr = file.NewTelemetryReader())
+            var pd = new PreparedData() {File = file};
+            using (StreamReader sr = file.NewTelemetryReader())
             {
                 var events = JsonConvert.DeserializeObject<List<TelemetryEvent>>(sr.ReadToEnd());
-                foreach (var @event in events)
+                foreach (TelemetryEvent @event in events)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -455,7 +465,7 @@ namespace MyPubgTelemetry.GUI
                 }
             }
 
-            foreach (var @event in pd.NormalizedEvents)
+            foreach (TelemetryEvent @event in pd.NormalizedEvents)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -692,7 +702,7 @@ namespace MyPubgTelemetry.GUI
         {
             TelemetryFile file = GetSelectedMatch();
             string filename = file.FileInfo.Name;
-            Regex regex = new Regex(@"^(..-)?(?<id>[^.]+)\.json(\.gz)?$", RegexOptions.Multiline);
+            var regex = new Regex(@"^(..-)?(?<id>[^.]+)\.json(\.gz)?$", RegexOptions.Multiline);
             Match match = regex.Match(filename);
             if (match.Success)
             {
