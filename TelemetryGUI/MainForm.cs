@@ -8,6 +8,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -25,7 +26,7 @@ namespace MyPubgTelemetry.GUI
     public partial class MainForm : Form
     {
         private InputBox MatchSearchInputBox { get; }
-        private const string ChartTitleDateFormat = "M/d/yy h:mm tt";
+        private const string ChartTitleDateFormat = "ddd M/d/yy h:mm tt";
         private const string XAxisDateFormat = "h:mm:ss tt";
         private HashSet<string> Squad { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private Regex RegexCsv { get; } = new Regex(@"\s*,\s*", RegexOptions.IgnoreCase);
@@ -43,12 +44,12 @@ namespace MyPubgTelemetry.GUI
             Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             InitChart();
             InitMatchesList();
-            MatchSearchInputBox = new InputBox {InputText = Clipboard.GetText(), Text = @"Search match IDs, dates, and player names"};
-            toolStripProgressBar1.TextChanged += delegate(object sender, EventArgs args)
+            MatchSearchInputBox = new InputBox { InputText = Clipboard.GetText(), Text = @"Search match IDs, dates, and player names" };
+            toolStripProgressBar1.TextChanged += delegate (object sender, EventArgs args)
             {
                 toolStripStatusLabel1.Text = toolStripProgressBar1.Text;
             };
-            var qts = new QueuedTaskScheduler(Environment.ProcessorCount, "QTS", false, ThreadPriority.Lowest);
+            var qts = new QueuedTaskScheduler(Environment.ProcessorCount - 1, "QTS", false, ThreadPriority.BelowNormal);
             _taskFactory = new TaskFactory(qts);
         }
 
@@ -65,7 +66,7 @@ namespace MyPubgTelemetry.GUI
             dataGridView1.MultiSelect = false;
             dataGridView1.BackgroundColor = SystemColors.ControlLightLight;
             dataGridView1.RowHeadersVisible = false;
-            dataGridView1.CellFormatting += delegate(object sender, DataGridViewCellFormattingEventArgs e)
+            dataGridView1.CellFormatting += delegate (object sender, DataGridViewCellFormattingEventArgs e)
             {
                 if (e.Value is DateTime value)
                 {
@@ -83,7 +84,7 @@ namespace MyPubgTelemetry.GUI
                 }
             };
             //dataGridView1.DataSource = _dataTable;
-            dataGridView1.KeyDown += delegate(object sender, KeyEventArgs args)
+            dataGridView1.KeyDown += delegate (object sender, KeyEventArgs args)
             {
                 switch (args.KeyCode)
                 {
@@ -92,7 +93,7 @@ namespace MyPubgTelemetry.GUI
                         break;
                 }
             };
-            dataGridView1.MouseDown += delegate(object sender, MouseEventArgs args)
+            dataGridView1.MouseDown += delegate (object sender, MouseEventArgs args)
             {
                 DataGridView.HitTestInfo hti = dataGridView1.HitTest(args.X, args.Y);
                 if (hti.RowIndex >= 0)
@@ -116,6 +117,7 @@ namespace MyPubgTelemetry.GUI
             dataGridView1.Columns[1].SortMode = DataGridViewColumnSortMode.NotSortable;
             dataGridView1.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
             dataGridView1.Columns[1].Frozen = false;
+            dataGridView1.Columns[1].DefaultCellStyle.Format = ChartTitleDateFormat;
 
             dataGridView1.Columns[2].Name = "SquadKills";
             dataGridView1.Columns[2].DataPropertyName = "SquadKills";
@@ -142,7 +144,7 @@ namespace MyPubgTelemetry.GUI
             chart1.ChartAreas[0].AxisX.IntervalType = DateTimeIntervalType.Minutes;
             chart1.ChartAreas[0].AxisX.Interval = 2;
             chart1.ChartAreas[0].AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount;
-            chart1.AxisViewChanged += delegate(object sender, ViewEventArgs args)
+            chart1.AxisViewChanged += delegate (object sender, ViewEventArgs args)
             {
                 chart1.ChartAreas[0].AxisX.Interval = chart1.ChartAreas[0].AxisX.Interval / 10;
                 RecalcPointLabels();
@@ -185,7 +187,7 @@ namespace MyPubgTelemetry.GUI
             LoadMatches();
         }
 
-        private void LoadMatches()
+        private void LoadMatches(bool deep=false)
         {
 
             var squaddies = RegexCsv.Split(textBoxSquad.Text);
@@ -205,7 +207,7 @@ namespace MyPubgTelemetry.GUI
                 });
                 return;
             }
-            List<TelemetryFile> telFiles = jsonFiles.Select(jsonFile => new TelemetryFile {FileInfo = jsonFile, Title = ""}).ToList();
+            List<TelemetryFile> telFiles = jsonFiles.Select(jsonFile => new TelemetryFile { FileInfo = jsonFile, Title = "" }).ToList();
             telFiles.Sort((x, y) => y.FileInfo.CreationTime.CompareTo(x.FileInfo.CreationTime));
             var blv = new BindingListView<TelemetryFile>(telFiles);
             dataGridView1.DataSource = blv;
@@ -217,10 +219,10 @@ namespace MyPubgTelemetry.GUI
             }
             CtsMatchMetaData?.Cancel();
             CtsMatchMetaData = new CancellationTokenSource();
-            Task.Run(() => UpdateMatchListMetaData(telFiles, squaddies, CtsMatchMetaData.Token));
+            Task.Run(() => UpdateMatchListMetaData(telFiles, squaddies, deep, CtsMatchMetaData.Token));
         }
 
-        private void UpdateMatchListMetaData(List<TelemetryFile> telFiles, string[] squaddies, CancellationToken cancellationToken)
+        private void UpdateMatchListMetaData(List<TelemetryFile> telFiles, string[] squaddies, bool deep, CancellationToken cancellationToken)
         {
             List<Task> tasks = new List<Task>();
             for (int i = 0; i < telFiles.Count; i++)
@@ -228,41 +230,41 @@ namespace MyPubgTelemetry.GUI
                 if (cancellationToken.IsCancellationRequested) break;
                 TelemetryFile file = telFiles[i];
                 file.Index = i;
-                Task task = _taskFactory.StartNew(() => ReadTelemetryMetaData(file, squaddies), cancellationToken);
+                Task task = _taskFactory.StartNew(() => ReadTelemetryMetaData(file, squaddies, deep), cancellationToken);
                 task.ContinueWith(continuationAction: (_) =>
                 {
                     file.TelemetryMetaDataLoaded = true;
-                    BeginInvoke((MethodInvoker) delegate()
-                    {
-                        UiUpdateOneFile(file);
-                    });
+                    BeginInvoke((MethodInvoker)delegate ()
+                   {
+                       UiUpdateOneFile(file);
+                   });
                 }, cancellationToken);
                 tasks.Add(task);
             }
 
             _taskFactory.ContinueWhenAny(tasks.ToArray(), (_) =>
             {
-                BeginInvoke((MethodInvoker) delegate()
-                {
-                    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
-                });
+                BeginInvoke((MethodInvoker)delegate ()
+               {
+                   dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+               });
             }, cancellationToken);
 
             _taskFactory.ContinueWhenAll(tasks.ToArray(), (_) =>
             {
                 DebugThreadWriteLine("Done loading metadata (worker).");
-                BeginInvoke((MethodInvoker) delegate()
-                {
-                    DebugThreadWriteLine("Done loading metadata (UI).");
-                    ReloadingMetaData = false;
+                BeginInvoke((MethodInvoker)delegate ()
+               {
+                   DebugThreadWriteLine("Done loading metadata (UI).");
+                   ReloadingMetaData = false;
                     //dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
                     toolStripProgressBar1.Visible = false;
-                    for (int col = 0; col < dataGridView1.ColumnCount; col++)
-                    {
-                        dataGridView1.Columns[col].SortMode = DataGridViewColumnSortMode.Automatic;
-                    }
-                    dataGridView1.Sort(dataGridView1.Columns[1], ListSortDirection.Descending);
-                });
+                   for (int col = 0; col < dataGridView1.ColumnCount; col++)
+                   {
+                       dataGridView1.Columns[col].SortMode = DataGridViewColumnSortMode.Automatic;
+                   }
+                   dataGridView1.Sort(dataGridView1.Columns[1], ListSortDirection.Descending);
+               });
             }, cancellationToken);
 
             void UiUpdateOneFile(TelemetryFile telemetryFile)
@@ -288,10 +290,13 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
-
-        private void ReadTelemetryMetaData(TelemetryFile file, string[] squaddies)
+        private void ReadTelemetryMetaData(TelemetryFile file, string[] squaddies, bool deep)
         {
-            using (var jtr = new JsonTextReader(file.NewTelemetryReader()))
+            using (var fs = file.FileInfo.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
+            using (var bs = new BufferedStream(fs, 1024 * 10))
+            using (var gs = new GZipStream(bs, CompressionMode.Decompress))
+            using (var sr = new StreamReader(gs))
+            using (var jtr = new JsonTextReader(sr))
             {
                 var teams = new Dictionary<int, SortedSet<string>>();
                 int squadTeamId = -1;
@@ -299,12 +304,12 @@ namespace MyPubgTelemetry.GUI
                 PreparedData pd = new PreparedData() {File = file};
                 while (jtr.Read())
                 {
-                    var serializer = new JsonSerializer();
                     if (jtr.TokenType == JsonToken.EndArray)
                     {
                         break;
                     }
 
+                    var serializer = new JsonSerializer();
                     var @event = serializer.Deserialize<TelemetryEvent>(jtr);
                     if (@event._T == "LogPlayerCreate")
                     {
@@ -324,6 +329,10 @@ namespace MyPubgTelemetry.GUI
                     else if (@event._T == "LogMatchStart")
                     {
                         file.MatchDate = @event._D;
+                        if (!deep)
+                        {
+                            break;
+                        }
                     }
                     else if (@event._T == "LogPlayerTakeDamage")
                     {
@@ -366,7 +375,8 @@ namespace MyPubgTelemetry.GUI
                     timePlayerEvents.Add(@event);
                 }
 
-                file.PreparedData = pd;
+                file.PreparedData = deep ? pd : null;
+
 
                 if (squadTeamId != -1)
                 {
@@ -378,11 +388,15 @@ namespace MyPubgTelemetry.GUI
                 {
                     file.Title = "[no squad members in match]";
                 }
-            }
-
-            if (file.MatchDate.HasValue)
-            {
-                file.FileInfo.CreationTime = file.MatchDate.Value;
+                if (file.MatchDate.HasValue)
+                {
+                    long matchTime = file.MatchDate.Value.ToFileTime();
+                    DebugThreadWriteLine("Bout to call SetFileCreateTime");
+                    if (file.FileInfo.CreationTimeUtc.ToFileTimeUtc() != matchTime)
+                    {
+                        fs.SafeFileHandle.SetFileCreateTime(matchTime);
+                    }
+                }
             }
         }
 
@@ -390,19 +404,12 @@ namespace MyPubgTelemetry.GUI
         {
             string fname = file.FileInfo.Name;
 
-            do { fname = Path.GetFileNameWithoutExtension(fname); }
-            while (fname != Path.GetFileNameWithoutExtension(fname));
-            
-            const string pfx = "mt-";
-            if (fname.StartsWith(pfx))
-            {
-                fname = fname.Substring(pfx.Length);
-            }
+            fname = TelemetryApp.TelemetryFilenameToMatchId(fname);
 
             AccountIds.TryGetValue(user, out string accountId);
             if (accountId == null) return;
             WebClient wc = new WebClient();
-            var values = new NameValueCollection {{"region", "pc-na"}, {"player_name", user}};
+            var values = new NameValueCollection { { "region", "pc-na" }, { "player_name", user } };
             wc.UploadValues("https://pubglookup.com/search", "POST", values);
             Task.Run(() =>
             {
@@ -420,6 +427,8 @@ namespace MyPubgTelemetry.GUI
         {
             try
             {
+                //Thread.Sleep(5000);
+
                 PreparedData pd = PrepareData(file, cancellationToken);
 
                 if (!cancellationToken.IsCancellationRequested)
@@ -433,10 +442,10 @@ namespace MyPubgTelemetry.GUI
             }
             finally
             {
-                BeginInvoke((MethodInvoker) delegate()
-                {
-                    ConsumePreparedDataQ(cancellationToken);
-                });
+                BeginInvoke((MethodInvoker)delegate ()
+               {
+                   ConsumePreparedDataQ(cancellationToken);
+               });
             }
         }
 
@@ -446,6 +455,7 @@ namespace MyPubgTelemetry.GUI
             {
                 return file.PreparedData;
             }
+            file.PreparedData = null;
 
             var pd = new PreparedData() {File = file};
             using (StreamReader sr = file.NewTelemetryReader())
@@ -495,13 +505,17 @@ namespace MyPubgTelemetry.GUI
                 timePlayerEvents.Add(@event);
             }
 
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                file.PreparedData = pd;
+            }
+
             return pd;
         }
 
         private static void DebugThreadWriteLine(string msg)
         {
-            var t = Thread.CurrentThread;
-            Debug.WriteLine($"T:{t.ManagedThreadId} {msg}");
+            Debug.WriteLine($"T:{Thread.CurrentThread} {msg}");
         }
 
         private void ConsumePreparedDataQ(CancellationToken cancellationToken)
@@ -529,15 +543,21 @@ namespace MyPubgTelemetry.GUI
 
             ClearChart(chart1);
 
-            string sdt = pd.File?.MatchDate?.ToLocalTime().ToString(ChartTitleDateFormat);
-            chart1.Titles[0].Text = $"{sdt} - HP over time";
+            DateTime? localTime = pd.File?.MatchDate?.ToLocalTime();
+            string sdt = "";
+            if (localTime.HasValue)
+            {
+                sdt = localTime.Value.ToString(ChartTitleDateFormat) ?? "";
+                sdt += " " + localTime.Value.GetTimeZoneAbbreviation();
+            }
+            chart1.Titles[0].Text = $"{sdt} \u2014 HP over time";
             chart1.Titles[0].Font = new Font(chart1.Titles[0].Font.FontFamily, 12, FontStyle.Bold);
 
             // Declare series first
             foreach (string playerName in pd.PlayerToEvents.Keys)
             {
                 var series = chart1.Series.Add(playerName);
-                series.BorderWidth = 4;
+                series.BorderWidth = 3;
                 series.ChartType = SeriesChartType.Line;
                 chart1.ChartAreas[0].AxisX.IsMarginVisible = false;
                 series.SmartLabelStyle.Enabled = true;
@@ -597,7 +617,7 @@ namespace MyPubgTelemetry.GUI
         {
             if (ModifierKeys.HasFlag(Keys.Control))
             {
-                Process.Start(TelemetryApp.App.DataDir);
+                LoadMatches(true);
             }
             else
             {
@@ -621,7 +641,7 @@ namespace MyPubgTelemetry.GUI
 
         private void ButtonOptions_Click(object sender, EventArgs e)
         {
-            var optionsForm = new OptionsForm {StartPosition = FormStartPosition.CenterParent};
+            var optionsForm = new OptionsForm { StartPosition = FormStartPosition.CenterParent };
             optionsForm.ShowDialog(this);
         }
 
@@ -651,7 +671,7 @@ namespace MyPubgTelemetry.GUI
         {
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
-                ObjectView<TelemetryFile> ovtf = (ObjectView<TelemetryFile>) row.DataBoundItem;
+                ObjectView<TelemetryFile> ovtf = (ObjectView<TelemetryFile>)row.DataBoundItem;
                 if (ovtf.Object == path)
                 {
                     row.Selected = true;
@@ -747,15 +767,15 @@ namespace MyPubgTelemetry.GUI
 
         private TelemetryFile MatchListGetValueAtIndex(int i)
         {
-            var dataBoundItem = (ObjectView<TelemetryFile>) dataGridView1.Rows[i].DataBoundItem;
+            var dataBoundItem = (ObjectView<TelemetryFile>)dataGridView1.Rows[i].DataBoundItem;
             return dataBoundItem.Object;
         }
 
         private static T GetPrimarySelectedValue<T>(DataGridView dgv) where T : class
         {
             DataGridViewRow row = dgv.SelectedRows.Cast<DataGridViewRow>().FirstOrDefault();
-            ObjectView<T> ovtf = (ObjectView<T>) row?.DataBoundItem;
-            return ovtf?.Object;
+            ObjectView<T> objectView = (ObjectView<T>)row?.DataBoundItem;
+            return objectView?.Object;
         }
 
         private TelemetryFile GetSelectedMatch()
@@ -767,7 +787,7 @@ namespace MyPubgTelemetry.GUI
 
         private TelemetryFile RowToTelemetryFile(DataGridViewRow row)
         {
-            ObjectView<TelemetryFile> ovtf = (ObjectView<TelemetryFile>) row.DataBoundItem;
+            ObjectView<TelemetryFile> ovtf = (ObjectView<TelemetryFile>)row.DataBoundItem;
             return ovtf.Object;
         }
 

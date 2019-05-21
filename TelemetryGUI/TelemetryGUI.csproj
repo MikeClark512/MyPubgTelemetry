@@ -93,7 +93,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TelemetryApp.cs" />
     <EmbeddedResource Include="InputBox.resx">
       <DependentUpon>InputBox.cs</DependentUpon>
     </EmbeddedResource>
@@ -140,6 +139,12 @@
     <Content Include="Resources\OpenFolder_16x.png" />
     <None Include="Resources\OpeninFileExplorer_16x.png" />
     <Content Include="Resources\pan.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TelemetryApp\TelemetryApp.csproj">
+      <Project>{573CAAC6-5626-4009-9712-9C674F4BDE56}</Project>
+      <Name>TelemetryApp</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
