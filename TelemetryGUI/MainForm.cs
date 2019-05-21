@@ -19,6 +19,7 @@ using System.Threading.Tasks.Schedulers;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using Equin.ApplicationFramework;
+using MyPubgTelemetry.Downloader;
 using Newtonsoft.Json;
 
 namespace MyPubgTelemetry.GUI
@@ -391,7 +392,6 @@ namespace MyPubgTelemetry.GUI
                 if (file.MatchDate.HasValue)
                 {
                     long matchTime = file.MatchDate.Value.ToFileTime();
-                    DebugThreadWriteLine("Bout to call SetFileCreateTime");
                     if (file.FileInfo.CreationTimeUtc.ToFileTimeUtc() != matchTime)
                     {
                         fs.SafeFileHandle.SetFileCreateTime(matchTime);
@@ -515,7 +515,7 @@ namespace MyPubgTelemetry.GUI
 
         private static void DebugThreadWriteLine(string msg)
         {
-            Debug.WriteLine($"T:{Thread.CurrentThread} {msg}");
+            Debug.WriteLine($"T:{Thread.CurrentThread.Name}{Thread.CurrentThread.ManagedThreadId} {msg}");
         }
 
         private void ConsumePreparedDataQ(CancellationToken cancellationToken)
@@ -618,6 +618,23 @@ namespace MyPubgTelemetry.GUI
             if (ModifierKeys.HasFlag(Keys.Control))
             {
                 LoadMatches(true);
+            }
+            if (ModifierKeys.HasFlag(Keys.Shift))
+            {
+                TelemetryDownloader downloader = new TelemetryDownloader();
+                var squadSet = new HashSet<string>(RegexCsv.Split(textBoxSquad.Text));
+                if (squadSet.Count == 0)
+                {
+                    return;
+                }
+                string squad = string.Join(",", squadSet);
+                downloader.DownloadProgressEvent += (sender2, args) =>
+                {
+                    DebugThreadWriteLine("DownloadProgressEvent " + args.Message);
+                };
+                List<TelemetryDownloader.NormalizedMatch> normalizedMatches = downloader.DownloadTelemetryForPlayers2(squad);
+                string jsonStr = JsonConvert.SerializeObject(normalizedMatches, Formatting.Indented);
+                DebugThreadWriteLine("Normalized matches: " + jsonStr);
             }
             else
             {

@@ -112,7 +112,7 @@
             // 
             this.tsmiCopyMatchId.Name = "tsmiCopyMatchId";
             this.tsmiCopyMatchId.Size = new System.Drawing.Size(211, 22);
-            this.tsmiCopyMatchId.Text = "Copy Match ID";
+            this.tsmiCopyMatchId.Text = "Copy NormalizedMatch ID";
             this.tsmiCopyMatchId.Click += new System.EventHandler(this.TsmiCopyPath_Click);
             // 
             // splitContainer1

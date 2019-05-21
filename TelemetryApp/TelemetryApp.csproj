@@ -7,7 +7,7 @@
     <ProjectGuid>{573CAAC6-5626-4009-9712-9C674F4BDE56}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MyPubgTelemetry.TelemetryApp</RootNamespace>
+    <RootNamespace>MyPubgTelemetry</RootNamespace>
     <AssemblyName>MyPubgTelemetry.TelemetryApp</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MatchMetadataModel\ApiModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TelemetryApp.cs" />
   </ItemGroup>
