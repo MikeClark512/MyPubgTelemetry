@@ -144,14 +144,22 @@ namespace MyPubgTelemetry
             return streamReader;
         }
 
-        public Stream NewMatchMetaDataReader()
+        public StreamReader NewMatchMetaDataReader()
         {
-            BufferedStream bufferedStream = new BufferedStream(FileInfo.OpenRead(), 1024 * 10);
+            return NewMatchMetaDataReader(FileMode.Open, FileAccess.Read, FileShare.ReadWrite, out FileStream fs);
+        }
+
+        public StreamReader NewMatchMetaDataReader(FileMode fileMode, FileAccess fileAccess, FileShare fileShare,
+            out FileStream fileStream)
+        {
+            fileStream = new FileStream(FileInfo.FullName, fileMode, fileAccess, fileShare);
+            BufferedStream bufferedStream = new BufferedStream(fileStream, 1024 * 10);
+            Stream stream = bufferedStream;
             if (FileInfo.Name.EndsWith(".gz", StringComparison.CurrentCultureIgnoreCase))
             {
-                return new GZipStream(bufferedStream, CompressionMode.Decompress);
+                stream = new GZipStream(bufferedStream, CompressionMode.Decompress);
             }
-            return bufferedStream;
+            return new StreamReader(stream);
         }
     }
 
@@ -205,9 +213,9 @@ namespace MyPubgTelemetry
             return value;
         }
 
-        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dict, K key, Func<V> defValSelector)
+        public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, Func<TValue> defValSelector)
         {
-            return dict.TryGetValue(key, out V value) ? value : defValSelector();
+            return dict.TryGetValue(key, out TValue value) ? value : defValSelector();
         }
 
         public static string GetTimeZoneAbbreviation(this DateTime time)

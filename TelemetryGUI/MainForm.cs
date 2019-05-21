@@ -52,6 +52,8 @@ namespace MyPubgTelemetry.GUI
             };
             var qts = new QueuedTaskScheduler(Environment.ProcessorCount - 1, "QTS", false, ThreadPriority.BelowNormal);
             _taskFactory = new TaskFactory(qts);
+            Width = 1022;
+            Height = 620;
         }
 
         private void InitMatchesList()
@@ -293,16 +295,13 @@ namespace MyPubgTelemetry.GUI
 
         private void ReadTelemetryMetaData(TelemetryFile file, string[] squaddies, bool deep)
         {
-            using (var fs = file.FileInfo.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
-            using (var bs = new BufferedStream(fs, 1024 * 10))
-            using (var gs = new GZipStream(bs, CompressionMode.Decompress))
-            using (var sr = new StreamReader(gs))
+            using (var sr = file.NewMatchMetaDataReader(FileMode.Open, FileAccess.ReadWrite, FileShare.Read, out FileStream fs))
             using (var jtr = new JsonTextReader(sr))
             {
                 var teams = new Dictionary<int, SortedSet<string>>();
                 int squadTeamId = -1;
                 jtr.Read();
-                PreparedData pd = new PreparedData() {File = file};
+                PreparedData pd = new PreparedData() { File = file };
                 while (jtr.Read())
                 {
                     if (jtr.TokenType == JsonToken.EndArray)
