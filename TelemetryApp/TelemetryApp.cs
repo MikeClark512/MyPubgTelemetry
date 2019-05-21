@@ -9,6 +9,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using System.Threading;
+using Microsoft.Win32.SafeHandles;
 using Newtonsoft.Json.Linq;
 
 namespace MyPubgTelemetry
@@ -87,6 +90,26 @@ namespace MyPubgTelemetry
         {
             return HttpClient.GetStringAsync("matches/" + matchId).Result;
         }
+
+        public static string TelemetryFilenameToMatchId(string fname)
+        {
+            fname = Path.GetFileName(fname);
+            if (string.IsNullOrEmpty(fname)) return null;
+
+            while (fname != Path.GetFileNameWithoutExtension(fname))
+            {
+                fname = Path.GetFileNameWithoutExtension(fname);
+            }
+
+            const string pfx = "mt-";
+            if (fname.StartsWith(pfx))
+            {
+                fname = fname.Substring(pfx.Length);
+            }
+
+            return fname;
+        }
+
     }
 
     public class TelemetryFile
@@ -99,10 +122,12 @@ namespace MyPubgTelemetry
         public int Index { get; set; }
         public int SquadKills { get; set; }
         public PreparedData PreparedData { get; set; }
+        public Mutex Mutex { get; } = new Mutex();
 
         public StreamReader NewTelemetryReader()
         {
-            Stream stream = new BufferedStream(FileInfo.OpenRead(), 1024 * 10);
+            FileStream fs = new FileStream(FileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            Stream stream = new BufferedStream(fs, 1024 * 10);
             if (FileInfo.Name.EndsWith(".gz", StringComparison.CurrentCultureIgnoreCase))
             {
                 stream = new GZipStream(stream, CompressionMode.Decompress);
@@ -176,6 +201,38 @@ namespace MyPubgTelemetry
         {
             return dict.TryGetValue(key, out V value) ? value : defValSelector();
         }
+
+        public static string GetTimeZoneAbbreviation(this DateTime time)
+        {
+            string tz;
+            if (time.Kind == DateTimeKind.Local)
+            {
+                tz = time.IsDaylightSavingTime() ? TimeZoneInfo.Local.DaylightName : TimeZoneInfo.Local.StandardName;
+            }
+            else
+            {
+                tz = "UTC";
+            }
+            string tza = Regex.Replace(tz, @"[a-z\s]", "");
+            return tza;
+        }
+
+        public static bool SetFileCreateTime(this SafeFileHandle hFile, long creationTime)
+        {
+            GCHandle pin = GCHandle.Alloc(creationTime, GCHandleType.Pinned);
+            try
+            {
+                return SetFileTime(hFile, pin.AddrOfPinnedObject(), IntPtr.Zero, IntPtr.Zero);
+            }
+            finally
+            {
+                pin.Free();
+            }
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetFileTime(SafeFileHandle hFile, IntPtr lpCreationTime, IntPtr lpLastAccessTime, IntPtr lpLastWriteTime);
     }
 
 }
