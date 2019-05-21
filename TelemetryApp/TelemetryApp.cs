@@ -40,6 +40,7 @@ namespace MyPubgTelemetry
                 HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
             }
         }
+        public Regex RegexCsv { get; } = new Regex(@"\s*,\s*", RegexOptions.IgnoreCase);
 
         private TelemetryApp()
         {
@@ -60,6 +61,13 @@ namespace MyPubgTelemetry
             {
                 ApiKey = File.ReadAllText(DefaultApiKeyFile)?.Trim();
             }
+        }
+
+        public string NormalizePlayerCsv(string csv)
+        {
+            List<string> strings = RegexCsv.Split(csv).ToList();
+            strings.RemoveAll(string.IsNullOrEmpty);
+            return string.Join(",", strings);
         }
 
         public void OpenFolderInFileExplorer(string path)
