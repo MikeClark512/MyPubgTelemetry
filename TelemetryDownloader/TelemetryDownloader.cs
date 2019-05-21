@@ -136,8 +136,8 @@ namespace MyPubgTelemetry.Downloader
 
                     foreach (string participantId in participantIds)
                     {
-                        MatchIncluded parti = model.Included.First(x => x.Id == participantId);
-                        roster.Players.Add(parti);
+                        MatchIncluded participant = model.Included.First(x => x.Id == participantId);
+                        roster.Players.Add(participant);
                     }
                 }
                 File.WriteAllText(mmOutputFilePath, nm.JsonStr);
