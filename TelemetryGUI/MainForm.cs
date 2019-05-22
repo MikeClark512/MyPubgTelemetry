@@ -8,7 +8,6 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -19,8 +18,10 @@ using System.Threading.Tasks.Schedulers;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using Equin.ApplicationFramework;
+using MongoDB.Bson.Serialization.Conventions;
 using MyPubgTelemetry.Downloader;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace MyPubgTelemetry.GUI
 {
@@ -35,7 +36,6 @@ namespace MyPubgTelemetry.GUI
         private BlockingCollection<PreparedData> PreparedDataQ { get; } = new BlockingCollection<PreparedData>();
         private BlockingCollection<TelemetryFile> MatchMetaDataQ { get; } = new BlockingCollection<TelemetryFile>();
         private readonly TaskFactory _taskFactory;
-        private bool ReloadingMetaData { get; set; }
         private CancellationTokenSource CtsMatchSwitch { get; set; }
         private CancellationTokenSource CtsMatchMetaData { get; set; }
 
@@ -52,8 +52,6 @@ namespace MyPubgTelemetry.GUI
             };
             var qts = new QueuedTaskScheduler(Environment.ProcessorCount - 1, "QTS", false, ThreadPriority.BelowNormal);
             _taskFactory = new TaskFactory(qts);
-            Width = 1022;
-            Height = 620;
         }
 
         private void InitMatchesList()
@@ -107,7 +105,7 @@ namespace MyPubgTelemetry.GUI
 
             dataGridView1.ColumnCount = 3;
 
-            dataGridView1.Columns[0].Name = "Name";
+            dataGridView1.Columns[0].Name = "Squad";
             dataGridView1.Columns[0].DataPropertyName = "Title";
             dataGridView1.Columns[0].ValueType = typeof(string);
             dataGridView1.Columns[0].SortMode = DataGridViewColumnSortMode.NotSortable;
@@ -190,9 +188,8 @@ namespace MyPubgTelemetry.GUI
             LoadMatches();
         }
 
-        private void LoadMatches(bool deep=false)
+        private void LoadMatches(bool deep = false)
         {
-
             var squaddies = RegexCsv.Split(textBoxSquad.Text);
             int sumLen = squaddies.Sum(s => s.Length);
             if (sumLen == 0) return; // nothin' but whitespace and commas.
@@ -204,22 +201,25 @@ namespace MyPubgTelemetry.GUI
             if (jsonFiles.Count == 0)
             {
                 BeginInvoke((MethodInvoker)delegate ()
-                {
-                    MessageBox.Show("No telemetry files found.\nUse the separate TelemetryDownloader program to download." +
-                                    "\nEventually the GUI will have support for downloading!");
-                });
+               {
+                   MessageBox.Show("No telemetry files found.\nUse the separate TelemetryDownloader program to download." +
+                                   "\nEventually the GUI will have support for downloading!");
+               });
                 return;
             }
+
             List<TelemetryFile> telFiles = jsonFiles.Select(jsonFile => new TelemetryFile { FileInfo = jsonFile, Title = "" }).ToList();
             telFiles.Sort((x, y) => y.FileInfo.CreationTime.CompareTo(x.FileInfo.CreationTime));
             var blv = new BindingListView<TelemetryFile>(telFiles);
             dataGridView1.DataSource = blv;
             toolStripProgressBar1.Maximum = telFiles.Count;
+            toolStripProgressBar1.Value = 0;
             toolStripProgressBar1.Visible = true;
             for (int col = 0; col < dataGridView1.ColumnCount; col++)
             {
                 dataGridView1.Columns[col].SortMode = DataGridViewColumnSortMode.NotSortable;
             }
+
             CtsMatchMetaData?.Cancel();
             CtsMatchMetaData = new CancellationTokenSource();
             Task.Run(() => UpdateMatchListMetaData(telFiles, squaddies, deep, CtsMatchMetaData.Token));
@@ -259,13 +259,13 @@ namespace MyPubgTelemetry.GUI
                 BeginInvoke((MethodInvoker)delegate ()
                {
                    DebugThreadWriteLine("Done loading metadata (UI).");
-                   ReloadingMetaData = false;
                     //dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
                     toolStripProgressBar1.Visible = false;
                    for (int col = 0; col < dataGridView1.ColumnCount; col++)
                    {
                        dataGridView1.Columns[col].SortMode = DataGridViewColumnSortMode.Automatic;
                    }
+
                    dataGridView1.Sort(dataGridView1.Columns[1], ListSortDirection.Descending);
                });
             }, cancellationToken);
@@ -388,6 +388,7 @@ namespace MyPubgTelemetry.GUI
                 {
                     file.Title = "[no squad members in match]";
                 }
+
                 if (file.MatchDate.HasValue)
                 {
                     long matchTime = file.MatchDate.Value.ToFileTime();
@@ -454,9 +455,10 @@ namespace MyPubgTelemetry.GUI
             {
                 return file.PreparedData;
             }
+
             file.PreparedData = null;
 
-            var pd = new PreparedData() {File = file};
+            var pd = new PreparedData() { File = file };
             using (StreamReader sr = file.NewTelemetryReader())
             {
                 var events = JsonConvert.DeserializeObject<List<TelemetryEvent>>(sr.ReadToEnd());
@@ -549,6 +551,7 @@ namespace MyPubgTelemetry.GUI
                 sdt = localTime.Value.ToString(ChartTitleDateFormat) ?? "";
                 sdt += " " + localTime.Value.GetTimeZoneAbbreviation();
             }
+
             chart1.Titles[0].Text = $"{sdt} \u2014 HP over time";
             chart1.Titles[0].Font = new Font(chart1.Titles[0].Font.FontFamily, 12, FontStyle.Bold);
 
@@ -569,7 +572,7 @@ namespace MyPubgTelemetry.GUI
             // Track player's last known HP so we can fill in a reasonable value at missing time intervals
             var lastHps = new Dictionary<string, float>();
             // Then add data
-            DebugThreadWriteLine("About to render " + pd.File.FileInfo.Name);
+            DebugThreadWriteLine("About to render " + pd.File?.FileInfo.Name);
             foreach (var kv in pd.TimeToPlayerToEvents)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -612,13 +615,13 @@ namespace MyPubgTelemetry.GUI
             chart.Series.Clear();
         }
 
-        private void Button1_Click(object sender, EventArgs e)
+        private async void Button1_Click(object sender, EventArgs e)
         {
             if (ModifierKeys.HasFlag(Keys.Control))
             {
                 LoadMatches(true);
             }
-            if (ModifierKeys.HasFlag(Keys.Shift))
+            else if (ModifierKeys.HasFlag(Keys.Shift))
             {
                 TelemetryDownloader downloader = new TelemetryDownloader();
                 var squadSet = new HashSet<string>(RegexCsv.Split(textBoxSquad.Text));
@@ -626,14 +629,28 @@ namespace MyPubgTelemetry.GUI
                 {
                     return;
                 }
+
                 string squad = string.Join(",", squadSet);
                 downloader.DownloadProgressEvent += (sender2, args) =>
                 {
-                    DebugThreadWriteLine("DownloadProgressEvent " + args.Message);
+                    BeginInvoke((MethodInvoker)delegate ()
+                    {
+                        if (!args.Rewrite)
+                        {
+                            DebugThreadWriteLine("DownloadProgressEvent " + args.Msg);
+                        }
+                        toolStripProgressBar1.Visible = !args.Complete;
+                        toolStripProgressBar1.Value = args.Value;
+                        toolStripProgressBar1.Maximum = args.Max;
+                        toolStripStatusLabel1.Text = args.Msg;
+                    });
                 };
-                List<TelemetryDownloader.NormalizedMatch> normalizedMatches = downloader.DownloadTelemetryForPlayers2(squad);
-                string jsonStr = JsonConvert.SerializeObject(normalizedMatches, Formatting.Indented);
-                DebugThreadWriteLine("Normalized matches: " + jsonStr);
+                List<NormalizedMatch> matches = await downloader.DownloadForPlayersAsync(squad);
+//                JsonSerializerSettings settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+//                string jsonStr = JsonConvert.SerializeObject(matches, Formatting.Indented, settings);
+                //DebugThreadWriteLine("Normalized matches:\n" + jsonStr);
+                DebugThreadWriteLine("# Normalized matches: " + matches.Count);
+                LoadMatches();
             }
             else
             {
@@ -825,6 +842,7 @@ namespace MyPubgTelemetry.GUI
             {
                 return;
             }
+
             CtsMatchSwitch?.Cancel();
             CtsMatchSwitch = new CancellationTokenSource();
             ClearChart(chart1);

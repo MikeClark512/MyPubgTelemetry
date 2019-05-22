@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MyPubgTelemetry.MatchMetadataModel;
+using MyPubgTelemetry.ApiMatchModel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -13,15 +14,156 @@ namespace MyPubgTelemetry.Downloader
 {
     public class TelemetryDownloader
     {
-        public class DownloadProgressEventArgs : EventArgs
+        public event EventHandler<DownloadProgressEventArgs> DownloadProgressEvent;
+
+        public async Task<List<NormalizedMatch>> DownloadForPlayersAsync(string playerNames)
         {
-            public int Value { get; set; }
-            public int Max { get; set; }
-            public string Message { get; set; }
-            public bool Rewrite { get; set; }
+            return await Task.Run(() =>
+            {
+                var playerNamesLocal = TelemetryApp.App.NormalizePlayerCsv(playerNames);
+                if (string.IsNullOrEmpty(playerNamesLocal))
+                {
+                    throw new ArgumentException("Failed to parse playerNames: " + playerNames);
+                }
+                playerNames = playerNamesLocal;
+                List<JToken> players = TelemetryApp.App.ApiGetPlayersByNames(playerNames);
+                List<string> matchIds = new List<string>();
+                foreach (JToken player in players)
+                {
+                    string name = player.SelectToken("attributes.name").ToString();
+                    List<JToken> matches = player.SelectToken("relationships.matches.data").ToList();
+                    foreach (JToken match in matches)
+                    {
+                        string matchId = match["id"].ToString();
+                        matchIds.Add(matchId);
+                    }
+                }
+
+                List<NormalizedMatch> nms = new List<NormalizedMatch>();
+                for (int i = 0, s = matchIds.Count; i < s; i++)
+                {
+                    string matchId = matchIds[i];
+                    NormalizedMatch nm = DownloadOnlyMatchMetadataForMatchId(matchId, i, s);
+                    //NormalizedRoster normalizedRoster = nm.Rosters.FirstOrDefault(r => r.Players.Select(p => p.Attributes.Name).Contains(name));
+                    nms.Add(nm);
+                }
+
+                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
+                {
+                    Value = matchIds.Count,
+                    Max = matchIds.Count,
+                    Msg = $"Finished loading all match metadata."
+                });
+
+                List<NormalizedMatch> nmsToDownload = nms.Where(nm => nm.TelemetryAlreadyDownloaded == false).ToList();
+                for (int i = 0, s = nmsToDownload.Count; i < s; i++)
+                {
+                    NormalizedMatch normalizedMatch = nmsToDownload[i];
+                    DownloadOnlyTelemetryForMatch(normalizedMatch, i, s);
+                }
+                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
+                {
+                    Complete = true,
+                    Value = players.Count,
+                    Max = players.Count,
+                    Msg = $"Summary: #Online: {matchIds.Count}, #NewDownloaded: {nmsToDownload.Count}"
+                });
+                return nms;
+            });
         }
 
-        public event EventHandler<DownloadProgressEventArgs> DownloadProgressEvent;
+        public NormalizedMatch DownloadOnlyMatchMetadataForMatchId(string matchId, int i, int matchesCount)
+        {
+            string mmOutputFileName = "mm-" + matchId + ".json";
+            string mmOutputFilePath = Path.Combine(TelemetryApp.App.MatchDir, mmOutputFileName);
+
+            string mtOutputFileName = "mt-" + matchId + ".json.gz";
+            string mtOutputFilePath = Path.Combine(TelemetryApp.App.TelemetryDir, mtOutputFileName);
+
+            NormalizedMatch normedMatch = new NormalizedMatch { Id = matchId };
+            string matchJsonStr;
+            if (!File.Exists(mmOutputFilePath))
+            {
+                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
+                {
+                    Value = i + 1,
+                    Max = matchesCount,
+                    Msg = $"Downloading metadata for match {i + 1}/{matchesCount}"
+                });
+                matchJsonStr = TelemetryApp.App.ApiGetMatch(matchId);
+                matchJsonStr = PrettyPrintJson(matchJsonStr);
+                File.WriteAllText(mmOutputFilePath, matchJsonStr);
+            }
+            else
+            {
+                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
+                {
+                    Value = i + 1,
+                    Max = matchesCount,
+                    Msg = $"Loading cached metadata for match {i + 1}/{matchesCount}"
+                });
+                normedMatch.MetadataAlreadyDownloaded = true;
+                matchJsonStr = File.ReadAllText(mmOutputFilePath);
+            }
+            normedMatch.JsonStr = matchJsonStr;
+            var model = JsonConvert.DeserializeObject<MatchModel>(normedMatch.JsonStr);
+            normedMatch.Model = model;
+            List<string> rosterIds = model.Data.Relationships.Rosters.Data.Select(x => x.Id).ToList();
+            foreach (string rosterId in rosterIds)
+            {
+                MatchIncluded includedRoster = model.Included.First(x => x.Id == rosterId);
+                List<string> participantIds = includedRoster.Relationships.Participants.Data.Select(x => x.Id).ToList();
+                NormalizedRoster roster = new NormalizedRoster { Roster = includedRoster };
+                normedMatch.Rosters.Add(roster);
+                foreach (string participantId in participantIds)
+                {
+                    MatchIncluded participant = model.Included.First(x => x.Id == participantId);
+                    roster.Players.Add(participant);
+                }
+            }
+            normedMatch.TelemetryAlreadyDownloaded = File.Exists(mtOutputFilePath);
+            return normedMatch;
+        }
+
+        public void DownloadOnlyTelemetryForMatch(NormalizedMatch normalizedMatch, int counter, int count)
+        {
+            string matchId = normalizedMatch.Id;
+            string mtOutputFileName = "mt-" + matchId + ".json.gz";
+            string mtOutputFilePath = Path.Combine(TelemetryApp.App.TelemetryDir, mtOutputFileName);
+            if (File.Exists(mtOutputFilePath))
+            {
+                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
+                {
+                    Rewrite = true,
+                    Value = counter,
+                    Max = count,
+                    Msg = $"[{counter}/{count}] Telemetry {matchId} already downloaded. Skip."
+                });
+                return;
+            }
+            MatchIncluded telemetryAsset = normalizedMatch.Model.Included
+                .FirstOrDefault(x => x.Type == "asset" && x.Attributes.Name == "telemetry");
+            string url = telemetryAsset?.Attributes?.Url;
+            if (url == null)
+            {
+                return;
+            }
+            Debug.WriteLine("Telemetry URL: " + url);
+            using (Stream result = TelemetryApp.App.HttpClient.GetStreamAsync(url).Result)
+            using (var stream = new GZipStream(result, CompressionMode.Decompress))
+            {
+                Uri uri = new Uri(url);
+                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
+                {
+                    Rewrite = true,
+                    Value = counter,
+                    Max = count,
+                    Msg = $"[{counter}/{count}] Downloading {uri.AbsolutePath}"
+                });
+                string pJson = PrettyPrintTelemetryJson(stream, out DateTime matchDateTime);
+                WriteStringToGzFile(mtOutputFilePath, pJson, matchDateTime);
+            }
+        }
 
         public void DownloadTelemetryForPlayers(string playerNames)
         {
@@ -40,7 +182,7 @@ namespace MyPubgTelemetry.Downloader
                 {
                     Value = i,
                     Max = players.Count,
-                    Message = $"\nChecking for new telemetry data for {name} ..."
+                    Msg = $"\nChecking for new telemetry data for {name} ..."
                 });
                 foreach (JToken match in matches)
                 {
@@ -52,7 +194,7 @@ namespace MyPubgTelemetry.Downloader
                 {
                     Value = i,
                     Max = players.Count,
-                    Message = "\n... telemetry data update complete."
+                    Msg = "\n... telemetry data update complete."
                 });
                 string[] teleFiles = Directory.GetFiles(app.TelemetryDir, "*.json");
                 int nTeleFiles = teleFiles.Length;
@@ -60,107 +202,18 @@ namespace MyPubgTelemetry.Downloader
                 {
                     Value = i,
                     Max = players.Count,
-                    Message =
+                    Msg =
                         $"Summary: MatchesOnline: {cApiMatches}, NewMatchesDownloaded: {nDownloaded}, AlreadyDownloaded: {nCacheHits}, TotalStored: {nTeleFiles}\n"
                 });
             }
         }
 
-        public List<NormalizedMatch> DownloadTelemetryForPlayers2(string playerNames)
-        {
-            var playerNamesLocal = TelemetryApp.App.NormalizePlayerCsv(playerNames);
-            if (string.IsNullOrEmpty(playerNamesLocal))
-            {
-                throw new ArgumentException("Failed to parse playerNames: " + playerNames);
-            }
-            playerNames = playerNamesLocal;
-            List<JToken> players = TelemetryApp.App.ApiGetPlayersByNames(playerNames);
-            List<NormalizedMatch> nms = new List<NormalizedMatch>();
-            foreach (JToken player in players)
-            {
-                string name = player.SelectToken("attributes.name").ToString();
-                List<JToken> matches = player.SelectToken("relationships.matches.data").ToList();
-                foreach (JToken match in matches)
-                {
-                    string matchId = match["id"].ToString();
-                    NormalizedMatch nm = DownloadMatchMetadataForMatchId(matchId);
-                    nms.Add(nm);
-                }
-            }
-            return nms;
-        }
-
-        public class NormalizedMatch
-        {
-            public string Id { get; set; }
-            [JsonIgnore]
-            public MatchMetadata Model { get; set; }
-            [JsonIgnore]
-            public string JsonStr { get; set; }
-            public List<NormalizedRoster> Rosters { get; } = new List<NormalizedRoster>();
-            public bool MetadataAlreadyDownloaded { get; set; }
-            public bool TelemetryAlreadyDownloaded { get; set; }
-        }
-
-        public class NormalizedRoster
-        {
-            public List<MatchIncluded> Players { get; } = new List<MatchIncluded>();
-            [JsonIgnore]
-            public MatchIncluded Roster { get; set;  }
-        }
-
-        public NormalizedMatch DownloadMatchMetadataForMatchId(string matchId)
+        public void DownloadTelemetryForMatchId(string matchId, int counter, int count, ref int nDownloaded, ref int nCacheHits)
         {
             string mtOutputFileName = "mt-" + matchId + ".json.gz";
             string mmOutputFileName = "mm-" + matchId + ".json";
             string mtOutputFilePath = Path.Combine(TelemetryApp.App.TelemetryDir, mtOutputFileName);
             string mmOutputFilePath = Path.Combine(TelemetryApp.App.MatchDir, mmOutputFileName);
-
-            NormalizedMatch nm = new NormalizedMatch { Id = matchId };
-            if (!File.Exists(mmOutputFilePath))
-            {
-                nm.JsonStr = TelemetryApp.App.ApiGetMatch(matchId);
-                var model = JsonConvert.DeserializeObject<MatchMetadata>(nm.JsonStr);
-                nm.Model = model;
-                nm.JsonStr = PrettyPrintJson(nm.JsonStr);
-
-                List<string> rosterIds = model.Data.Relationships.Rosters.Data.Select(x => x.Id).ToList();
-                foreach (string rosterId in rosterIds)
-                {
-
-                    MatchIncluded includedRoster = model.Included.First(x => x.Id == rosterId);
-                    List<string> participantIds = includedRoster.Relationships.Participants.Data.Select(x => x.Id).ToList();
-
-                    NormalizedRoster roster = new NormalizedRoster {Roster = includedRoster};
-                    nm.Rosters.Add(roster);
-
-                    foreach (string participantId in participantIds)
-                    {
-                        MatchIncluded participant = model.Included.First(x => x.Id == participantId);
-                        roster.Players.Add(participant);
-                    }
-                }
-                File.WriteAllText(mmOutputFilePath, nm.JsonStr);
-            }
-            else
-            {
-                nm.MetadataAlreadyDownloaded = true;
-            }
-            if (File.Exists(mtOutputFilePath))
-            {
-                nm.TelemetryAlreadyDownloaded = true;
-            }
-            return nm;
-        }
-
-        public void DownloadTelemetryForMatchId(string matchId, int counter, int count,
-            ref int nDownloaded, ref int nCacheHits)
-        {
-            string mtOutputFileName = "mt-" + matchId + ".json.gz";
-            string mmOutputFileName = "mm-" + matchId + ".json";
-            string mtOutputFilePath = Path.Combine(TelemetryApp.App.TelemetryDir, mtOutputFileName);
-            string mmOutputFilePath = Path.Combine(TelemetryApp.App.MatchDir, mmOutputFileName);
-
             string matchJson = null;
             if (!File.Exists(mmOutputFilePath))
             {
@@ -171,7 +224,7 @@ namespace MyPubgTelemetry.Downloader
                     Rewrite = true,
                     Value = counter,
                     Max = count,
-                    Message = $"[{counter}/{count}] Downloading match metadata."
+                    Msg = $"[{counter}/{count}] Downloading match metadata."
                 });
             }
             else
@@ -186,7 +239,7 @@ namespace MyPubgTelemetry.Downloader
                     Rewrite = true,
                     Value = counter,
                     Max = count,
-                    Message = $"[{counter}/{count}] Telemetry {matchId} already downloaded. Skip."
+                    Msg = $"[{counter}/{count}] Telemetry {matchId} already downloaded. Skip."
                 });
                 nCacheHits++;
                 return;
@@ -206,7 +259,7 @@ namespace MyPubgTelemetry.Downloader
                     Rewrite = true,
                     Value = counter,
                     Max = count,
-                    Message = $"[{counter}/{count}] Downloading {uri.AbsolutePath}"
+                    Msg = $"[{counter}/{count}] Downloading {uri.AbsolutePath}"
                 });
                 string pJson = PrettyPrintTelemetryJson(stream, out DateTime matchDateTime);
                 WriteStringToGzFile(mtOutputFilePath, pJson, matchDateTime);
@@ -238,5 +291,33 @@ namespace MyPubgTelemetry.Downloader
             JToken jsonObject = JToken.Parse(json);
             return jsonObject.ToString(Formatting.Indented);
         }
+    }
+
+    public class NormalizedMatch
+    {
+        public string Id { get; set; }
+        [JsonIgnore]
+        public MatchModel Model { get; set; }
+        [JsonIgnore]
+        public string JsonStr { get; set; }
+        public List<NormalizedRoster> Rosters { get; } = new List<NormalizedRoster>();
+        public bool MetadataAlreadyDownloaded { get; set; }
+        public bool TelemetryAlreadyDownloaded { get; set; }
+    }
+
+    public class NormalizedRoster
+    {
+        public List<MatchIncluded> Players { get; } = new List<MatchIncluded>();
+        [JsonIgnore]
+        public MatchIncluded Roster { get; set; }
+    }
+
+    public class DownloadProgressEventArgs : EventArgs
+    {
+        public int Value { get; set; }
+        public int Max { get; set; }
+        public string Msg { get; set; }
+        public bool Rewrite { get; set; }
+        public bool Complete { set; get; }
     }
 }

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
-namespace MyPubgTelemetry.MatchMetadataModel
+namespace MyPubgTelemetry.ApiMatchModel
 {
-    public partial class MatchMetadata
+    public class MatchModel
     {
         public MatchData Data { get; set; }
         public List<MatchIncluded> Included { get; set; }
@@ -11,7 +13,7 @@ namespace MyPubgTelemetry.MatchMetadataModel
         public Meta Meta { get; set; }
     }
 
-    public partial class MatchData
+    public class MatchData
     {
         public string Type { get; set; }
         public string Id { get; set; }
@@ -20,7 +22,7 @@ namespace MyPubgTelemetry.MatchMetadataModel
         public MatchDataLinks Links { get; set; }
     }
 
-    public partial class MatchDataAttributes
+    public class MatchDataAttributes
     {
         public string ShardId { get; set; }
         public object Tags { get; set; }
@@ -34,30 +36,30 @@ namespace MyPubgTelemetry.MatchMetadataModel
         public DateTimeOffset CreatedAt { get; set; }
     }
 
-    public partial class MatchDataLinks
+    public class MatchDataLinks
     {
         public Uri Self { get; set; }
         public string Schema { get; set; }
     }
 
-    public partial class MatchDataRelationships
+    public class MatchDataRelationships
     {
         public MatchAssets MatchAssets { get; set; }
         public MatchAssets Rosters { get; set; }
     }
 
-    public partial class MatchAssets
+    public class MatchAssets
     {
         public List<MatchDatum> Data { get; set; }
     }
 
-    public partial class MatchDatum
+    public class MatchDatum
     {
         public string Type { get; set; }
         public string Id { get; set; }
     }
 
-    public partial class MatchIncluded
+    public class MatchIncluded
     {
         public string Type { get; set; }
         public string Id { get; set; }
@@ -65,7 +67,7 @@ namespace MyPubgTelemetry.MatchMetadataModel
         public IncludedRelationships Relationships { get; set; }
     }
 
-    public partial class IncludedAttributes
+    public class IncludedAttributes
     {
         public Stats Stats { get; set; }
         public string Actor { get; set; }
@@ -74,10 +76,10 @@ namespace MyPubgTelemetry.MatchMetadataModel
         public string Name { get; set; }
         public string Description { get; set; }
         public DateTimeOffset? CreatedAt { get; set; }
-        public Uri Url { get; set; }
+        public string Url { get; set; }
     }
 
-    public partial class Stats
+    public class Stats
     {
         public long? DbnOs { get; set; }
         public long? Assists { get; set; }
@@ -112,15 +114,17 @@ namespace MyPubgTelemetry.MatchMetadataModel
         public long? WinPointsDelta { get; set; }
         public long? Rank { get; set; }
         public long? TeamId { get; set; }
+        [JsonExtensionData]
+        public Dictionary<string, JToken> OtherStats { get; set; } = new Dictionary<string, JToken>();
     }
 
-    public partial class IncludedRelationships
+    public class IncludedRelationships
     {
         public MatchAssets Team { get; set; }
         public MatchAssets Participants { get; set; }
     }
 
-    public partial class Meta
+    public class Meta
     {
     }
 }
