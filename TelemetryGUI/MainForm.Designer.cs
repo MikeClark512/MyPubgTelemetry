@@ -75,7 +75,7 @@
             this.chart1.Legends.Add(legend1);
             this.chart1.Location = new System.Drawing.Point(3, 0);
             this.chart1.Name = "chart1";
-            this.chart1.Size = new System.Drawing.Size(171, 227);
+            this.chart1.Size = new System.Drawing.Size(473, 506);
             this.chart1.TabIndex = 6;
             this.chart1.Text = "chart1";
             // 
@@ -138,8 +138,8 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.buttonNext);
             this.splitContainer1.Panel2.Controls.Add(this.chart1);
-            this.splitContainer1.Size = new System.Drawing.Size(550, 269);
-            this.splitContainer1.SplitterDistance = 372;
+            this.splitContainer1.Size = new System.Drawing.Size(934, 548);
+            this.splitContainer1.SplitterDistance = 454;
             this.splitContainer1.TabIndex = 5;
             // 
             // dataGridView1
@@ -155,7 +155,7 @@
             this.dataGridView1.Location = new System.Drawing.Point(0, 68);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(369, 159);
+            this.dataGridView1.Size = new System.Drawing.Size(451, 438);
             this.dataGridView1.StandardTab = true;
             this.dataGridView1.TabIndex = 1;
             this.dataGridView1.SelectionChanged += new System.EventHandler(this.DataGridView1_SelectionChanged);
@@ -175,9 +175,9 @@
             // 
             this.buttonOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOptions.Location = new System.Drawing.Point(0, 233);
+            this.buttonOptions.Location = new System.Drawing.Point(0, 512);
             this.buttonOptions.Name = "buttonOptions";
-            this.buttonOptions.Size = new System.Drawing.Size(370, 23);
+            this.buttonOptions.Size = new System.Drawing.Size(452, 23);
             this.buttonOptions.TabIndex = 2;
             this.buttonOptions.Text = "&Options...";
             this.buttonOptions.UseVisualStyleBackColor = true;
@@ -201,7 +201,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxSquad.Location = new System.Drawing.Point(63, 4);
             this.textBoxSquad.Name = "textBoxSquad";
-            this.textBoxSquad.Size = new System.Drawing.Size(306, 20);
+            this.textBoxSquad.Size = new System.Drawing.Size(388, 20);
             this.textBoxSquad.TabIndex = 0;
             this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSquad_KeyDown);
             // 
@@ -227,7 +227,7 @@
             // buttonNext
             // 
             this.buttonNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonNext.Location = new System.Drawing.Point(88, 233);
+            this.buttonNext.Location = new System.Drawing.Point(390, 512);
             this.buttonNext.Name = "buttonNext";
             this.buttonNext.Size = new System.Drawing.Size(83, 23);
             this.buttonNext.TabIndex = 7;
@@ -240,9 +240,9 @@
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1,
             this.toolStripProgressBar1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 271);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 550);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(574, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(958, 22);
             this.statusStrip1.SizingGrip = false;
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
@@ -251,7 +251,7 @@
             // 
             this.toolStripStatusLabel1.Margin = new System.Windows.Forms.Padding(12, 3, 0, 2);
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(345, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(729, 17);
             this.toolStripStatusLabel1.Spring = true;
             this.toolStripStatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -265,7 +265,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(574, 293);
+            this.ClientSize = new System.Drawing.Size(958, 572);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.splitContainer1);
             this.KeyPreview = true;

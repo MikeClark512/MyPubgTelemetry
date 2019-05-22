@@ -44,7 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MatchMetadataModel\ApiModels.cs" />
+    <Compile Include="ApiMatchModel\MatchModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TelemetryApp.cs" />
   </ItemGroup>

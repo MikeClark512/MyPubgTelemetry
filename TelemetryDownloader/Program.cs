@@ -25,8 +25,8 @@ namespace MyPubgTelemetry.Downloader
             TelemetryDownloader downloader = new TelemetryDownloader();
             downloader.DownloadProgressEvent += (sender, eventArgs) =>
             {
-                if (eventArgs.Rewrite) ConsoleRewrite(eventArgs.Message);
-                else Console.WriteLine(eventArgs.Message);
+                if (eventArgs.Rewrite) ConsoleRewrite(eventArgs.Msg);
+                else Console.WriteLine(eventArgs.Msg);
             };
             downloader.DownloadTelemetryForPlayers(USERNAMES);
             if (Debugger.IsAttached)
