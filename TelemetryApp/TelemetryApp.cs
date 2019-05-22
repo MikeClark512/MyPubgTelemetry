@@ -12,6 +12,8 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Win32.SafeHandles;
+using MyPubgTelemetry.ApiMatchModel;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace MyPubgTelemetry
@@ -128,9 +130,12 @@ namespace MyPubgTelemetry
         public ISet<string> Squad { get; set; }
         public bool TelemetryMetaDataLoaded { get; set; }
         public int Index { get; set; }
-        public int SquadKills { get; set; }
+        public long SquadKills { get; set; }
         public PreparedData PreparedData { get; set; }
         public Mutex Mutex { get; } = new Mutex();
+        public NormalizedMatch NormalizedMatch { get; set; }
+
+        public TelemetryFile() { }
 
         public StreamReader NewTelemetryReader()
         {
@@ -160,6 +165,12 @@ namespace MyPubgTelemetry
                 stream = new GZipStream(bufferedStream, CompressionMode.Decompress);
             }
             return new StreamReader(stream);
+        }
+
+        public string GetMatchId()
+        {
+            if (FileInfo == null) return null;
+            return TelemetryApp.TelemetryFilenameToMatchId(FileInfo.Name);
         }
     }
 
@@ -192,6 +203,25 @@ namespace MyPubgTelemetry
         public float health;
         public int teamId = -1;
         public string accountId;
+    }
+
+    public class NormalizedMatch
+    {
+        public string Id { get; set; }
+        [JsonIgnore]
+        public MatchModel Model { get; set; }
+        [JsonIgnore]
+        public string JsonStr { get; set; }
+        public List<NormalizedRoster> Rosters { get; } = new List<NormalizedRoster>();
+        public bool MetadataAlreadyDownloaded { get; set; }
+        public bool TelemetryAlreadyDownloaded { get; set; }
+    }
+
+    public class NormalizedRoster
+    {
+        public List<MatchIncluded> Players { get; } = new List<MatchIncluded>();
+        [JsonIgnore]
+        public MatchIncluded Roster { get; set; }
     }
 
     public static class TelemetryAppExtensions

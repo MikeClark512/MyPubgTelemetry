@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,10 +19,8 @@ using System.Threading.Tasks.Schedulers;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using Equin.ApplicationFramework;
-using MongoDB.Bson.Serialization.Conventions;
 using MyPubgTelemetry.Downloader;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace MyPubgTelemetry.GUI
 {
@@ -38,6 +37,7 @@ namespace MyPubgTelemetry.GUI
         private readonly TaskFactory _taskFactory;
         private CancellationTokenSource CtsMatchSwitch { get; set; }
         private CancellationTokenSource CtsMatchMetaData { get; set; }
+        public StringBuilder LogBuffer { get; set; } = new StringBuilder();
 
         public MainForm()
         {
@@ -49,6 +49,13 @@ namespace MyPubgTelemetry.GUI
             toolStripProgressBar1.TextChanged += delegate (object sender, EventArgs args)
             {
                 toolStripStatusLabel1.Text = toolStripProgressBar1.Text;
+            };
+            toolStripStatusLabel1.TextChanged += delegate (object sender, EventArgs args)
+            {
+                LogBuffer.Append(toolStripStatusLabel1.Text.Trim());
+                LogBuffer.Append(Environment.NewLine);
+                if (LogBuffer.Length > 500000)
+                    LogBuffer.Remove(0, 100000);
             };
             var qts = new QueuedTaskScheduler(Environment.ProcessorCount - 1, "QTS", false, ThreadPriority.BelowNormal);
             _taskFactory = new TaskFactory(qts);
@@ -234,7 +241,7 @@ namespace MyPubgTelemetry.GUI
                 TelemetryFile file = telFiles[i];
                 file.Index = i;
                 Task task = _taskFactory.StartNew(() => ReadTelemetryMetaData(file, squaddies, deep), cancellationToken);
-                task.ContinueWith(continuationAction: (_) =>
+                task.ContinueWith((_) =>
                 {
                     file.TelemetryMetaDataLoaded = true;
                     BeginInvoke((MethodInvoker)delegate ()
@@ -259,8 +266,8 @@ namespace MyPubgTelemetry.GUI
                 BeginInvoke((MethodInvoker)delegate ()
                {
                    DebugThreadWriteLine("Done loading metadata (UI).");
-                    //dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
-                    toolStripProgressBar1.Visible = false;
+                   //dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                   toolStripProgressBar1.Visible = false;
                    for (int col = 0; col < dataGridView1.ColumnCount; col++)
                    {
                        dataGridView1.Columns[col].SortMode = DataGridViewColumnSortMode.Automatic;
@@ -295,6 +302,17 @@ namespace MyPubgTelemetry.GUI
 
         private void ReadTelemetryMetaData(TelemetryFile file, string[] squaddies, bool deep)
         {
+            NormalizedMatch normalizedMatch = ReadMatchMetaData(file);
+            file.NormalizedMatch = normalizedMatch;
+            NormalizedRoster roster = normalizedMatch.Rosters.FirstOrDefault(r =>
+            {
+                HashSet<string> rosterPlayers = r.Players.Select(p => p.Attributes.Stats.Name.ToLower()).ToHashSet();
+                HashSet<string> lowerSquaddies = squaddies.Select(s => s.ToLower()).ToHashSet();
+                rosterPlayers.IntersectWith(lowerSquaddies);
+                return rosterPlayers.Count > 0;
+            });
+            long kills = roster?.Players.Sum(p => p.Attributes.Stats.Kills) ?? -1;
+            file.SquadKills = kills;
             using (var sr = file.NewMatchMetaDataReader(FileMode.Open, FileAccess.ReadWrite, FileShare.Read, out FileStream fs))
             using (var jtr = new JsonTextReader(sr))
             {
@@ -398,6 +416,15 @@ namespace MyPubgTelemetry.GUI
                     }
                 }
             }
+        }
+
+        private static NormalizedMatch ReadMatchMetaData(TelemetryFile file)
+        {
+            string mid = file.GetMatchId();
+            string mmn = $"mm-{mid}.json";
+            string mmf = Path.Combine(TelemetryApp.App.MatchDir, mmn);
+            string jsonStr = File.ReadAllText(mmf);
+            return TelemetryDownloader.NormalizeMatch(mid, jsonStr);
         }
 
         private void PubgLookup(TelemetryFile file, string user)
@@ -646,8 +673,8 @@ namespace MyPubgTelemetry.GUI
                     });
                 };
                 List<NormalizedMatch> matches = await downloader.DownloadForPlayersAsync(squad);
-//                JsonSerializerSettings settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-//                string jsonStr = JsonConvert.SerializeObject(matches, Formatting.Indented, settings);
+                //JsonSerializerSettings settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+                //string jsonStr = JsonConvert.SerializeObject(matches, Formatting.Indented, settings);
                 //DebugThreadWriteLine("Normalized matches:\n" + jsonStr);
                 DebugThreadWriteLine("# Normalized matches: " + matches.Count);
                 LoadMatches();
@@ -674,7 +701,7 @@ namespace MyPubgTelemetry.GUI
 
         private void ButtonOptions_Click(object sender, EventArgs e)
         {
-            var optionsForm = new OptionsForm { StartPosition = FormStartPosition.CenterParent };
+            var optionsForm = new OptionsForm { StartPosition = FormStartPosition.CenterParent, LogText = LogBuffer.ToString() };
             optionsForm.ShowDialog(this);
         }
 
@@ -733,10 +760,8 @@ namespace MyPubgTelemetry.GUI
                     SelectMatch(telemetryFile);
                     return true;
                 }
-
                 return false;
             }
-
             int selIdx = MatchListGetSelectedIndex();
             int rowCount = dataGridView1.RowCount;
             for (int i = selIdx + 1; i < rowCount; i++)
