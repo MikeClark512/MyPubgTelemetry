@@ -1,4 +1,6 @@
-﻿namespace MyPubgTelemetry.GUI
+﻿using System.Drawing;
+
+namespace MyPubgTelemetry.GUI
 {
     partial class OptionsForm
     {
@@ -35,7 +37,6 @@
             this.textBoxApiKey = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageGeneral = new System.Windows.Forms.TabPage();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.buttonSettingsDirOpenInFileExplorer = new System.Windows.Forms.Button();
             this.buttonDataDirOpenInFileExplorer = new System.Windows.Forms.Button();
             this.buttonDataDirBrowse = new System.Windows.Forms.Button();
@@ -43,8 +44,12 @@
             this.labelSettingsDir = new System.Windows.Forms.Label();
             this.textBoxDataDir = new System.Windows.Forms.TextBox();
             this.labelDataDir = new System.Windows.Forms.Label();
+            this.tabPageLog = new System.Windows.Forms.TabPage();
+            this.textBoxLog = new System.Windows.Forms.TextBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tabControl1.SuspendLayout();
             this.tabPageGeneral.SuspendLayout();
+            this.tabPageLog.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonCancel
@@ -98,6 +103,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Controls.Add(this.tabPageGeneral);
+            this.tabControl1.Controls.Add(this.tabPageLog);
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -195,10 +201,37 @@
             this.labelDataDir.AutoSize = true;
             this.labelDataDir.Location = new System.Drawing.Point(6, 94);
             this.labelDataDir.Name = "labelDataDir";
-            this.labelDataDir.Size = new System.Drawing.Size(62, 13);
+            this.labelDataDir.Size = new System.Drawing.Size(85, 13);
             this.labelDataDir.TabIndex = 7;
             this.labelDataDir.Text = "MmdData folder:";
             this.toolTip1.SetToolTip(this.labelDataDir, "Telemetry data files will be stored and and read from this directory.");
+            // 
+            // tabPageLog
+            // 
+            this.tabPageLog.Controls.Add(this.textBoxLog);
+            this.tabPageLog.Location = new System.Drawing.Point(4, 22);
+            this.tabPageLog.Name = "tabPageLog";
+            this.tabPageLog.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageLog.Size = new System.Drawing.Size(489, 241);
+            this.tabPageLog.TabIndex = 1;
+            this.tabPageLog.Text = "Log";
+            this.tabPageLog.UseVisualStyleBackColor = true;
+            // 
+            // textBoxLog
+            // 
+            this.textBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxLog.Font = new System.Drawing.Font("Courier New", 12F);
+            this.textBoxLog.Location = new System.Drawing.Point(6, 6);
+            this.textBoxLog.Multiline = true;
+            this.textBoxLog.Name = "textBoxLog";
+            this.textBoxLog.ReadOnly = true;
+            this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.textBoxLog.Size = new System.Drawing.Size(480, 229);
+            this.textBoxLog.TabIndex = 0;
+            this.textBoxLog.WordWrap = false;
+            this.textBoxLog.VisibleChanged += new System.EventHandler(this.TextBoxLog_VisibleChanged);
             // 
             // OptionsForm
             // 
@@ -218,6 +251,8 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPageGeneral.ResumeLayout(false);
             this.tabPageGeneral.PerformLayout();
+            this.tabPageLog.ResumeLayout(false);
+            this.tabPageLog.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -238,5 +273,7 @@
         private System.Windows.Forms.Label labelSettingsDir;
         private System.Windows.Forms.TextBox textBoxDataDir;
         private System.Windows.Forms.Label labelDataDir;
+        private System.Windows.Forms.TabPage tabPageLog;
+        private System.Windows.Forms.TextBox textBoxLog;
     }
 }

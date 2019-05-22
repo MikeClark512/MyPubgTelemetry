@@ -2,7 +2,7 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassPrimaryPlayerspace="MyPubgTelemetry.GUI.Properties" GeneratedClassPrimaryPlayer="Settings">
   <Profiles />
   <Settings>
-    <Setting PrimaryPlayer="Squad" Type="System.String" Scope="User">
+    <Setting Name="Squad" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

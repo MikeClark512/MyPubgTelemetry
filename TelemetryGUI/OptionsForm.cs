@@ -14,6 +14,8 @@ namespace MyPubgTelemetry.GUI
             InitializeComponent();
         }
 
+        public string LogText { get; set; }
+
         private void OptionsForm_Load(object sender, EventArgs e)
         {
             textBoxApiKey.Text = TelemetryApp.App.ApiKey;
@@ -25,6 +27,7 @@ namespace MyPubgTelemetry.GUI
             {
                 Debug.WriteLine($"link {link.Name} {link.Start} {link.Length}");
             }
+            textBoxLog.Text = LogText;
         }
 
         private void ButtonCancel_Click(object sender, EventArgs e)
@@ -50,9 +53,7 @@ namespace MyPubgTelemetry.GUI
 
         private void ButtonDataDirBrowse_Click(object sender, EventArgs e)
         {
-            var dlg = new CommonOpenFileDialog();
-            dlg.IsFolderPicker = true;
-            dlg.InitialDirectory = textBoxDataDir.Text;
+            var dlg = new CommonOpenFileDialog { IsFolderPicker = true, InitialDirectory = textBoxDataDir.Text };
             //dlg.RootFolder = Environment.SpecialFolder.MyComputer;
             CommonFileDialogResult result = dlg.ShowDialog();
             if (result == CommonFileDialogResult.Ok)
@@ -64,6 +65,15 @@ namespace MyPubgTelemetry.GUI
         private void LabelApiKey_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             TelemetryApp.App.OpenUrlInWebBrowser("https://developer.pubg.com/");
+        }
+
+        private void TextBoxLog_VisibleChanged(object sender, EventArgs e)
+        {
+            if (textBoxLog.Visible)
+            {
+                textBoxLog.SelectionStart = textBoxLog.TextLength;
+                textBoxLog.ScrollToCaret();
+            }
         }
     }
 }

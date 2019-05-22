@@ -80,40 +80,49 @@ namespace MyPubgTelemetry.Downloader
             string mtOutputFileName = "mt-" + matchId + ".json.gz";
             string mtOutputFilePath = Path.Combine(TelemetryApp.App.TelemetryDir, mtOutputFileName);
 
-            NormalizedMatch normedMatch = new NormalizedMatch { Id = matchId };
             string matchJsonStr;
+            bool metadataAlreadyDownloaded;
             if (!File.Exists(mmOutputFilePath))
             {
                 DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
                 {
-                    Value = i + 1,
+                    Value = i,
                     Max = matchesCount,
                     Msg = $"Downloading metadata for match {i + 1}/{matchesCount}"
                 });
                 matchJsonStr = TelemetryApp.App.ApiGetMatch(matchId);
                 matchJsonStr = PrettyPrintJson(matchJsonStr);
                 File.WriteAllText(mmOutputFilePath, matchJsonStr);
+                metadataAlreadyDownloaded = false;
             }
             else
             {
                 DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
                 {
-                    Value = i + 1,
+                    Value = i,
                     Max = matchesCount,
                     Msg = $"Loading cached metadata for match {i + 1}/{matchesCount}"
                 });
-                normedMatch.MetadataAlreadyDownloaded = true;
                 matchJsonStr = File.ReadAllText(mmOutputFilePath);
+                metadataAlreadyDownloaded = true;
             }
+            NormalizedMatch normedMatch = NormalizeMatch(matchId, matchJsonStr);
             normedMatch.JsonStr = matchJsonStr;
-            var model = JsonConvert.DeserializeObject<MatchModel>(normedMatch.JsonStr);
-            normedMatch.Model = model;
+            normedMatch.MetadataAlreadyDownloaded = metadataAlreadyDownloaded;
+            normedMatch.TelemetryAlreadyDownloaded = File.Exists(mtOutputFilePath);
+            return normedMatch;
+        }
+
+        public static NormalizedMatch NormalizeMatch(string matchId, string matchJsonStr)
+        {
+            NormalizedMatch normedMatch = new NormalizedMatch {Id = matchId};
+            MatchModel model = JsonConvert.DeserializeObject<MatchModel>(matchJsonStr);
             List<string> rosterIds = model.Data.Relationships.Rosters.Data.Select(x => x.Id).ToList();
             foreach (string rosterId in rosterIds)
             {
                 MatchIncluded includedRoster = model.Included.First(x => x.Id == rosterId);
                 List<string> participantIds = includedRoster.Relationships.Participants.Data.Select(x => x.Id).ToList();
-                NormalizedRoster roster = new NormalizedRoster { Roster = includedRoster };
+                NormalizedRoster roster = new NormalizedRoster {Roster = includedRoster};
                 normedMatch.Rosters.Add(roster);
                 foreach (string participantId in participantIds)
                 {
@@ -121,7 +130,8 @@ namespace MyPubgTelemetry.Downloader
                     roster.Players.Add(participant);
                 }
             }
-            normedMatch.TelemetryAlreadyDownloaded = File.Exists(mtOutputFilePath);
+            normedMatch.Model = model;
+            normedMatch.JsonStr = matchJsonStr;
             return normedMatch;
         }
 
@@ -291,25 +301,6 @@ namespace MyPubgTelemetry.Downloader
             JToken jsonObject = JToken.Parse(json);
             return jsonObject.ToString(Formatting.Indented);
         }
-    }
-
-    public class NormalizedMatch
-    {
-        public string Id { get; set; }
-        [JsonIgnore]
-        public MatchModel Model { get; set; }
-        [JsonIgnore]
-        public string JsonStr { get; set; }
-        public List<NormalizedRoster> Rosters { get; } = new List<NormalizedRoster>();
-        public bool MetadataAlreadyDownloaded { get; set; }
-        public bool TelemetryAlreadyDownloaded { get; set; }
-    }
-
-    public class NormalizedRoster
-    {
-        public List<MatchIncluded> Players { get; } = new List<MatchIncluded>();
-        [JsonIgnore]
-        public MatchIncluded Roster { get; set; }
     }
 
     public class DownloadProgressEventArgs : EventArgs
