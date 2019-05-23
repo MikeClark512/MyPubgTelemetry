@@ -104,6 +104,32 @@ namespace MyPubgTelemetry
             return playersObject["data"].ToList();
         }
 
+        public static void FileWriteAllTextAtomic(string path, string contents)
+        {
+            FileInfo temp = new FileInfo(Path.GetTempFileName());
+            try
+            {
+                File.WriteAllText(temp.FullName, contents);
+                File.Move(temp.FullName, path);
+            }
+            finally
+            {
+                try
+                {
+                    if (temp.Exists)
+                    {
+                        temp.Delete();
+                    }
+                }
+                catch (Exception)
+                {
+                    // Just trying to be maximally tidy. It is highly unusual to be unable to delete a temp file that we just created for ourselves.
+                    // (And we have not shared a reference to the temp file path with any other function or program.)
+                    // If this exception occurs, something very bad is happening that we're probably powerless to prevent or help the user with.
+                }
+            }
+        }
+
         public string ApiGetMatch(string matchId)
         {
             return HttpClient.GetStringAsync("matches/" + matchId).Result;

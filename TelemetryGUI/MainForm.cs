@@ -176,7 +176,7 @@ namespace MyPubgTelemetry.GUI
             string[] ignore =
             {
                 "DeathType", "KillPointsDelta", "KillPoints", "KillStreaks", "LastKillPoints", "Name", "PlayerId", "MostDamage", "RankPoints", "WinPoints",
-                "WinPointsDelta", "Rank", "TeamId", "LastWinPoints"
+                "WinPointsDelta", "TeamId", "LastWinPoints"
             };
             Type pt = pi.PropertyType;
             string name = pi.Name;
@@ -382,6 +382,8 @@ namespace MyPubgTelemetry.GUI
                 rosterPlayers.IntersectWith(lowerSquaddies);
                 return rosterPlayers.Count > 0;
             });
+
+            // Foreach stat that looks numeric, sum it across each player on the roster -- even if that stat doesn't make sense as a sum stat :)
             MatchModelStats sqst = file;
             foreach (PropertyInfo pi in typeof(MatchModelStats).GetProperties())
             {
@@ -407,6 +409,9 @@ namespace MyPubgTelemetry.GUI
                     pi.SetValue(sqst, sum);
                 }
             }
+
+            // Don't report rank as a sum stat, just set it directly from the roster.
+            sqst.Rank = roster?.Roster.Attributes.Stats.Rank ?? -1;
 
             using (var sr = file.NewMatchMetaDataReader(FileMode.Open, FileAccess.ReadWrite, FileShare.Read, out FileStream fs))
             using (var jtr = new JsonTextReader(sr))
@@ -1020,17 +1025,30 @@ namespace MyPubgTelemetry.GUI
 
         internal static void SaveDataGridViewToCSV(DataGridView dgv, string filename)
         {
-            dgv.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
-            DataGridViewSelectionMode saved = dgv.SelectionMode;
-            dgv.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dgv.SelectAll();
-            DataObject dataObject = dgv.GetClipboardContent();
-            if (dataObject == null)
+            DataGridViewClipboardCopyMode clipboardCopyModeSaved = dgv.ClipboardCopyMode;
+            bool multiSelectSaved = dgv.MultiSelect;
+            DataGridViewSelectionMode selectionModeSaved = dgv.SelectionMode;
+            try
             {
-                MessageBox.Show("Export failed.", "Export failed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                dgv.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
+                dgv.SelectionMode = DataGridViewSelectionMode.CellSelect;
+                dgv.MultiSelect = true;
+                dgv.SelectAll();
+                DataObject dataObject = dgv.GetClipboardContent();
+                if (dataObject == null)
+                {
+                    MessageBox.Show("Export failed.", "Export failed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                File.WriteAllText(filename, dataObject.GetText(TextDataFormat.CommaSeparatedValue));
+            }
+            finally
+            {
+                dgv.MultiSelect = multiSelectSaved;
+                dgv.SelectionMode = selectionModeSaved;
+                dgv.ClipboardCopyMode = clipboardCopyModeSaved;
             }
 
-            File.WriteAllText(filename, dataObject?.GetText(TextDataFormat.CommaSeparatedValue));
         }
 
         private void ButtonExportCsv_Click(object sender, EventArgs e)
