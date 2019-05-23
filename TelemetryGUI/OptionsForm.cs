@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
@@ -28,6 +29,7 @@ namespace MyPubgTelemetry.GUI
                 Debug.WriteLine($"link {link.Name} {link.Start} {link.Length}");
             }
             textBoxLog.Text = LogText;
+            richTextBoxAbout.SelectedRtf = Properties.Resources.AboutRTF;
         }
 
         private void ButtonCancel_Click(object sender, EventArgs e)

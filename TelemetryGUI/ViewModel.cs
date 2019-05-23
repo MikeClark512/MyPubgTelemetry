@@ -37,11 +37,18 @@ namespace MyPubgTelemetry.GUI
         public StringBuilder LogBuffer { get; set; } = new StringBuilder();
 
         private volatile bool _downloadActive;
+        private bool _reloadActive;
 
         public bool DownloadActive
         {
             get => _downloadActive;
             set => SetProperty(storage: ref _downloadActive, value);
+        }
+
+        public bool ReloadActive
+        {
+            get => _reloadActive;
+            set => SetProperty(storage: ref _reloadActive, value);
         }
 
         //private BlockingCollection<TelemetryFile> MatchMetaDataQ { get; } = new BlockingCollection<TelemetryFile>();

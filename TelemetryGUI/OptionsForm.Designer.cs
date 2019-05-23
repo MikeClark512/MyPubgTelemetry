@@ -35,7 +35,7 @@ namespace MyPubgTelemetry.GUI
             this.buttonOk = new System.Windows.Forms.Button();
             this.labelApiKey = new System.Windows.Forms.LinkLabel();
             this.textBoxApiKey = new System.Windows.Forms.TextBox();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabControlOptions = new System.Windows.Forms.TabControl();
             this.tabPageGeneral = new System.Windows.Forms.TabPage();
             this.buttonSettingsDirOpenInFileExplorer = new System.Windows.Forms.Button();
             this.buttonDataDirOpenInFileExplorer = new System.Windows.Forms.Button();
@@ -46,10 +46,13 @@ namespace MyPubgTelemetry.GUI
             this.labelDataDir = new System.Windows.Forms.Label();
             this.tabPageLog = new System.Windows.Forms.TabPage();
             this.textBoxLog = new System.Windows.Forms.TextBox();
+            this.tabPageAbout = new System.Windows.Forms.TabPage();
+            this.richTextBoxAbout = new System.Windows.Forms.RichTextBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.tabControl1.SuspendLayout();
+            this.tabControlOptions.SuspendLayout();
             this.tabPageGeneral.SuspendLayout();
             this.tabPageLog.SuspendLayout();
+            this.tabPageAbout.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonCancel
@@ -97,18 +100,19 @@ namespace MyPubgTelemetry.GUI
             this.textBoxApiKey.Size = new System.Drawing.Size(474, 58);
             this.textBoxApiKey.TabIndex = 3;
             // 
-            // tabControl1
+            // tabControlOptions
             // 
-            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.tabControlOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tabControl1.Controls.Add(this.tabPageGeneral);
-            this.tabControl1.Controls.Add(this.tabPageLog);
-            this.tabControl1.Location = new System.Drawing.Point(12, 12);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(497, 267);
-            this.tabControl1.TabIndex = 4;
+            this.tabControlOptions.Controls.Add(this.tabPageGeneral);
+            this.tabControlOptions.Controls.Add(this.tabPageLog);
+            this.tabControlOptions.Controls.Add(this.tabPageAbout);
+            this.tabControlOptions.Location = new System.Drawing.Point(12, 12);
+            this.tabControlOptions.Name = "tabControlOptions";
+            this.tabControlOptions.SelectedIndex = 0;
+            this.tabControlOptions.Size = new System.Drawing.Size(497, 267);
+            this.tabControlOptions.TabIndex = 4;
             // 
             // tabPageGeneral
             // 
@@ -201,7 +205,7 @@ namespace MyPubgTelemetry.GUI
             this.labelDataDir.AutoSize = true;
             this.labelDataDir.Location = new System.Drawing.Point(6, 94);
             this.labelDataDir.Name = "labelDataDir";
-            this.labelDataDir.Size = new System.Drawing.Size(85, 13);
+            this.labelDataDir.Size = new System.Drawing.Size(62, 13);
             this.labelDataDir.TabIndex = 7;
             this.labelDataDir.Text = "Data folder:";
             this.toolTip1.SetToolTip(this.labelDataDir, "Telemetry data files will be stored and and read from this directory.");
@@ -233,6 +237,31 @@ namespace MyPubgTelemetry.GUI
             this.textBoxLog.WordWrap = false;
             this.textBoxLog.VisibleChanged += new System.EventHandler(this.TextBoxLog_VisibleChanged);
             // 
+            // tabPageAbout
+            // 
+            this.tabPageAbout.Controls.Add(this.richTextBoxAbout);
+            this.tabPageAbout.Location = new System.Drawing.Point(4, 22);
+            this.tabPageAbout.Name = "tabPageAbout";
+            this.tabPageAbout.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageAbout.Size = new System.Drawing.Size(489, 241);
+            this.tabPageAbout.TabIndex = 2;
+            this.tabPageAbout.Text = "About";
+            this.tabPageAbout.UseVisualStyleBackColor = true;
+            // 
+            // richTextBoxAbout
+            // 
+            this.richTextBoxAbout.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.richTextBoxAbout.BackColor = System.Drawing.Color.White;
+            this.richTextBoxAbout.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.richTextBoxAbout.Location = new System.Drawing.Point(6, 6);
+            this.richTextBoxAbout.Name = "richTextBoxAbout";
+            this.richTextBoxAbout.ReadOnly = true;
+            this.richTextBoxAbout.Size = new System.Drawing.Size(477, 229);
+            this.richTextBoxAbout.TabIndex = 0;
+            this.richTextBoxAbout.Text = "";
+            // 
             // OptionsForm
             // 
             this.AcceptButton = this.buttonOk;
@@ -241,18 +270,19 @@ namespace MyPubgTelemetry.GUI
             this.CancelButton = this.buttonCancel;
             this.ClientSize = new System.Drawing.Size(521, 320);
             this.ControlBox = false;
-            this.Controls.Add(this.tabControl1);
+            this.Controls.Add(this.tabControlOptions);
             this.Controls.Add(this.buttonOk);
             this.Controls.Add(this.buttonCancel);
             this.Name = "OptionsForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Options";
             this.Load += new System.EventHandler(this.OptionsForm_Load);
-            this.tabControl1.ResumeLayout(false);
+            this.tabControlOptions.ResumeLayout(false);
             this.tabPageGeneral.ResumeLayout(false);
             this.tabPageGeneral.PerformLayout();
             this.tabPageLog.ResumeLayout(false);
             this.tabPageLog.PerformLayout();
+            this.tabPageAbout.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -262,7 +292,7 @@ namespace MyPubgTelemetry.GUI
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Button buttonOk;
         private System.Windows.Forms.TextBox textBoxApiKey;
-        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabControl tabControlOptions;
         private System.Windows.Forms.TabPage tabPageGeneral;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.LinkLabel labelApiKey;
@@ -275,5 +305,7 @@ namespace MyPubgTelemetry.GUI
         private System.Windows.Forms.Label labelDataDir;
         private System.Windows.Forms.TabPage tabPageLog;
         private System.Windows.Forms.TextBox textBoxLog;
+        private System.Windows.Forms.TabPage tabPageAbout;
+        private System.Windows.Forms.RichTextBox richTextBoxAbout;
     }
 }
