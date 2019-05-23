@@ -40,7 +40,6 @@ namespace MyPubgTelemetry.Analyzer
             squad.Add("wckd");
             squad.Add("Giles333");
             squad.Add("Solunth");
-            int matchCount = 0;
             // map enemy playername to a set of match IDs that they were encountered in
             var enemyEncountersByMatch = new Dictionary<string, HashSet<string>>();
             string[] paths = Directory.GetFileSystemEntries(teleDir, "*.json");

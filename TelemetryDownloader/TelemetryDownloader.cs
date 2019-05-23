@@ -92,7 +92,7 @@ namespace MyPubgTelemetry.Downloader
                 });
                 matchJsonStr = TelemetryApp.App.ApiGetMatch(matchId);
                 matchJsonStr = PrettyPrintJson(matchJsonStr);
-                File.WriteAllText(mmOutputFilePath, matchJsonStr);
+                TelemetryApp.FileWriteAllTextAtomic(mmOutputFilePath, matchJsonStr);
                 metadataAlreadyDownloaded = false;
             }
             else
@@ -228,7 +228,7 @@ namespace MyPubgTelemetry.Downloader
             if (!File.Exists(mmOutputFilePath))
             {
                 matchJson = PrettyPrintJson(TelemetryApp.App.ApiGetMatch(matchId));
-                File.WriteAllText(mmOutputFilePath, matchJson);
+                TelemetryApp.FileWriteAllTextAtomic(mmOutputFilePath, matchJson);
                 DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
                 {
                     Rewrite = true,
