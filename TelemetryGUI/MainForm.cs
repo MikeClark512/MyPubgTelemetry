@@ -8,6 +8,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -15,6 +16,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Schedulers;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using CsvHelper;
 using Equin.ApplicationFramework;
 using MyPubgTelemetry.ApiMatchModel;
 using MyPubgTelemetry.Downloader;
@@ -68,7 +70,7 @@ namespace MyPubgTelemetry.GUI
                 BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty,
                 null,
                 dataGridView1,
-                new object[] { true });
+                new object[] {true});
 
             dataGridView1.ColumnHeadersDefaultCellStyle.SelectionBackColor = SystemColors.Control;
             dataGridView1.RowHeadersDefaultCellStyle.SelectionBackColor = SystemColors.Control;
@@ -279,6 +281,7 @@ namespace MyPubgTelemetry.GUI
                 ViewModel.ReloadActive = false;
                 return;
             }
+
             List<TelemetryFile> telFiles = jsonFiles.Select(jsonFile => new TelemetryFile {FileInfo = jsonFile, Title = ""}).ToList();
             telFiles.Sort((x, y) => y.FileInfo.CreationTime.CompareTo(x.FileInfo.CreationTime));
             var blv = new BindingListView<TelemetryFile>(telFiles);
@@ -291,6 +294,7 @@ namespace MyPubgTelemetry.GUI
             {
                 dataGridView1.Columns[col].SortMode = DataGridViewColumnSortMode.NotSortable;
             }
+
             ViewModel.CtsMatchMetaData?.Cancel();
             ViewModel.CtsMatchMetaData = new CancellationTokenSource();
             Task.Run(() => UpdateMatchListMetaData(telFiles, squaddies, deep, ViewModel.CtsMatchMetaData.Token));
@@ -678,7 +682,8 @@ namespace MyPubgTelemetry.GUI
             chart1.ChartAreas[0].AxisX.TitleFont = DeriveFont(chart1.ChartAreas[0].AxisX.TitleFont, 0);
 
             ISet<string> squad = pd.File?.Squad ?? new HashSet<string>();
-            NormalizedRoster roster = pd.File?.NormalizedMatch?.Rosters?.FirstOrDefault(r => r.Players?.Any(p => squad.Contains(p?.Attributes?.Stats?.Name)) ?? false);
+            NormalizedRoster roster =
+                pd.File?.NormalizedMatch?.Rosters?.FirstOrDefault(r => r.Players?.Any(p => squad.Contains(p?.Attributes?.Stats?.Name)) ?? false);
             chart1.Titles[0].Text = $"HP over time for one match -- {sdt} -- Squad Rank: {roster?.Roster.Attributes.Stats.Rank}";
             chart1.Titles[0].Font = new Font(chart1.Titles[0].Font.FontFamily, 12, FontStyle.Bold);
 
@@ -738,6 +743,7 @@ namespace MyPubgTelemetry.GUI
             {
                 chart1Series.Points.Clear();
             }
+
             chart.Series.Clear();
         }
 
@@ -759,6 +765,16 @@ namespace MyPubgTelemetry.GUI
 
         private async Task DownloadAndRefresh()
         {
+            if (string.IsNullOrWhiteSpace(TelemetryApp.App.ApiKey))
+            {
+                BeginInvoke((MethodInvoker) delegate()
+                {
+                    MessageBox.Show("Your API Key is not set. Please go to the options dialog and paste a valid API Key.",
+                        "API Key Not Set", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                });
+                return;
+            }
+
             TelemetryDownloader downloader = new TelemetryDownloader();
             var squadSet = new HashSet<string>(ViewModel.RegexCsv.Split(textBoxSquad.Text));
             if (squadSet.Count == 0)
@@ -791,6 +807,11 @@ namespace MyPubgTelemetry.GUI
                 //DebugThreadWriteLine("Normalized matches:\n" + jsonStr);
                 DebugThreadWriteLine("# Normalized matches: " + matches.Count);
             }
+            catch (Exception hre)
+            {
+                string msg = hre?.InnerException?.Message + "\nCheck that your API key is set correctly.";
+                MessageBox.Show(msg, "HTTP Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
             finally
             {
                 ViewModel.DownloadActive = false;
@@ -813,10 +834,14 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
-        private void ButtonOptions_Click(object sender, EventArgs e)
+        private async void ButtonOptions_Click(object sender, EventArgs e)
         {
             var optionsForm = new OptionsForm {StartPosition = FormStartPosition.CenterParent, LogText = ViewModel.LogBuffer.ToString()};
-            optionsForm.ShowDialog(this);
+            DialogResult dialogResult = optionsForm.ShowDialog(this);
+            if (dialogResult == DialogResult.OK)
+            {
+               await DownloadAndRefresh();
+            }
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
@@ -993,9 +1018,32 @@ namespace MyPubgTelemetry.GUI
             Task.Run(() => SwitchMatch(file, ViewModel.CtsMatchSwitch.Token));
         }
 
+        internal static void SaveDataGridViewToCSV(DataGridView dgv, string filename)
+        {
+            dgv.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
+            DataGridViewSelectionMode saved = dgv.SelectionMode;
+            dgv.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            dgv.SelectAll();
+            DataObject dataObject = dgv.GetClipboardContent();
+            if (dataObject == null)
+            {
+                MessageBox.Show("Export failed.", "Export failed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            File.WriteAllText(filename, dataObject?.GetText(TextDataFormat.CommaSeparatedValue));
+        }
+
         private void ButtonExportCsv_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Coming soon.", "Coming soon.", MessageBoxButtons.AbortRetryIgnore);
+            SaveFileDialog dialog = new SaveFileDialog
+            {
+                Filter = "CSV File|*.csv|All Files|*.*",
+                Title = "Export CSV...",
+                OverwritePrompt = true
+            };
+            dialog.ShowDialog();
+            if (dialog.FileName == "") return;
+            SaveDataGridViewToCSV(dataGridView1, dialog.FileName);
         }
     }
 

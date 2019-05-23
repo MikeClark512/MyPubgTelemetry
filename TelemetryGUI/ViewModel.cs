@@ -7,7 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-// SetProperty in VolatileBindableBase uses synchronization to make sure that writes to ref'd volatiles get flushed
+// SetProperty in VolatileBindableBase uses synchronization to make sure that writes to ref'd volatiles get flushed,
+// so let's ignore the compiler warning about the runtime not respecting volatile on ref'd variables.
 #pragma warning disable 420
 
 namespace MyPubgTelemetry.GUI
@@ -50,7 +51,5 @@ namespace MyPubgTelemetry.GUI
             get => _reloadActive;
             set => SetProperty(storage: ref _reloadActive, value);
         }
-
-        //private BlockingCollection<TelemetryFile> MatchMetaDataQ { get; } = new BlockingCollection<TelemetryFile>();
     }
 }
