@@ -1,26 +1,34 @@
-# MyPubgTelemetry
+## PUBG Telemetry Downloader and Analyzer
 
-Use `TelemetryDownloader` to download and save all of the available telemetry for one or more players. For efficiency, the downloader will skip telemetry files that you have already downloaded. It not delete old (previously downloaded) telemetry that is no longer available online, so that you can accumulate historical data on your computer.
+![main](https://github.com/MikeClark512/MyPubgTelemetry/blob/master/site/screenshots/main.png)
 
-Use `TelemetryGUI` to view charts/reports calculated from saved telemetry.  Use `TelemetryAnalyzer` to generate text reports.
+Downloads and saves all available telemetry and match metadata for one or more players.
+The downloader skips files that you have already downloaded.
+Previously downloaded telemetry that is no longer available online is preserved, so that you can accumulate historical data over time.
 
-## How to use
-1. This project is new and in development. Using it will require Visual Studio and recompiling.
+### Requirements
+This project is new and in development.
+Using it will require Visual Studio and recompiling.
+Release binary builds are planned and will be available in the future.
+
+### Instructions
 1. Download the repo and open the .sln file in Visual Studio (2019).
-1. Edit MyPubgTelemetry\Program.cs to change the username you want to download telemetry for.
-1. Run the project (e.g. Debug (menu) -> Run)
-1. Paste your [PUBG API key](https://developer.playbattlegrounds.com/) into the command window when prompted.
-1. Telemetry data for the user's matches is downloaded and saved to %APPDATA%\MyPubgTelemetry\telemetry_files\
-1. Telemetry data that has already been downloaded will be skipped.
-1. Old telemetry data that is no longer available online will be preserved in the download directory.
+1. Run the "TelemetryGUI" project. The application window should appear.
+1. Open the options screen.
+1. Paste your [PUBG API key](https://developer.playbattlegrounds.com/) into the API Key field.
+1. Close the options screen by pressing OK.
+1. Enter your name (and optionally a comma separated list of your friend's names) into the squad field
+1. Press the reload button.
+1. The initial download could take a long time. Subsequent reloads will run much more quickly.
 
-## Plans for the Future
-1. Read usernames from config or command-line instead of hard-coded
+### Plans for the Future
 1. Add more charts and reports to the GUI
+1. Add more individual-player statistics
 1. Make it easier to plugin new reports to the GUI
+1. CSV Export
 
-## Projects Structure
+### Projects Structure
+1. `TelemetryGUI` - GUI-based telemetry downloader and analyzer
 1. `TelemetryApp` - Contains code and classes shared between all projects
 1. `TelemetryDownloader` - Console-based telemetry downloader and cacher
-1. `TelemetryGUI` - GUI-based telemetry analyzer
-1. `TelemetryAnalyzer` - Console-based telemetry analyzer
+1. Any other projects in the solution works in progress and may come and go

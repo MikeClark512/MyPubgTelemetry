@@ -7,7 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryDownloader", "Tele
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A956564C-AE8F-494B-AA33-A38DC1059C3B}"
 	ProjectSection(SolutionItems) = preProject
-		notes.txt = notes.txt
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -18,6 +17,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchAnalyzer", "MatchAnalyzer\MatchAnalyzer.csproj", "{669B8C07-9493-4025-B07E-E02E3F950851}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryApp", "TelemetryApp\TelemetryApp.csproj", "{573CAAC6-5626-4009-9712-9C674F4BDE56}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "site", "site\screenshots", "{F3853D6B-16FB-4084-9345-2AD98D080BAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +49,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F3853D6B-16FB-4084-9345-2AD98D080BAD} = {A956564C-AE8F-494B-AA33-A38DC1059C3B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {68B4B716-D671-4D1C-9418-CBB45C02AC60}
