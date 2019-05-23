@@ -203,7 +203,7 @@ namespace MyPubgTelemetry.GUI
             this.labelDataDir.Name = "labelDataDir";
             this.labelDataDir.Size = new System.Drawing.Size(85, 13);
             this.labelDataDir.TabIndex = 7;
-            this.labelDataDir.Text = "MmdData folder:";
+            this.labelDataDir.Text = "Data folder:";
             this.toolTip1.SetToolTip(this.labelDataDir, "Telemetry data files will be stored and and read from this directory.");
             // 
             // tabPageLog

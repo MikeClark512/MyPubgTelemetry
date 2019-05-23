@@ -8,13 +8,18 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows.Threading;
 using Microsoft.Win32.SafeHandles;
 using MyPubgTelemetry.ApiMatchModel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Windows;
+using System.Windows.Forms;
 
 namespace MyPubgTelemetry
 {
@@ -84,7 +89,7 @@ namespace MyPubgTelemetry
 
         public void OpenUrlInWebBrowser(string url)
         {
-            ProcessStartInfo psi = new ProcessStartInfo(url) {UseShellExecute = true};
+            ProcessStartInfo psi = new ProcessStartInfo(url) { UseShellExecute = true };
             Process.Start(psi);
         }
 
@@ -122,7 +127,7 @@ namespace MyPubgTelemetry
 
     }
 
-    public class TelemetryFile
+    public class TelemetryFile : MatchModelStats
     {
         public FileInfo FileInfo { set; get; }
         public string Title { set; get; }
@@ -130,7 +135,6 @@ namespace MyPubgTelemetry
         public ISet<string> Squad { get; set; }
         public bool TelemetryMetaDataLoaded { get; set; }
         public int Index { get; set; }
-        public long SquadKills { get; set; }
         public PreparedData PreparedData { get; set; }
         public Mutex Mutex { get; } = new Mutex();
         public NormalizedMatch NormalizedMatch { get; set; }
@@ -219,9 +223,40 @@ namespace MyPubgTelemetry
 
     public class NormalizedRoster
     {
-        public List<MatchIncluded> Players { get; } = new List<MatchIncluded>();
+        public List<MatchModelIncluded> Players { get; } = new List<MatchModelIncluded>();
         [JsonIgnore]
-        public MatchIncluded Roster { get; set; }
+        public MatchModelIncluded Roster { get; set; }
+    }
+
+    public abstract class VolatileBindableBase : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+        public readonly Control MainControl;
+        protected VolatileBindableBase(Control mainControl)
+        {
+            MainControl = mainControl;
+        }
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
+        {
+            lock (this)
+            {
+                if (Equals(storage, value)) return false;
+                storage = value;
+                if (MainControl.InvokeRequired)
+                {
+                    MainControl.Invoke((MethodInvoker)delegate
+                    {
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                    });
+                }
+                else
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                }
+                return true;
+            }
+        }
     }
 
     public static class TelemetryAppExtensions

@@ -7,22 +7,22 @@ namespace MyPubgTelemetry.ApiMatchModel
 {
     public class MatchModel
     {
-        public MatchData Data { get; set; }
-        public List<MatchIncluded> Included { get; set; }
-        public MatchDataLinks Links { get; set; }
-        public Meta Meta { get; set; }
+        public MatchModelData Data { get; set; }
+        public List<MatchModelIncluded> Included { get; set; }
+        public MatchModelLinks Links { get; set; }
+        public MatchModelMeta Meta { get; set; }
     }
 
-    public class MatchData
+    public class MatchModelData
     {
         public string Type { get; set; }
         public string Id { get; set; }
-        public MatchDataAttributes Attributes { get; set; }
-        public MatchDataRelationships Relationships { get; set; }
-        public MatchDataLinks Links { get; set; }
+        public MatchModelAttributes Attributes { get; set; }
+        public MatchModelRelationships Relationships { get; set; }
+        public MatchModelLinks Links { get; set; }
     }
 
-    public class MatchDataAttributes
+    public class MatchModelAttributes
     {
         public string ShardId { get; set; }
         public object Tags { get; set; }
@@ -36,40 +36,40 @@ namespace MyPubgTelemetry.ApiMatchModel
         public DateTimeOffset CreatedAt { get; set; }
     }
 
-    public class MatchDataLinks
+    public class MatchModelLinks
     {
         public Uri Self { get; set; }
         public string Schema { get; set; }
     }
 
-    public class MatchDataRelationships
+    public class MatchModelRelationships
     {
-        public MatchAssets MatchAssets { get; set; }
-        public MatchAssets Rosters { get; set; }
+        public MatchModelAssets MatchAssets { get; set; }
+        public MatchModelAssets Rosters { get; set; }
     }
 
-    public class MatchAssets
+    public class MatchModelAssets
     {
-        public List<MatchDatum> Data { get; set; }
+        public List<MatchModelDatum> Data { get; set; }
     }
 
-    public class MatchDatum
+    public class MatchModelDatum
     {
         public string Type { get; set; }
         public string Id { get; set; }
     }
 
-    public class MatchIncluded
+    public class MatchModelIncluded
     {
         public string Type { get; set; }
         public string Id { get; set; }
-        public IncludedAttributes Attributes { get; set; }
-        public IncludedRelationships Relationships { get; set; }
+        public MatchModelIncludedAttributes Attributes { get; set; }
+        public MatchModelIncludedRelationships Relationships { get; set; }
     }
 
-    public class IncludedAttributes
+    public class MatchModelIncludedAttributes
     {
-        public Stats Stats { get; set; }
+        public MatchModelStats Stats { get; set; }
         public string Actor { get; set; }
         public string ShardId { get; set; }
         public bool? Won { get; set; }
@@ -79,52 +79,53 @@ namespace MyPubgTelemetry.ApiMatchModel
         public string Url { get; set; }
     }
 
-    public class Stats
+    public class MatchModelStats
     {
-        public long? DbnOs { get; set; }
-        public long? Assists { get; set; }
-        public long? Boosts { get; set; }
-        public double? DamageDealt { get; set; }
+        // ReSharper disable once InconsistentNaming
+        public long DBNOs { get; set; }
+        public long Assists { get; set; }
+        public long Boosts { get; set; }
+        public double DamageDealt { get; set; }
         public string DeathType { get; set; }
-        public long? HeadshotKills { get; set; }
-        public long? Heals { get; set; }
-        public long? KillPlace { get; set; }
-        public long? KillPoints { get; set; }
-        public long? KillPointsDelta { get; set; }
-        public long? KillStreaks { get; set; }
-        public long? Kills { get; set; }
-        public long? LastKillPoints { get; set; }
-        public long? LastWinPoints { get; set; }
-        public double? LongestKill { get; set; }
-        public long? MostDamage { get; set; }
+        public long HeadshotKills { get; set; }
+        public long Heals { get; set; }
+        public long KillPlace { get; set; }
+        public long KillPoints { get; set; }
+        public long KillPointsDelta { get; set; }
+        public long KillStreaks { get; set; }
+        public long Kills { get; set; }
+        public long LastKillPoints { get; set; }
+        public long LastWinPoints { get; set; }
+        public double LongestKill { get; set; }
+        public long MostDamage { get; set; }
         public string Name { get; set; }
         public string PlayerId { get; set; }
-        public long? RankPoints { get; set; }
-        public long? Revives { get; set; }
-        public double? RideDistance { get; set; }
-        public long? RoadKills { get; set; }
-        public double? SwimDistance { get; set; }
-        public long? TeamKills { get; set; }
-        public double? TimeSurvived { get; set; }
-        public long? VehicleDestroys { get; set; }
-        public double? WalkDistance { get; set; }
-        public long? WeaponsAcquired { get; set; }
-        public long? WinPlace { get; set; }
-        public long? WinPoints { get; set; }
-        public long? WinPointsDelta { get; set; }
-        public long? Rank { get; set; }
-        public long? TeamId { get; set; }
+        public long RankPoints { get; set; }
+        public long Revives { get; set; }
+        public double RideDistance { get; set; }
+        public long RoadKills { get; set; }
+        public double SwimDistance { get; set; }
+        public long TeamKills { get; set; }
+        public double TimeSurvived { get; set; }
+        public long VehicleDestroys { get; set; }
+        public double WalkDistance { get; set; }
+        public long WeaponsAcquired { get; set; }
+        public long WinPlace { get; set; }
+        public long WinPoints { get; set; }
+        public long WinPointsDelta { get; set; }
+        public long Rank { get; set; }
+        public long TeamId { get; set; }
         [JsonExtensionData]
         public Dictionary<string, JToken> OtherStats { get; set; } = new Dictionary<string, JToken>();
     }
 
-    public class IncludedRelationships
+    public class MatchModelIncludedRelationships
     {
-        public MatchAssets Team { get; set; }
-        public MatchAssets Participants { get; set; }
+        public MatchModelAssets Team { get; set; }
+        public MatchModelAssets Participants { get; set; }
     }
 
-    public class Meta
+    public class MatchModelMeta
     {
     }
 }
