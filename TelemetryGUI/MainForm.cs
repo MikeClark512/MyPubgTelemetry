@@ -39,9 +39,10 @@ namespace MyPubgTelemetry.GUI
             ViewModel.MatchSearchInputBox = new InputBox {InputText = Clipboard.GetText(), Text = @"Search match IDs, dates, and player names"};
             ViewModel.PropertyChanged += (sender, args) =>
             {
-                if (args.PropertyName == "DownloadActive")
+                if (args.PropertyName == "DownloadActive" || args.PropertyName == "ReloadActive")
                 {
-                    buttonRefresh.Enabled = !ViewModel.DownloadActive;
+                    bool loadingActive = ViewModel.DownloadActive || ViewModel.ReloadActive;
+                    buttonRefresh.Enabled = !loadingActive;
                 }
             };
         }
@@ -62,6 +63,13 @@ namespace MyPubgTelemetry.GUI
 
         private void InitMatchesList()
         {
+            typeof(DataGridView).InvokeMember(
+                "DoubleBuffered",
+                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty,
+                null,
+                dataGridView1,
+                new object[] { true });
+
             dataGridView1.ColumnHeadersDefaultCellStyle.SelectionBackColor = SystemColors.Control;
             dataGridView1.RowHeadersDefaultCellStyle.SelectionBackColor = SystemColors.Control;
             dataGridView1.EnableHeadersVisualStyles = false;
@@ -75,18 +83,18 @@ namespace MyPubgTelemetry.GUI
             dataGridView1.RowHeadersVisible = false;
             dataGridView1.CellFormatting += delegate(object sender, DataGridViewCellFormattingEventArgs e)
             {
-                DataGridView dgv = (DataGridView) sender;
-                DataGridViewColumn column = dgv.Columns[e.ColumnIndex];
-                if (column.DataPropertyName.Contains("."))
-                {
-                    object data = dgv.Rows[e.RowIndex].DataBoundItem;
-                    if (data is ICustomTypeDescriptor ictd)
-                        data = ictd.GetPropertyOwner(null);
-                    string[] properties = column.DataPropertyName.Split('.');
-                    for (int i = 0; i < properties.Length && data != null; i++)
-                        data = data.GetType().GetProperty(properties[i])?.GetValue(data);
-                    e.Value = data;
-                }
+                //DataGridView dgv = (DataGridView) sender;
+                //DataGridViewColumn column = dgv.Columns[e.ColumnIndex];
+                //if (column.DataPropertyName.Contains("."))
+                //{
+                //    object data = dgv.Rows[e.RowIndex].DataBoundItem;
+                //    if (data is ICustomTypeDescriptor ictd)
+                //        data = ictd.GetPropertyOwner(null);
+                //    string[] properties = column.DataPropertyName.Split('.');
+                //    for (int i = 0; i < properties.Length && data != null; i++)
+                //        data = data.GetType().GetProperty(properties[i])?.GetValue(data);
+                //    e.Value = data;
+                //}
 
                 if (e.Value is DateTime value)
                 {
@@ -163,8 +171,18 @@ namespace MyPubgTelemetry.GUI
 
         private void AddSquadStatColumn(PropertyInfo pi)
         {
+            string[] ignore =
+            {
+                "DeathType", "KillPointsDelta", "KillPoints", "KillStreaks", "LastKillPoints", "Name", "PlayerId", "MostDamage", "RankPoints", "WinPoints",
+                "WinPointsDelta", "Rank", "TeamId", "LastWinPoints"
+            };
             Type pt = pi.PropertyType;
             string name = pi.Name;
+            if (ignore.Contains(name))
+            {
+                return;
+            }
+
             AddStatColumn(name, name, pt);
         }
 
@@ -182,7 +200,7 @@ namespace MyPubgTelemetry.GUI
 
         private void InitChart()
         {
-            chart1.Titles.Add("Hitpoints over time (one match)");
+            chart1.Titles.Add("");
             chart1.ChartAreas[0].CursorX.IsUserEnabled = true;
             chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
             chart1.ChartAreas[0].CursorX.LineColor = Color.Black;
@@ -233,16 +251,17 @@ namespace MyPubgTelemetry.GUI
             return field?.GetValue(instance);
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private async void MainForm_Load(object sender, EventArgs e)
         {
             var path = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
             DebugThreadWriteLine("config path = " + path);
             textBoxSquad.Text = Properties.Settings.Default.Squad.Trim();
-            LoadMatches();
+            await DownloadAndRefresh();
         }
 
         private void LoadMatches(bool deep = false)
         {
+            ViewModel.ReloadActive = true;
             var squaddies = ViewModel.RegexCsv.Split(textBoxSquad.Text);
             int sumLen = squaddies.Sum(s => s.Length);
             if (sumLen == 0) return; // nothin' but whitespace and commas.
@@ -255,12 +274,11 @@ namespace MyPubgTelemetry.GUI
             {
                 BeginInvoke((MethodInvoker) delegate()
                 {
-                    MessageBox.Show("No telemetry files found.\nUse the separate TelemetryDownloader program to download." +
-                                    "\nEventually the GUI will have support for downloading!");
+                    MessageBox.Show("No telemetry files found!");
                 });
+                ViewModel.ReloadActive = false;
                 return;
             }
-
             List<TelemetryFile> telFiles = jsonFiles.Select(jsonFile => new TelemetryFile {FileInfo = jsonFile, Title = ""}).ToList();
             telFiles.Sort((x, y) => y.FileInfo.CreationTime.CompareTo(x.FileInfo.CreationTime));
             var blv = new BindingListView<TelemetryFile>(telFiles);
@@ -268,11 +286,11 @@ namespace MyPubgTelemetry.GUI
             toolStripProgressBar1.Maximum = telFiles.Count;
             toolStripProgressBar1.Value = 0;
             toolStripProgressBar1.Visible = true;
+            dataGridView1.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.EnableResizing;
             for (int col = 0; col < dataGridView1.ColumnCount; col++)
             {
                 dataGridView1.Columns[col].SortMode = DataGridViewColumnSortMode.NotSortable;
             }
-
             ViewModel.CtsMatchMetaData?.Cancel();
             ViewModel.CtsMatchMetaData = new CancellationTokenSource();
             Task.Run(() => UpdateMatchListMetaData(telFiles, squaddies, deep, ViewModel.CtsMatchMetaData.Token));
@@ -312,7 +330,7 @@ namespace MyPubgTelemetry.GUI
                 BeginInvoke((MethodInvoker) delegate()
                 {
                     DebugThreadWriteLine("Done loading metadata (UI).");
-                    //dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
                     toolStripProgressBar1.Visible = false;
                     for (int col = 0; col < dataGridView1.ColumnCount; col++)
                     {
@@ -320,6 +338,7 @@ namespace MyPubgTelemetry.GUI
                     }
 
                     dataGridView1.Sort(dataGridView1.Columns[1], ListSortDirection.Descending);
+                    ViewModel.ReloadActive = false;
                 });
             }, cancellationToken);
 
@@ -629,6 +648,11 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
+        private Font DeriveFont(Font orig, int sizeAdj)
+        {
+            return new Font(orig.FontFamily, orig.Size + sizeAdj);
+        }
+
         private void ConsumePreparedData(PreparedData pd, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -647,7 +671,15 @@ namespace MyPubgTelemetry.GUI
                 sdt += " " + localTime.Value.GetTimeZoneAbbreviation();
             }
 
-            chart1.Titles[0].Text = $"{sdt} \u2014 HP over time";
+            chart1.ChartAreas[0].AxisY.Title = "HITPOINTS: 0 to 100";
+            chart1.ChartAreas[0].AxisY.TitleFont = DeriveFont(chart1.ChartAreas[0].AxisY.TitleFont, 0);
+
+            chart1.ChartAreas[0].AxisX.Title = "TIME STARTS WHEN PLAYERS SPAWN INTO THE MATCH'S WAITING-LOBBY AND ENDS WHEN THE LAST SQUADMATE DIES";
+            chart1.ChartAreas[0].AxisX.TitleFont = DeriveFont(chart1.ChartAreas[0].AxisX.TitleFont, 0);
+
+            ISet<string> squad = pd.File?.Squad ?? new HashSet<string>();
+            NormalizedRoster roster = pd.File?.NormalizedMatch?.Rosters?.FirstOrDefault(r => r.Players?.Any(p => squad.Contains(p?.Attributes?.Stats?.Name)) ?? false);
+            chart1.Titles[0].Text = $"HP over time for one match -- {sdt} -- Squad Rank: {roster?.Roster.Attributes.Stats.Rank}";
             chart1.Titles[0].Font = new Font(chart1.Titles[0].Font.FontFamily, 12, FontStyle.Bold);
 
             // Declare series first
@@ -706,7 +738,6 @@ namespace MyPubgTelemetry.GUI
             {
                 chart1Series.Points.Clear();
             }
-
             chart.Series.Clear();
         }
 
@@ -718,49 +749,54 @@ namespace MyPubgTelemetry.GUI
             }
             else if (ModifierKeys.HasFlag(Keys.Shift))
             {
-                TelemetryDownloader downloader = new TelemetryDownloader();
-                var squadSet = new HashSet<string>(ViewModel.RegexCsv.Split(textBoxSquad.Text));
-                if (squadSet.Count == 0)
-                {
-                    return;
-                }
-
-                string squad = string.Join(",", squadSet);
-                downloader.DownloadProgressEvent += (sender2, args) =>
-                {
-                    BeginInvoke((MethodInvoker) delegate()
-                    {
-                        if (!args.Rewrite)
-                        {
-                            DebugThreadWriteLine("DownloadProgressEvent " + args.Msg);
-                        }
-
-                        toolStripProgressBar1.Visible = !args.Complete;
-                        toolStripProgressBar1.Maximum = (int) args.Max;
-                        toolStripProgressBar1.Value = (int) args.Value;
-                        toolStripStatusLabel1.Text = args.Msg;
-                    });
-                };
-                ViewModel.DownloadActive = true;
-                try
-                {
-                    List<NormalizedMatch> matches = await downloader.DownloadForPlayersAsync(squad);
-                    //JsonSerializerSettings settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-                    //string jsonStr = JsonConvert.SerializeObject(matches, Formatting.Indented, settings);
-                    //DebugThreadWriteLine("Normalized matches:\n" + jsonStr);
-                    DebugThreadWriteLine("# Normalized matches: " + matches.Count);
-                }
-                finally
-                {
-                    ViewModel.DownloadActive = false;
-                }
-
                 LoadMatches();
             }
             else
             {
-                LoadMatches();
+                await DownloadAndRefresh();
             }
+        }
+
+        private async Task DownloadAndRefresh()
+        {
+            TelemetryDownloader downloader = new TelemetryDownloader();
+            var squadSet = new HashSet<string>(ViewModel.RegexCsv.Split(textBoxSquad.Text));
+            if (squadSet.Count == 0)
+            {
+                return;
+            }
+
+            string squad = string.Join(",", squadSet);
+            downloader.DownloadProgressEvent += (sender2, args) =>
+            {
+                BeginInvoke((MethodInvoker) delegate()
+                {
+                    if (!args.Rewrite)
+                    {
+                        DebugThreadWriteLine("DownloadProgressEvent " + args.Msg);
+                    }
+
+                    toolStripProgressBar1.Visible = !args.Complete;
+                    toolStripProgressBar1.Maximum = (int) args.Max;
+                    toolStripProgressBar1.Value = (int) args.Value;
+                    toolStripStatusLabel1.Text = args.Msg;
+                });
+            };
+            ViewModel.DownloadActive = true;
+            try
+            {
+                List<NormalizedMatch> matches = await downloader.DownloadForPlayersAsync(squad);
+                //JsonSerializerSettings settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+                //string jsonStr = JsonConvert.SerializeObject(matches, Formatting.Indented, settings);
+                //DebugThreadWriteLine("Normalized matches:\n" + jsonStr);
+                DebugThreadWriteLine("# Normalized matches: " + matches.Count);
+            }
+            finally
+            {
+                ViewModel.DownloadActive = false;
+            }
+
+            LoadMatches();
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -858,9 +894,19 @@ namespace MyPubgTelemetry.GUI
 
         private void ButtonNext_Click(object sender, EventArgs e)
         {
-            int rot = chart1.ChartAreas[0].Area3DStyle.Rotation;
-            rot = (rot + 5) % 180;
-            chart1.ChartAreas[0].Area3DStyle.Rotation = rot;
+            //int rot = chart1.ChartAreas[0].Area3DStyle.Rotation;
+            //rot = (rot + 5) % 180;
+            //chart1.ChartAreas[0].Area3DStyle.Rotation = rot;
+            if (splitContainer1.Panel2Collapsed)
+            {
+                buttonToggle.Text = "Hide Chart";
+                splitContainer1.Panel2Collapsed = false;
+            }
+            else
+            {
+                buttonToggle.Text = "Show Chart";
+                splitContainer1.Panel2Collapsed = true;
+            }
         }
 
         private void TsmiCopyPath_Click(object sender, EventArgs e)
@@ -945,6 +991,11 @@ namespace MyPubgTelemetry.GUI
             if (ViewModel.DownloadActive) return;
 
             Task.Run(() => SwitchMatch(file, ViewModel.CtsMatchSwitch.Token));
+        }
+
+        private void ButtonExportCsv_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Coming soon.", "Coming soon.", MessageBoxButtons.AbortRetryIgnore);
         }
     }
 

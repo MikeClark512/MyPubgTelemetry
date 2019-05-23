@@ -61,6 +61,17 @@ namespace MyPubgTelemetry.GUI.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {\rtf1\fbidis\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+        ///{\*\generator Riched20 10.0.17763}\viewkind4\uc1 
+        ///\pard\sa200\sl276\slmult1\qc\b\f0\fs24\lang9 M\u848?\u778?\u769?\u871?\u877?\u872?\u866?\u863?\u808?\u858?\u800?\u803?\u793?y\u836?\u788?\u836?\u779?\u769?\u785?\u860?\u828?\u825?\u841?\u852?\u828? \u783?\u835?\u771?\u782?\u785?\u820?\u863?\u832?\u814?\u798?\u792?\u854?\u826?P\u772?\u771?\u781?\u871?\u877?\u787?\u824?\u802?\u820?\u827?\u852?U\u877?\u770?\u801 [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string AboutRTF {
+            get {
+                return ResourceManager.GetString("AboutRTF", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap FindinFiles_16x {
