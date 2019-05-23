@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -27,7 +28,7 @@ namespace MyPubgTelemetry.Downloader
                 }
                 playerNames = playerNamesLocal;
                 List<JToken> players = TelemetryApp.App.ApiGetPlayersByNames(playerNames);
-                List<string> matchIds = new List<string>();
+                HashSet<string> matchIds = new HashSet<string>();
                 foreach (JToken player in players)
                 {
                     string name = player.SelectToken("attributes.name").ToString();
@@ -39,14 +40,14 @@ namespace MyPubgTelemetry.Downloader
                     }
                 }
 
-                List<NormalizedMatch> nms = new List<NormalizedMatch>();
-                for (int i = 0, s = matchIds.Count; i < s; i++)
+                BlockingCollection<NormalizedMatch> nms = new BlockingCollection<NormalizedMatch>();
+                var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 4 };
+                Parallel.ForEach(matchIds, parallelOptions, (matchId, state, i) =>
                 {
-                    string matchId = matchIds[i];
-                    NormalizedMatch nm = DownloadOnlyMatchMetadataForMatchId(matchId, i, s);
+                    NormalizedMatch nm = DownloadOnlyMatchMetadataForMatchId(matchId, i, matchIds.Count);
                     //NormalizedRoster normalizedRoster = nm.Rosters.FirstOrDefault(r => r.Players.Select(p => p.Attributes.Name).Contains(name));
                     nms.Add(nm);
-                }
+                });
 
                 DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
                 {
@@ -56,23 +57,22 @@ namespace MyPubgTelemetry.Downloader
                 });
 
                 List<NormalizedMatch> nmsToDownload = nms.Where(nm => nm.TelemetryAlreadyDownloaded == false).ToList();
-                for (int i = 0, s = nmsToDownload.Count; i < s; i++)
+                Parallel.ForEach(nmsToDownload, parallelOptions, (normalizedMatch, state, i) =>
                 {
-                    NormalizedMatch normalizedMatch = nmsToDownload[i];
-                    DownloadOnlyTelemetryForMatch(normalizedMatch, i, s);
-                }
+                    DownloadOnlyTelemetryForMatch(normalizedMatch, i, nmsToDownload.Count);
+                });
                 DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
                 {
                     Complete = true,
                     Value = players.Count,
                     Max = players.Count,
-                    Msg = $"Summary: #Online: {matchIds.Count}, #NewDownloaded: {nmsToDownload.Count}"
+                    Msg = $"Summary: Online: {matchIds.Count}, NewDownloaded: {nmsToDownload.Count}"
                 });
-                return nms;
+                return nms.ToList();
             });
         }
 
-        public NormalizedMatch DownloadOnlyMatchMetadataForMatchId(string matchId, int i, int matchesCount)
+        public NormalizedMatch DownloadOnlyMatchMetadataForMatchId(string matchId, long i, int matchesCount)
         {
             string mmOutputFileName = "mm-" + matchId + ".json";
             string mmOutputFilePath = Path.Combine(TelemetryApp.App.MatchDir, mmOutputFileName);
@@ -115,18 +115,18 @@ namespace MyPubgTelemetry.Downloader
 
         public static NormalizedMatch NormalizeMatch(string matchId, string matchJsonStr)
         {
-            NormalizedMatch normedMatch = new NormalizedMatch {Id = matchId};
+            NormalizedMatch normedMatch = new NormalizedMatch { Id = matchId };
             MatchModel model = JsonConvert.DeserializeObject<MatchModel>(matchJsonStr);
             List<string> rosterIds = model.Data.Relationships.Rosters.Data.Select(x => x.Id).ToList();
             foreach (string rosterId in rosterIds)
             {
-                MatchIncluded includedRoster = model.Included.First(x => x.Id == rosterId);
-                List<string> participantIds = includedRoster.Relationships.Participants.Data.Select(x => x.Id).ToList();
-                NormalizedRoster roster = new NormalizedRoster {Roster = includedRoster};
+                MatchModelIncluded modelIncludedRoster = model.Included.First(x => x.Id == rosterId);
+                List<string> participantIds = modelIncludedRoster.Relationships.Participants.Data.Select(x => x.Id).ToList();
+                NormalizedRoster roster = new NormalizedRoster { Roster = modelIncludedRoster };
                 normedMatch.Rosters.Add(roster);
                 foreach (string participantId in participantIds)
                 {
-                    MatchIncluded participant = model.Included.First(x => x.Id == participantId);
+                    MatchModelIncluded participant = model.Included.First(x => x.Id == participantId);
                     roster.Players.Add(participant);
                 }
             }
@@ -135,7 +135,7 @@ namespace MyPubgTelemetry.Downloader
             return normedMatch;
         }
 
-        public void DownloadOnlyTelemetryForMatch(NormalizedMatch normalizedMatch, int counter, int count)
+        public void DownloadOnlyTelemetryForMatch(NormalizedMatch normalizedMatch, long counter, int count)
         {
             string matchId = normalizedMatch.Id;
             string mtOutputFileName = "mt-" + matchId + ".json.gz";
@@ -151,7 +151,7 @@ namespace MyPubgTelemetry.Downloader
                 });
                 return;
             }
-            MatchIncluded telemetryAsset = normalizedMatch.Model.Included
+            MatchModelIncluded telemetryAsset = normalizedMatch.Model.Included
                 .FirstOrDefault(x => x.Type == "asset" && x.Attributes.Name == "telemetry");
             string url = telemetryAsset?.Attributes?.Url;
             if (url == null)
@@ -305,8 +305,8 @@ namespace MyPubgTelemetry.Downloader
 
     public class DownloadProgressEventArgs : EventArgs
     {
-        public int Value { get; set; }
-        public int Max { get; set; }
+        public long Value { get; set; }
+        public long Max { get; set; }
         public string Msg { get; set; }
         public bool Rewrite { get; set; }
         public bool Complete { set; get; }
