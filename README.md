@@ -2,7 +2,7 @@
 
 ![main](https://github.com/MikeClark512/MyPubgTelemetry/blob/master/site/screenshots/main.png)
 
-Downloads and saves all available telemetry and match metadata for one or more players.
+This app downloads and saves all available telemetry and match metadata for one or more players.
 The downloader skips files that you have already downloaded.
 Previously downloaded telemetry that is no longer available online is preserved, so that you can accumulate historical data over time.
 
@@ -24,11 +24,11 @@ Release binary builds are planned and will be available in the future.
 ### Plans for the Future
 1. Add more charts and reports to the GUI
 1. Add more individual-player statistics
-1. Make it easier to plugin new reports to the GUI
+1. Make it easier to author/plug-in new reports and/or charts
 1. CSV Export
 
 ### Projects Structure
 1. `TelemetryGUI` - GUI-based telemetry downloader and analyzer
 1. `TelemetryApp` - Contains code and classes shared between all projects
 1. `TelemetryDownloader` - Console-based telemetry downloader and cacher
-1. Any other projects in the solution works in progress and may come and go
+1. Any other projects in the solution are works-in-progress and may come and go
