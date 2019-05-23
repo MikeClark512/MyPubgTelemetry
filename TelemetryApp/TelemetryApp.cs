@@ -13,13 +13,11 @@ using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows.Threading;
+using System.Windows.Forms;
 using Microsoft.Win32.SafeHandles;
 using MyPubgTelemetry.ApiMatchModel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Windows;
-using System.Windows.Forms;
 
 namespace MyPubgTelemetry
 {
