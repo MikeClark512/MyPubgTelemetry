@@ -29,12 +29,12 @@ namespace MyPubgTelemetry
             App = new TelemetryApp();
         }
 
-        public string DefaultApiKeyFile { get; }
-        public string AppName { get; }
-        public string DataDir { get; }
-        public string TelemetryDir { get; }
-        public string MatchDir { get; }
-        public HttpClient HttpClient { get; }
+        public string DefaultApiKeyFile { get; set; }
+        public string AppName { get; set; }
+        public string DataDir { get; set; }
+        public string TelemetryDir { get; set; }
+        public string MatchDir { get; set; }
+        public HttpClient HttpClient { get; set; }
         private string _apiKey;
         public string ApiKey
         {
@@ -48,6 +48,11 @@ namespace MyPubgTelemetry
         public Regex RegexCsv { get; } = new Regex(@"\s*,\s*", RegexOptions.IgnoreCase);
 
         private TelemetryApp()
+        {
+            ReInit();
+        }
+
+        public void ReInit()
         {
             HttpClientHandler httpClientHandler = new HttpClientHandler();
             HttpClient = new HttpClient(httpClientHandler);

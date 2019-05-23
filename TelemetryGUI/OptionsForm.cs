@@ -9,16 +9,18 @@ namespace MyPubgTelemetry.GUI
 {
     public partial class OptionsForm : Form
     {
+        public string ApiKeyAtLoad { get; set; }
+        public string LogText { get; set; }
+
         public OptionsForm()
         {
             InitializeComponent();
         }
 
-        public string LogText { get; set; }
-
         private void OptionsForm_Load(object sender, EventArgs e)
         {
             textBoxApiKey.Text = TelemetryApp.App.ApiKey;
+            ApiKeyAtLoad = TelemetryApp.App.ApiKey;
             MinimumSize = Size;
             textBoxSettingsDir.Text = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
             textBoxDataDir.Text = TelemetryApp.App.DataDir;
@@ -33,13 +35,14 @@ namespace MyPubgTelemetry.GUI
 
         private void ButtonCancel_Click(object sender, EventArgs e)
         {
-            Close();
+            DialogResult = DialogResult.Cancel;
         }
 
         private void ButtonOK_Click(object sender, EventArgs e)
         {
             File.WriteAllText(TelemetryApp.App.DefaultApiKeyFile, textBoxApiKey.Text);
-            Close();
+            TelemetryApp.App.ReInit();
+            DialogResult = DialogResult.OK;
         }
 
         private void ButtonSettingsDirOpenInFileExplorer_Click(object sender, EventArgs e)
