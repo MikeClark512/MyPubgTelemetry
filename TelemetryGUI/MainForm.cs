@@ -63,6 +63,7 @@ namespace MyPubgTelemetry.GUI
 
         private void InitMatchesList()
         {
+            // Visually faster repainting
             typeof(DataGridView).InvokeMember(
                 "DoubleBuffered",
                 BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty,
@@ -254,7 +255,7 @@ namespace MyPubgTelemetry.GUI
         private async void MainForm_Load(object sender, EventArgs e)
         {
             var path = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
-            DebugThreadWriteLine("config path = " + path);
+            DebugThreadWriteLine("Config path = " + path);
             textBoxSquad.Text = Properties.Settings.Default.Squad.Trim();
             string envNoDlOnStart = Environment.GetEnvironmentVariable("MYPUBGTELEMETRY_NODLONSTART");
             bool bNoDlOnStart = TelemetryApp.ToBooly(envNoDlOnStart);
@@ -270,10 +271,13 @@ namespace MyPubgTelemetry.GUI
 
         private async void LoadMatches(bool deep = false)
         {
-            ViewModel.ReloadActive = true;
             var squaddies = ViewModel.RegexCsv.Split(textBoxSquad.Text);
             int sumLen = squaddies.Sum(s => s.Length);
-            if (sumLen == 0) return; // nothin' but whitespace and commas.
+            if (sumLen == 0)
+            {
+                return; // nothin' but whitespace and commas.
+            }
+            ViewModel.ReloadActive = true;
             ViewModel.Squad.Clear();
             ViewModel.Squad.UnionWith(squaddies);
             var di = new DirectoryInfo(TelemetryApp.App.TelemetryDir);
@@ -808,7 +812,7 @@ namespace MyPubgTelemetry.GUI
             }
             catch (Exception hre)
             {
-                string msg = hre?.InnerException?.Message + "\nCheck that your API key is set correctly.";
+                string msg = hre.InnerException?.Message + "\nCheck that your API key is set correctly.";
                 MessageBox.Show(msg, "HTTP Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             finally

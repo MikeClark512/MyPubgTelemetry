@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MyPubgTelemetry.ApiMatchModel;
 using Newtonsoft.Json;
@@ -41,10 +42,12 @@ namespace MyPubgTelemetry.Downloader
                 }
 
                 BlockingCollection<NormalizedMatch> nms = new BlockingCollection<NormalizedMatch>();
-                var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 4 };
+                var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 2 };
+                int parallelCounter = 0;
                 Parallel.ForEach(matchIds, parallelOptions, (matchId, state, i) =>
                 {
-                    NormalizedMatch nm = DownloadOnlyMatchMetadataForMatchId(matchId, i, matchIds.Count);
+                    // ReSharper disable once AccessToModifiedClosure -- Interlocked.Increment
+                    NormalizedMatch nm = DownloadOnlyMatchMetadataForMatchId(matchId, ref parallelCounter, matchIds.Count);
                     //NormalizedRoster normalizedRoster = nm.Rosters.FirstOrDefault(r => r.Players.Select(p => p.Attributes.Name).Contains(name));
                     nms.Add(nm);
                 });
@@ -57,22 +60,22 @@ namespace MyPubgTelemetry.Downloader
                 });
 
                 List<NormalizedMatch> nmsToDownload = nms.Where(nm => nm.TelemetryAlreadyDownloaded == false).ToList();
-                Parallel.ForEach(nmsToDownload, parallelOptions, (normalizedMatch, state, i) =>
-                {
-                    DownloadOnlyTelemetryForMatch(normalizedMatch, i, nmsToDownload.Count);
-                });
+                parallelCounter = 0;
                 DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
                 {
-                    Complete = true,
-                    Value = players.Count,
-                    Max = players.Count,
-                    Msg = $"Summary: Online: {matchIds.Count}, NewDownloaded: {nmsToDownload.Count}"
+                    Value = 0,
+                    Max = nmsToDownload.Count,
+                    Msg = $"Starting download of {nmsToDownload.Count} match telemetry file(s)."
+                });
+                Parallel.ForEach(nmsToDownload, parallelOptions, (normalizedMatch, state, i) =>
+                {
+                    DownloadOnlyTelemetryForMatch(normalizedMatch, ref parallelCounter, nmsToDownload.Count);
                 });
                 return nms.ToList();
             });
         }
 
-        public NormalizedMatch DownloadOnlyMatchMetadataForMatchId(string matchId, long i, int matchesCount)
+        public NormalizedMatch DownloadOnlyMatchMetadataForMatchId(string matchId, ref int counter, int matchesCount)
         {
             string mmOutputFileName = "mm-" + matchId + ".json";
             string mmOutputFilePath = Path.Combine(TelemetryApp.App.MatchDir, mmOutputFileName);
@@ -86,9 +89,9 @@ namespace MyPubgTelemetry.Downloader
             {
                 DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
                 {
-                    Value = i,
+                    Value = Interlocked.Increment(ref counter),
                     Max = matchesCount,
-                    Msg = $"Downloading metadata for match {i + 1}/{matchesCount}"
+                    Msg = $"[{counter}/{matchesCount}] Downloading metadata for match: {matchId}"
                 });
                 matchJsonStr = TelemetryApp.App.ApiGetMatch(matchId);
                 matchJsonStr = PrettyPrintJson(matchJsonStr);
@@ -99,9 +102,9 @@ namespace MyPubgTelemetry.Downloader
             {
                 DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
                 {
-                    Value = i,
+                    Value = Interlocked.Increment(ref counter),
                     Max = matchesCount,
-                    Msg = $"Loading cached metadata for match {i + 1}/{matchesCount}"
+                    Msg = $"[{counter}/{matchesCount}] Loading cached metadata for match: {matchId}"
                 });
                 matchJsonStr = File.ReadAllText(mmOutputFilePath);
                 metadataAlreadyDownloaded = true;
@@ -135,7 +138,7 @@ namespace MyPubgTelemetry.Downloader
             return normedMatch;
         }
 
-        public void DownloadOnlyTelemetryForMatch(NormalizedMatch normalizedMatch, long counter, int count)
+        public void DownloadOnlyTelemetryForMatch(NormalizedMatch normalizedMatch, ref int counter, int count)
         {
             string matchId = normalizedMatch.Id;
             string mtOutputFileName = "mt-" + matchId + ".json.gz";
@@ -145,7 +148,7 @@ namespace MyPubgTelemetry.Downloader
                 DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
                 {
                     Rewrite = true,
-                    Value = counter,
+                    Value = Interlocked.Increment(ref counter),
                     Max = count,
                     Msg = $"[{counter}/{count}] Telemetry {matchId} already downloaded. Skip."
                 });
@@ -163,14 +166,14 @@ namespace MyPubgTelemetry.Downloader
             using (var stream = new GZipStream(result, CompressionMode.Decompress))
             {
                 Uri uri = new Uri(url);
+                string pJson = PrettyPrintTelemetryJson(stream, out DateTime matchDateTime);
                 DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
                 {
                     Rewrite = true,
-                    Value = counter,
+                    Value = Interlocked.Increment(ref counter),
                     Max = count,
-                    Msg = $"[{counter}/{count}] Downloading {uri.AbsolutePath}"
+                    Msg = $"[{counter}/{count}] Downloaded {uri.AbsolutePath}"
                 });
-                string pJson = PrettyPrintTelemetryJson(stream, out DateTime matchDateTime);
                 WriteStringToGzFile(mtOutputFilePath, pJson, matchDateTime);
             }
         }

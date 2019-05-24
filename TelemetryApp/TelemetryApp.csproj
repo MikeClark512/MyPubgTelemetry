@@ -49,6 +49,7 @@
     <Compile Include="ApiMatchModel\MatchModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TelemetryApp.cs" />
+    <Compile Include="TelemetryDownloader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
