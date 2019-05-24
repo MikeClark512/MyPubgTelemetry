@@ -247,6 +247,7 @@
             this.labelMatches.Size = new System.Drawing.Size(51, 13);
             this.labelMatches.TabIndex = 3;
             this.labelMatches.Text = "Matches:";
+            this.labelMatches.Click += new System.EventHandler(this.LabelMatches_Click);
             // 
             // statusStrip1
             // 
