@@ -29,8 +29,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend5 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.contextMenuMatches = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tsmiPubgLookup = new System.Windows.Forms.ToolStripMenuItem();
@@ -51,6 +51,8 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
+            this.comboBoxStatsFocus = new System.Windows.Forms.ComboBox();
+            this.labelStatusFocus = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.contextMenuMatches.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -66,14 +68,14 @@
             this.chart1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea1.Name = "Default";
-            this.chart1.ChartAreas.Add(chartArea1);
-            legend1.Alignment = System.Drawing.StringAlignment.Center;
-            legend1.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend1.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
-            legend1.Name = "Legend1";
-            legend1.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
-            this.chart1.Legends.Add(legend1);
+            chartArea5.Name = "Default";
+            this.chart1.ChartAreas.Add(chartArea5);
+            legend5.Alignment = System.Drawing.StringAlignment.Center;
+            legend5.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend5.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
+            legend5.Name = "Legend1";
+            legend5.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
+            this.chart1.Legends.Add(legend5);
             this.chart1.Location = new System.Drawing.Point(6, -1);
             this.chart1.Name = "chart1";
             this.chart1.Size = new System.Drawing.Size(990, 326);
@@ -88,32 +90,32 @@
             this.tsmiOpenInFileExplorer,
             this.tsmiCopyMatchId});
             this.contextMenuMatches.Name = "contextMenuMatches";
-            this.contextMenuMatches.Size = new System.Drawing.Size(215, 76);
+            this.contextMenuMatches.Size = new System.Drawing.Size(212, 76);
             this.contextMenuMatches.Opening += new System.ComponentModel.CancelEventHandler(this.ContextMenuMatches_Opening);
             // 
             // tsmiPubgLookup
             // 
             this.tsmiPubgLookup.Name = "tsmiPubgLookup";
-            this.tsmiPubgLookup.Size = new System.Drawing.Size(214, 22);
+            this.tsmiPubgLookup.Size = new System.Drawing.Size(211, 22);
             this.tsmiPubgLookup.Text = "Open in pubglookup.com";
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(211, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(208, 6);
             // 
             // tsmiOpenInFileExplorer
             // 
             this.tsmiOpenInFileExplorer.Name = "tsmiOpenInFileExplorer";
-            this.tsmiOpenInFileExplorer.Size = new System.Drawing.Size(214, 22);
+            this.tsmiOpenInFileExplorer.Size = new System.Drawing.Size(211, 22);
             this.tsmiOpenInFileExplorer.Text = "Open in File Explorer";
             this.tsmiOpenInFileExplorer.Click += new System.EventHandler(this.TsmiOpenInFileExplorer_Click);
             // 
             // tsmiCopyMatchId
             // 
             this.tsmiCopyMatchId.Name = "tsmiCopyMatchId";
-            this.tsmiCopyMatchId.Size = new System.Drawing.Size(214, 22);
-            this.tsmiCopyMatchId.Text = "Copy NormalizedMatch ID";
+            this.tsmiCopyMatchId.Size = new System.Drawing.Size(211, 22);
+            this.tsmiCopyMatchId.Text = "Copy Match ID";
             this.tsmiCopyMatchId.Click += new System.EventHandler(this.TsmiCopyPath_Click);
             // 
             // splitContainer1
@@ -128,6 +130,8 @@
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.labelStatusFocus);
+            this.splitContainer1.Panel1.Controls.Add(this.comboBoxStatsFocus);
             this.splitContainer1.Panel1.Controls.Add(this.buttonExportCsv);
             this.splitContainer1.Panel1.Controls.Add(this.buttonOptions);
             this.splitContainer1.Panel1.Controls.Add(this.buttonToggle);
@@ -275,6 +279,27 @@
             this.toolStripProgressBar1.Name = "toolStripProgressBar1";
             this.toolStripProgressBar1.Size = new System.Drawing.Size(189, 16);
             // 
+            // comboBoxStatsFocus
+            // 
+            this.comboBoxStatsFocus.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxStatsFocus.FormattingEnabled = true;
+            this.comboBoxStatsFocus.Items.AddRange(new object[] {
+            "Squad (sum)"});
+            this.comboBoxStatsFocus.Location = new System.Drawing.Point(621, 40);
+            this.comboBoxStatsFocus.Name = "comboBoxStatsFocus";
+            this.comboBoxStatsFocus.Size = new System.Drawing.Size(107, 21);
+            this.comboBoxStatsFocus.TabIndex = 9;
+            // 
+            // label1
+            // 
+            this.labelStatusFocus.AutoSize = true;
+            this.labelStatusFocus.Location = new System.Drawing.Point(569, 44);
+            this.labelStatusFocus.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
+            this.labelStatusFocus.Name = "labelStatusFocus";
+            this.labelStatusFocus.Size = new System.Drawing.Size(49, 13);
+            this.labelStatusFocus.TabIndex = 10;
+            this.labelStatusFocus.Text = "Stats for:";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -327,6 +352,8 @@
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.Button buttonExportCsv;
+        private System.Windows.Forms.Label labelStatusFocus;
+        private System.Windows.Forms.ComboBox comboBoxStatsFocus;
     }
 }
 
