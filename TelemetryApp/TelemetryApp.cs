@@ -130,6 +130,41 @@ namespace MyPubgTelemetry
             }
         }
 
+        public static bool ToBooly(string str)
+        {
+            TryParseBooly(str, out bool result);
+            return result;
+        }
+
+        public static bool TryParseBooly(string str, out bool result)
+        {
+            if (bool.TryParse(str, out bool bResult))
+            {
+                result = bResult;
+                return true;
+            }
+            str = str?.Trim();
+            string[] truthy = { "1", "on", "yes" };
+            if (truthy.Contains(str, StringComparer.OrdinalIgnoreCase))
+            {
+                result = true;
+                return true;
+            }
+            string[] falsy = { "0", "off", "no" };
+            if (falsy.Contains(str, StringComparer.OrdinalIgnoreCase))
+            {
+                result = false;
+                return true;
+            }
+            if (long.TryParse(str, out long lResult))
+            {
+                result = lResult > 0;
+                return true;
+            }
+            result = false;
+            return false;
+        }
+
         public string ApiGetMatch(string matchId)
         {
             return HttpClient.GetStringAsync("matches/" + matchId).Result;

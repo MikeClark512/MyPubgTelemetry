@@ -8,7 +8,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -16,7 +15,6 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Schedulers;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
-using CsvHelper;
 using Equin.ApplicationFramework;
 using MyPubgTelemetry.ApiMatchModel;
 using MyPubgTelemetry.Downloader;
@@ -258,10 +256,19 @@ namespace MyPubgTelemetry.GUI
             var path = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
             DebugThreadWriteLine("config path = " + path);
             textBoxSquad.Text = Properties.Settings.Default.Squad.Trim();
-            await DownloadAndRefresh();
+            string envNoDlOnStart = Environment.GetEnvironmentVariable("MYPUBGTELEMETRY_NODLONSTART");
+            bool bNoDlOnStart = TelemetryApp.ToBooly(envNoDlOnStart);
+            if (bNoDlOnStart)
+            {
+                LoadMatches();
+            }
+            else
+            {
+                await DownloadAndRefresh();
+            }
         }
 
-        private void LoadMatches(bool deep = false)
+        private async void LoadMatches(bool deep = false)
         {
             ViewModel.ReloadActive = true;
             var squaddies = ViewModel.RegexCsv.Split(textBoxSquad.Text);
@@ -284,7 +291,7 @@ namespace MyPubgTelemetry.GUI
 
             List<TelemetryFile> telFiles = jsonFiles.Select(jsonFile => new TelemetryFile {FileInfo = jsonFile, Title = ""}).ToList();
             telFiles.Sort((x, y) => y.FileInfo.CreationTime.CompareTo(x.FileInfo.CreationTime));
-            var blv = new BindingListView<TelemetryFile>(telFiles);
+            var blv = new BindingListView2<TelemetryFile>(telFiles);
             dataGridView1.DataSource = blv;
             toolStripProgressBar1.Maximum = telFiles.Count;
             toolStripProgressBar1.Value = 0;
@@ -297,11 +304,22 @@ namespace MyPubgTelemetry.GUI
 
             ViewModel.CtsMatchMetaData?.Cancel();
             ViewModel.CtsMatchMetaData = new CancellationTokenSource();
-            Task.Run(() => UpdateMatchListMetaData(telFiles, squaddies, deep, ViewModel.CtsMatchMetaData.Token));
+            await Task.Run(() => UpdateMatchListMetaData(telFiles, squaddies, deep, ViewModel.CtsMatchMetaData.Token));
         }
 
         private void UpdateMatchListMetaData(List<TelemetryFile> telFiles, string[] squaddies, bool deep, CancellationToken cancellationToken)
         {
+            void UiUpdateOneFile(TelemetryFile telemetryFile)
+            {
+                int loadedCount = telFiles.Count(x => x.TelemetryMetaDataLoaded);
+                toolStripProgressBar1.Text = $"Loaded {loadedCount} of {telFiles.Count} matches.";
+                int fi = telemetryFile.Index;
+                if (fi <= dataGridView1.DisplayedRowCount(true))
+                {
+                    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                }
+                toolStripProgressBar1.Value = loadedCount;
+            }
             List<Task> tasks = new List<Task>();
             for (int i = 0; i < telFiles.Count; i++)
             {
@@ -345,30 +363,6 @@ namespace MyPubgTelemetry.GUI
                     ViewModel.ReloadActive = false;
                 });
             }, cancellationToken);
-
-            void UiUpdateOneFile(TelemetryFile telemetryFile)
-            {
-                int loadedCount = telFiles.Count(x => x.TelemetryMetaDataLoaded);
-                toolStripProgressBar1.Text = $"Loaded {loadedCount} of {telFiles.Count} matches.";
-                int fi = telemetryFile.Index;
-
-                int row = telemetryFile.Index;
-                //for (int row = 0; row < dataGridView1.RowCount; row++)
-                //{
-                //for (int col = 0; col < dataGridView1.Columns.Count; col++)
-                //{
-                //    DebugThreadWriteLine("UiUpdateOneFile");
-                //    dataGridView1.UpdateCellValue(col, row);
-                //}
-                //}
-
-                if (fi <= dataGridView1.DisplayedRowCount(true))
-                {
-                    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
-                }
-
-                toolStripProgressBar1.Value = loadedCount;
-            }
         }
 
         private void ReadTelemetryMetaData(TelemetryFile file, string[] squaddies, bool deep)
@@ -1023,7 +1017,7 @@ namespace MyPubgTelemetry.GUI
             Task.Run(() => SwitchMatch(file, ViewModel.CtsMatchSwitch.Token));
         }
 
-        internal static void SaveDataGridViewToCSV(DataGridView dgv, string filename)
+        internal static void SaveDataGridViewToCsv(DataGridView dgv, string filename)
         {
             DataGridViewClipboardCopyMode clipboardCopyModeSaved = dgv.ClipboardCopyMode;
             bool multiSelectSaved = dgv.MultiSelect;
@@ -1061,7 +1055,16 @@ namespace MyPubgTelemetry.GUI
             };
             dialog.ShowDialog();
             if (dialog.FileName == "") return;
-            SaveDataGridViewToCSV(dataGridView1, dialog.FileName);
+            SaveDataGridViewToCsv(dataGridView1, dialog.FileName);
+        }
+
+        private void LabelMatches_Click(object sender, EventArgs e)
+        {
+            object dataSource = dataGridView1.DataSource;
+            if (dataSource is BindingListView<TelemetryFile> blv)
+            {
+                Debug.WriteLine(">>>>>>>>" + blv.Sort);
+            }
         }
     }
 
