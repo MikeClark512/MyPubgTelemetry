@@ -284,11 +284,11 @@ namespace MyPubgTelemetry.GUI
             chart1.Series.ToList().ForEach(x => x.IsValueShownAsLabel = zoomedIn);
             if (zoomedIn)
             {
-                chart1.ChartAreas[0].AxisX.LabelStyle.Format = "mm'm'ss's'";
+                chart1.ChartAreas[0].AxisX.LabelStyle.Format = "m'm'ss's'";
             }
             else
             {
-                chart1.ChartAreas[0].AxisX.LabelStyle.Format = "mm'm'";
+                chart1.ChartAreas[0].AxisX.LabelStyle.Format = "m'm'";
             }
         }
 
@@ -315,6 +315,8 @@ namespace MyPubgTelemetry.GUI
             {
                 await DownloadAndRefresh();
             }
+
+            comboBoxStatsFocus.SelectedIndex = 0;
         }
 
         private async void LoadMatches(bool deep = false)
@@ -727,10 +729,10 @@ namespace MyPubgTelemetry.GUI
                 sdt += " " + localTime.Value.GetTimeZoneAbbreviation();
             }
 
-            chart1.ChartAreas[0].AxisY.Title = "HITPOINTS: 0 to 100";
+            chart1.ChartAreas[0].AxisY.Title = "HP: 0 to 100";
             chart1.ChartAreas[0].AxisY.TitleFont = DeriveFont(chart1.ChartAreas[0].AxisY.TitleFont, 0);
 
-            chart1.ChartAreas[0].AxisX.Title = "TIME (minutes elapsed): 0 at spawn, ends when the last squadmate dies";
+            chart1.ChartAreas[0].AxisX.Title = "Elapsed time since start of match (in minutes).";
             chart1.ChartAreas[0].AxisX.TitleFont = DeriveFont(chart1.ChartAreas[0].AxisX.TitleFont, 0);
 
             ISet<string> squad = pd.File?.Squad ?? new HashSet<string>();
