@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -201,6 +202,7 @@ namespace MyPubgTelemetry.GUI
 
         private void InitChart()
         {
+            chart1.Tag = new ChartTag();
             chart1.Titles.Add("");
             chart1.ChartAreas[0].CursorX.IsUserEnabled = true;
             chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
@@ -209,12 +211,16 @@ namespace MyPubgTelemetry.GUI
             chart1.ChartAreas[0].CursorX.IntervalType = DateTimeIntervalType.Seconds;
             chart1.ChartAreas[0].CursorX.Interval = 1;
             chart1.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
-            chart1.ChartAreas[0].AxisX.ScrollBar.IsPositionedInside = true;
-            chart1.ChartAreas[0].AxisX.LabelStyle.Format = UiConstants.XAxisDateFormat;
+            chart1.ChartAreas[0].AxisX.ScrollBar.IsPositionedInside = false;
+            chart1.ChartAreas[0].AxisX.ScaleView.SmallScrollMinSize = 1;
+            chart1.ChartAreas[0].AxisX.ScaleView.SmallScrollMinSizeType = DateTimeIntervalType.Seconds;
+            chart1.ChartAreas[0].AxisX.ScaleView.SmallScrollSize = 10;
+            chart1.ChartAreas[0].AxisX.ScaleView.SmallScrollSizeType = DateTimeIntervalType.Seconds;
+            chart1.ChartAreas[0].AxisX.LabelStyle.Format = "mm'm'ss's'";
             chart1.ChartAreas[0].AxisX.IsLabelAutoFit = true;
             chart1.ChartAreas[0].AxisX.LabelAutoFitStyle = LabelAutoFitStyles.LabelsAngleStep30;
             chart1.ChartAreas[0].AxisX.IntervalType = DateTimeIntervalType.Minutes;
-            chart1.ChartAreas[0].AxisX.Interval = 2;
+            chart1.ChartAreas[0].AxisX.Interval = 1;
             chart1.ChartAreas[0].AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount;
             chart1.AxisViewChanged += delegate(object sender, ViewEventArgs args)
             {
@@ -224,6 +230,40 @@ namespace MyPubgTelemetry.GUI
                 double delta = scaleView.ViewMaximum - scaleView.ViewMinimum;
                 bool zoomed = chart1.ChartAreas[0].AxisX.ScaleView.IsZoomed;
                 chart1.ChartAreas[0].AxisX.Interval = zoomed ? delta * 100 : 0;
+            };
+            chart1.MouseWheel += delegate(object sender, MouseEventArgs args)
+            {
+                //ChartTag tag = (ChartTag) chart1.Tag;
+                if (ModifierKeys.HasFlag(Keys.Control))
+                {
+                    var xax = chart1.ChartAreas[0].AxisX;
+                    //var yax = chart1.ChartAreas[0].AxisY;
+                    if (args.Delta > 0)
+                    {
+                        var xMin = xax.ScaleView.ViewMinimum;
+                        var xMax = xax.ScaleView.ViewMaximum;
+                        var xLen = xMax - xMin;
+                        var xDiv = xLen / 4;
+                        var posXStart = xax.PixelPositionToValue(args.Location.X) - xDiv;
+                        var posXFinish = xax.PixelPositionToValue(args.Location.X) + xDiv;
+                        xax.ScaleView.PrivateInvoke("Zoom", posXStart, posXFinish - posXStart, DateTimeIntervalType.Number, true, true);
+                    }
+                    else
+                    {
+                        xax.ScaleView.PrivateInvoke("ZoomReset", 1, true);
+                    }
+                }
+                else
+                {
+                    ScrollType? scrollType = null;
+                    if (ModifierKeys == Keys.None)
+                        scrollType = args.Delta < 0 ? ScrollType.SmallIncrement : ScrollType.SmallDecrement;
+                    else if (ModifierKeys == Keys.Shift)
+                        scrollType = args.Delta < 0 ? ScrollType.LargeIncrement : ScrollType.LargeDecrement;
+                    if (scrollType.HasValue)
+                        chart1.ChartAreas[0].AxisX.ScaleView.Scroll(scrollType.Value);
+                }
+                DebugThreadWriteLine("wheel delta=" + args.Delta);
             };
             //chart1.ChartAreas[0].Area3DStyle.Enable3D = true;
             //chart1.ChartAreas[0].Area3DStyle.IsRightAngleAxes = false;
@@ -239,9 +279,17 @@ namespace MyPubgTelemetry.GUI
         {
             double scaleViewSize = chart1.ChartAreas[0].AxisX.ScaleView.Size;
             DebugThreadWriteLine("scaleViewSize " + scaleViewSize);
-            bool zoomedIn = scaleViewSize < 0.01;
+            bool zoomedIn = chart1.ChartAreas[0].AxisX.ScaleView.IsZoomed; //scaleViewSize < 0.01;
             //series.SmartLabelStyle.MaxMovingDistance = 0;
             chart1.Series.ToList().ForEach(x => x.IsValueShownAsLabel = zoomedIn);
+            if (zoomedIn)
+            {
+                chart1.ChartAreas[0].AxisX.LabelStyle.Format = "mm'm'ss's'";
+            }
+            else
+            {
+                chart1.ChartAreas[0].AxisX.LabelStyle.Format = "mm'm'";
+            }
         }
 
         // ReSharper disable once UnusedMember.Local
@@ -409,7 +457,8 @@ namespace MyPubgTelemetry.GUI
             }
 
             // Don't report rank as a sum stat, just set it directly from the roster.
-            sqst.Rank = roster?.Roster.Attributes.Stats.Rank ?? -1;
+            // "999" -- no matching roster was found -- fudge a value that won't overlap with real ranks.
+            sqst.Rank = roster?.Roster.Attributes.Stats.Rank ?? 999;
 
             using (var sr = file.NewMatchMetaDataReader(FileMode.Open, FileAccess.ReadWrite, FileShare.Read, out FileStream fs))
             using (var jtr = new JsonTextReader(sr))
@@ -681,7 +730,7 @@ namespace MyPubgTelemetry.GUI
             chart1.ChartAreas[0].AxisY.Title = "HITPOINTS: 0 to 100";
             chart1.ChartAreas[0].AxisY.TitleFont = DeriveFont(chart1.ChartAreas[0].AxisY.TitleFont, 0);
 
-            chart1.ChartAreas[0].AxisX.Title = "TIME STARTS WHEN PLAYERS SPAWN INTO THE MATCH'S WAITING-LOBBY AND ENDS WHEN THE LAST SQUADMATE DIES";
+            chart1.ChartAreas[0].AxisX.Title = "TIME (minutes elapsed): 0 at spawn, ends when the last squadmate dies";
             chart1.ChartAreas[0].AxisX.TitleFont = DeriveFont(chart1.ChartAreas[0].AxisX.TitleFont, 0);
 
             ISet<string> squad = pd.File?.Squad ?? new HashSet<string>();
@@ -708,6 +757,7 @@ namespace MyPubgTelemetry.GUI
             var lastHps = new Dictionary<string, float>();
             // Then add data
             DebugThreadWriteLine("About to render " + pd.File?.FileInfo.Name);
+            DateTime t0 = pd.TimeToPlayerToEvents.Keys.FirstOrDefault().ToLocalTime();
             foreach (var kv in pd.TimeToPlayerToEvents)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -716,21 +766,22 @@ namespace MyPubgTelemetry.GUI
                     return;
                 }
 
-                var eventGroupTime = kv.Key.ToLocalTime();
+                TimeSpan eventTimeOffset = kv.Key.ToLocalTime().Subtract(t0);
+                DateTime dt = new DateTime(eventTimeOffset.Ticks);
                 var timePlayerToEvents = kv.Value;
                 foreach (string squadMember in pd.Squad)
                 {
                     timePlayerToEvents.TryGetValue(squadMember, out var squadEvents);
                     if (squadEvents != null)
                     {
-                        chart1.Series[squadMember].Points.AddXY(eventGroupTime, squadEvents.First().character.health);
+                        chart1.Series[squadMember].Points.AddXY(dt, squadEvents.First().character.health);
                         float minHp = squadEvents.Select(x => x.character.health).Min();
                         lastHps[squadMember] = minHp;
                     }
                     else
                     {
                         float lastHp = lastHps.GetValueOrDefault(squadMember, () => 100);
-                        chart1.Series[squadMember].Points.AddXY(eventGroupTime, lastHp);
+                        chart1.Series[squadMember].Points.AddXY(dt, lastHp);
                     }
                 }
             }
@@ -1076,5 +1127,45 @@ namespace MyPubgTelemetry.GUI
     {
         public const string ChartTitleDateFormat = "ddd M/d/yy h:mm tt";
         public const string XAxisDateFormat = "h:mm:ss tt";
+    }
+
+    public class ChartTag
+    {
+    }
+
+    // Helper extension to BindingListView that always applies a secondary sort of MatchDate DESC to whatever primary sort is requested.
+    public class BindingListView2<T> : BindingListView<T>, IBindingListView
+    {
+        public BindingListView2(IList list) : base(list)
+        {
+        }
+
+        public BindingListView2(IContainer container) : base(container)
+        {
+        }
+
+        public new void ApplySort(ListSortDescriptionCollection sorts)
+        {
+            //Debug.WriteLine(">>>>>>BLV2 ApplySort(ListSortDescriptionCollection)!");
+            List<ListSortDescription> sortDescList = sorts.Cast<ListSortDescription>().ToList();
+            sortDescList.Add(new ListSortDescription(GetPropertyDescriptor("MatchDate"), ListSortDirection.Descending));
+            ListSortDescriptionCollection newSorts = new ListSortDescriptionCollection(sortDescList.ToArray());
+            base.ApplySort(newSorts);
+        }
+
+        public new void ApplySort(PropertyDescriptor property, ListSortDirection direction)
+        {
+            //Debug.WriteLine(">>>>>>BLV2 ApplySort(PropertyDescriptor,ListSortDirection)!");
+            var sort = new ListSortDescription(property, direction);
+            var dateSort = new ListSortDescription(GetPropertyDescriptor("MatchDate"), ListSortDirection.Descending);
+            ListSortDescription[] sorts = { sort, dateSort };
+            ListSortDescriptionCollection newSorts = new ListSortDescriptionCollection(sorts);
+            ApplySort(newSorts);
+        }
+
+        private PropertyDescriptor GetPropertyDescriptor(string propertyName)
+        {
+            return TypeDescriptor.GetProperties(typeof(T)).Find(propertyName, false);
+        }
     }
 }

@@ -246,8 +246,8 @@ namespace MyPubgTelemetry
     {
         public Dictionary<string, List<TelemetryEvent>> PlayerToEvents { get; } =
             new Dictionary<string, List<TelemetryEvent>>();
-        public Dictionary<DateTime, Dictionary<string, List<TelemetryEvent>>> TimeToPlayerToEvents { get; } =
-            new Dictionary<DateTime, Dictionary<string, List<TelemetryEvent>>>();
+        public IDictionary<DateTime, Dictionary<string, List<TelemetryEvent>>> TimeToPlayerToEvents { get; } =
+            new SortedDictionary<DateTime, Dictionary<string, List<TelemetryEvent>>>();
         public List<TelemetryEvent> NormalizedEvents { get; } = new List<TelemetryEvent>();
         public HashSet<string> Squad { get; } = new HashSet<string>();
         public TelemetryFile File { get; set; }
@@ -373,6 +373,16 @@ namespace MyPubgTelemetry
             {
                 pin.Free();
             }
+        }
+
+        public static object PrivateInvoke(this object o, string methodName, params object[] args)
+        {
+            var mi = o.GetType().GetMethod(methodName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (mi != null)
+            {
+                return mi.Invoke(o, args);
+            }
+            return null;
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]

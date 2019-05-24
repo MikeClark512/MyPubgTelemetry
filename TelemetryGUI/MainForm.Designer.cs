@@ -74,7 +74,7 @@
             legend1.Name = "Legend1";
             legend1.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
             this.chart1.Legends.Add(legend1);
-            this.chart1.Location = new System.Drawing.Point(3, 0);
+            this.chart1.Location = new System.Drawing.Point(6, -1);
             this.chart1.Name = "chart1";
             this.chart1.Size = new System.Drawing.Size(990, 326);
             this.chart1.TabIndex = 6;
