@@ -36,9 +36,6 @@
     <ApplicationIcon>Resources\pan.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CsvHelper, Version=12.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
-      <HintPath>..\packages\CsvHelper.12.1.2\lib\net45\CsvHelper.dll</HintPath>
-    </Reference>
     <Reference Include="Equin.ApplicationFramework.BindingListView, Version=1.4.5222.35545, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Equin.ApplicationFramework.BindingListView.1.4.5222.35545\lib\net40-Client\Equin.ApplicationFramework.BindingListView.dll</HintPath>
     </Reference>
@@ -147,10 +144,6 @@
     <ProjectReference Include="..\TelemetryApp\TelemetryApp.csproj">
       <Project>{573CAAC6-5626-4009-9712-9C674F4BDE56}</Project>
       <Name>TelemetryApp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TelemetryDownloader\TelemetryDownloader.csproj">
-      <Project>{6386d3c6-fd98-4769-97d7-4df8f4b57c89}</Project>
-      <Name>TelemetryDownloader</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
