@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -50,6 +51,34 @@ namespace MyPubgTelemetry.GUI
         {
             get => _reloadActive;
             set => SetProperty(storage: ref _reloadActive, value);
+        }
+
+        public Dictionary<string, Color> PlayerColors { get; set; } = new Dictionary<string, Color>(StringComparer.CurrentCultureIgnoreCase);
+
+        private int PlayerColorCycleIndex { get; set; } = -1;
+
+        public List<Color> PlayerColorPalette { get; set; } = new List<Color>();
+
+        public Color NextPlayerColor()
+        {
+            if (PlayerColorPalette.Count == 0)
+            {
+                return Color.DeepPink;
+            }
+            if (PlayerColorCycleIndex >= PlayerColorPalette.Count)
+            {
+                PlayerColorCycleIndex = -1;
+            }
+            return PlayerColorPalette[++PlayerColorCycleIndex];
+        }
+
+        public Color ColorForPlayer(string name)
+        {
+            if (PlayerColors.ContainsKey(name))
+            {
+                return PlayerColors[name];
+            }
+            return PlayerColors[name] = NextPlayerColor();
         }
     }
 }
