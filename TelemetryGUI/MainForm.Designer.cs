@@ -29,8 +29,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend5 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.contextMenuMatches = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tsmiPubgLookup = new System.Windows.Forms.ToolStripMenuItem();
@@ -38,6 +38,8 @@
             this.tsmiOpenInFileExplorer = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiCopyMatchId = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.labelStatusFocus = new System.Windows.Forms.Label();
+            this.comboBoxStatsFocus = new System.Windows.Forms.ComboBox();
             this.buttonExportCsv = new System.Windows.Forms.Button();
             this.buttonOptions = new System.Windows.Forms.Button();
             this.buttonToggle = new System.Windows.Forms.Button();
@@ -51,8 +53,7 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
-            this.comboBoxStatsFocus = new System.Windows.Forms.ComboBox();
-            this.labelStatusFocus = new System.Windows.Forms.Label();
+            this.toolTipBalloon = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.contextMenuMatches.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -68,14 +69,14 @@
             this.chart1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea5.Name = "Default";
-            this.chart1.ChartAreas.Add(chartArea5);
-            legend5.Alignment = System.Drawing.StringAlignment.Center;
-            legend5.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend5.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
-            legend5.Name = "Legend1";
-            legend5.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
-            this.chart1.Legends.Add(legend5);
+            chartArea1.Name = "Default";
+            this.chart1.ChartAreas.Add(chartArea1);
+            legend1.Alignment = System.Drawing.StringAlignment.Center;
+            legend1.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend1.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
+            legend1.Name = "Legend1";
+            legend1.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
+            this.chart1.Legends.Add(legend1);
             this.chart1.Location = new System.Drawing.Point(6, -1);
             this.chart1.Name = "chart1";
             this.chart1.Size = new System.Drawing.Size(990, 326);
@@ -148,6 +149,27 @@
             this.splitContainer1.Size = new System.Drawing.Size(996, 668);
             this.splitContainer1.SplitterDistance = 325;
             this.splitContainer1.TabIndex = 5;
+            // 
+            // labelStatusFocus
+            // 
+            this.labelStatusFocus.AutoSize = true;
+            this.labelStatusFocus.Location = new System.Drawing.Point(569, 44);
+            this.labelStatusFocus.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
+            this.labelStatusFocus.Name = "labelStatusFocus";
+            this.labelStatusFocus.Size = new System.Drawing.Size(49, 13);
+            this.labelStatusFocus.TabIndex = 10;
+            this.labelStatusFocus.Text = "Stats for:";
+            // 
+            // comboBoxStatsFocus
+            // 
+            this.comboBoxStatsFocus.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxStatsFocus.FormattingEnabled = true;
+            this.comboBoxStatsFocus.Items.AddRange(new object[] {
+            "Squad (sum)"});
+            this.comboBoxStatsFocus.Location = new System.Drawing.Point(621, 40);
+            this.comboBoxStatsFocus.Name = "comboBoxStatsFocus";
+            this.comboBoxStatsFocus.Size = new System.Drawing.Size(107, 21);
+            this.comboBoxStatsFocus.TabIndex = 9;
             // 
             // buttonExportCsv
             // 
@@ -279,26 +301,9 @@
             this.toolStripProgressBar1.Name = "toolStripProgressBar1";
             this.toolStripProgressBar1.Size = new System.Drawing.Size(189, 16);
             // 
-            // comboBoxStatsFocus
+            // toolTipBalloon
             // 
-            this.comboBoxStatsFocus.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxStatsFocus.FormattingEnabled = true;
-            this.comboBoxStatsFocus.Items.AddRange(new object[] {
-            "Squad (sum)"});
-            this.comboBoxStatsFocus.Location = new System.Drawing.Point(621, 40);
-            this.comboBoxStatsFocus.Name = "comboBoxStatsFocus";
-            this.comboBoxStatsFocus.Size = new System.Drawing.Size(107, 21);
-            this.comboBoxStatsFocus.TabIndex = 9;
-            // 
-            // label1
-            // 
-            this.labelStatusFocus.AutoSize = true;
-            this.labelStatusFocus.Location = new System.Drawing.Point(569, 44);
-            this.labelStatusFocus.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
-            this.labelStatusFocus.Name = "labelStatusFocus";
-            this.labelStatusFocus.Size = new System.Drawing.Size(49, 13);
-            this.labelStatusFocus.TabIndex = 10;
-            this.labelStatusFocus.Text = "Stats for:";
+            this.toolTipBalloon.IsBalloon = true;
             // 
             // MainForm
             // 
@@ -354,6 +359,7 @@
         private System.Windows.Forms.Button buttonExportCsv;
         private System.Windows.Forms.Label labelStatusFocus;
         private System.Windows.Forms.ComboBox comboBoxStatsFocus;
+        private System.Windows.Forms.ToolTip toolTipBalloon;
     }
 }
 

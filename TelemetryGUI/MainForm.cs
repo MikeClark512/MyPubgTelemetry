@@ -315,18 +315,16 @@ namespace MyPubgTelemetry.GUI
             {
                 await DownloadAndRefresh();
             }
-
             comboBoxStatsFocus.SelectedIndex = 0;
         }
 
         private async void LoadMatches(bool deep = false)
         {
-            var squaddies = ViewModel.RegexCsv.Split(textBoxSquad.Text);
-            int sumLen = squaddies.Sum(s => s.Length);
-            if (sumLen == 0)
+            if (!ValidateInputSquad())
             {
-                return; // nothin' but whitespace and commas.
+                return;
             }
+            var squaddies = new HashSet<string>(ViewModel.RegexCsv.Split(textBoxSquad.Text));
             ViewModel.ReloadActive = true;
             ViewModel.Squad.Clear();
             ViewModel.Squad.UnionWith(squaddies);
@@ -361,7 +359,23 @@ namespace MyPubgTelemetry.GUI
             await Task.Run(() => UpdateMatchListMetaData(telFiles, squaddies, deep, ViewModel.CtsMatchMetaData.Token));
         }
 
-        private void UpdateMatchListMetaData(List<TelemetryFile> telFiles, string[] squaddies, bool deep, CancellationToken cancellationToken)
+        private bool ValidateInputSquad()
+        {
+            var squaddies = ViewModel.RegexCsv.Split(textBoxSquad.Text);
+            if (squaddies.Sum(s => s.Length) == 0)
+            {
+                BeginInvoke((MethodInvoker) delegate
+                {
+                    toolTipBalloon.Show("", textBoxSquad, 0);
+                    var msg = "Enter some player names (case sensitive, comma separated) and then press refresh.";
+                    toolTipBalloon.Show(msg, textBoxSquad, 15, textBoxSquad.Height - 5, 7500);
+                });
+                return false;
+            }
+            return true;
+        }
+
+        private void UpdateMatchListMetaData(List<TelemetryFile> telFiles, IEnumerable<string> squaddies, bool deep, CancellationToken cancellationToken)
         {
             void UiUpdateOneFile(TelemetryFile telemetryFile)
             {
@@ -419,7 +433,7 @@ namespace MyPubgTelemetry.GUI
             }, cancellationToken);
         }
 
-        private void ReadTelemetryMetaData(TelemetryFile file, string[] squaddies, bool deep)
+        private void ReadTelemetryMetaData(TelemetryFile file, IEnumerable<string> squaddies, bool deep)
         {
             NormalizedMatch normalizedMatch = ReadMatchMetaData(file);
             file.NormalizedMatch = normalizedMatch;
@@ -821,23 +835,12 @@ namespace MyPubgTelemetry.GUI
 
         private async Task DownloadAndRefresh()
         {
-            if (string.IsNullOrWhiteSpace(TelemetryApp.App.ApiKey))
+            if (!PreFlight())
             {
-                BeginInvoke((MethodInvoker) delegate()
-                {
-                    MessageBox.Show("Your API Key is not set. Please go to the options dialog and paste a valid API Key.",
-                        "API Key Not Set", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                });
                 return;
             }
-
             TelemetryDownloader downloader = new TelemetryDownloader();
             var squadSet = new HashSet<string>(ViewModel.RegexCsv.Split(textBoxSquad.Text));
-            if (squadSet.Count == 0)
-            {
-                return;
-            }
-
             string squad = string.Join(",", squadSet);
             downloader.DownloadProgressEvent += (sender2, args) =>
             {
@@ -874,6 +877,30 @@ namespace MyPubgTelemetry.GUI
             }
 
             LoadMatches();
+        }
+
+        private bool PreFlight()
+        {
+            if (!ValidateInputSquad())
+                return false;
+            if (!ValidateApiKey())
+                return false;
+            return true;
+        }
+
+        private bool ValidateApiKey()
+        {
+            if (string.IsNullOrWhiteSpace(TelemetryApp.App.ApiKey))
+            {
+                BeginInvoke((MethodInvoker)delegate ()
+                {
+                    var msg = "Your API Key is not set. Please go to the options dialog and paste a valid API Key.";
+                    toolTipBalloon.Show("", buttonOptions, 0);
+                    toolTipBalloon.Show(msg, buttonOptions);
+                });
+                return false;
+            }
+            return true;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
