@@ -46,5 +46,17 @@ namespace MyPubgTelemetry.GUI.Properties {
                 this["LastDir"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PlayerColors {
+            get {
+                return ((string)(this["PlayerColors"]));
+            }
+            set {
+                this["PlayerColors"] = value;
+            }
+        }
     }
 }

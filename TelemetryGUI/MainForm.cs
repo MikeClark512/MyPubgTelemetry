@@ -19,6 +19,7 @@ using System.Windows.Forms.DataVisualization.Charting;
 using Equin.ApplicationFramework;
 using MyPubgTelemetry.ApiMatchModel;
 using MyPubgTelemetry.Downloader;
+using MyPubgTelemetry.GUI.Properties;
 using Newtonsoft.Json;
 
 namespace MyPubgTelemetry.GUI
@@ -204,12 +205,15 @@ namespace MyPubgTelemetry.GUI
         {
             chart1.Tag = new ChartTag();
             chart1.Titles.Add("");
+            //chart1.Palette = ChartColorPalette.Berry;
+
             chart1.ChartAreas[0].CursorX.IsUserEnabled = true;
             chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
             chart1.ChartAreas[0].CursorX.LineColor = Color.Black;
             chart1.ChartAreas[0].CursorX.SelectionColor = Color.CornflowerBlue;
             chart1.ChartAreas[0].CursorX.IntervalType = DateTimeIntervalType.Seconds;
             chart1.ChartAreas[0].CursorX.Interval = 1;
+
             chart1.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
             chart1.ChartAreas[0].AxisX.ScrollBar.IsPositionedInside = false;
             chart1.ChartAreas[0].AxisX.ScaleView.SmallScrollMinSize = 1;
@@ -222,6 +226,7 @@ namespace MyPubgTelemetry.GUI
             chart1.ChartAreas[0].AxisX.IntervalType = DateTimeIntervalType.Minutes;
             chart1.ChartAreas[0].AxisX.Interval = 1;
             chart1.ChartAreas[0].AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount;
+
             chart1.AxisViewChanged += delegate(object sender, ViewEventArgs args)
             {
                 chart1.ChartAreas[0].AxisX.Interval = chart1.ChartAreas[0].AxisX.Interval / 10;
@@ -282,14 +287,7 @@ namespace MyPubgTelemetry.GUI
             bool zoomedIn = chart1.ChartAreas[0].AxisX.ScaleView.IsZoomed; //scaleViewSize < 0.01;
             //series.SmartLabelStyle.MaxMovingDistance = 0;
             chart1.Series.ToList().ForEach(x => x.IsValueShownAsLabel = zoomedIn);
-            if (zoomedIn)
-            {
-                chart1.ChartAreas[0].AxisX.LabelStyle.Format = "m'm'ss's'";
-            }
-            else
-            {
-                chart1.ChartAreas[0].AxisX.LabelStyle.Format = "m'm'";
-            }
+            chart1.ChartAreas[0].AxisX.LabelStyle.Format = zoomedIn ? "m'm'ss's'" : "m'm'";
         }
 
         // ReSharper disable once UnusedMember.Local
@@ -304,9 +302,14 @@ namespace MyPubgTelemetry.GUI
         {
             var path = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
             DebugThreadWriteLine("Config path = " + path);
-            textBoxSquad.Text = Properties.Settings.Default.Squad.Trim();
+            textBoxSquad.Text = Settings.Default.Squad.Trim();
             string envNoDlOnStart = Environment.GetEnvironmentVariable("MYPUBGTELEMETRY_NODLONSTART");
             bool bNoDlOnStart = TelemetryApp.ToBooly(envNoDlOnStart);
+            ViewModel.PlayerColorPalette = GetPaletteColors(chart1.Palette);
+            if (!string.IsNullOrWhiteSpace(Settings.Default.PlayerColors))
+            {
+                ViewModel.PlayerColors = JsonConvert.DeserializeObject<Dictionary<string, Color>>(Settings.Default.PlayerColors);
+            }
             if (bNoDlOnStart)
             {
                 LoadMatches();
@@ -759,6 +762,7 @@ namespace MyPubgTelemetry.GUI
             foreach (string playerName in pd.PlayerToEvents.Keys)
             {
                 var series = chart1.Series.Add(playerName);
+                series.Color = ViewModel.ColorForPlayer(playerName);
                 series.BorderWidth = 3;
                 series.ChartType = SeriesChartType.Line;
                 chart1.ChartAreas[0].AxisX.IsMarginVisible = false;
@@ -803,6 +807,19 @@ namespace MyPubgTelemetry.GUI
             }
 
             RecalcPointLabels();
+        }
+
+        private List<Color> GetPaletteColors(ChartColorPalette palette)
+        {
+            Type type = typeof(Chart).Assembly.GetType("System.Windows.Forms.DataVisualization.Charting.Utilities.ChartPaletteColors");
+            BindingFlags bf = BindingFlags.Static | BindingFlags.Public;
+            MethodInfo mi = type.GetMethod("GetPaletteColors", bf);
+            object ret = mi?.Invoke(null, new object[] {palette});
+            if (ret is Color[] colors)
+            {
+                return colors.ToList();
+            }
+            return new List<Color>();
         }
 
         private void ClearChart(Chart chart)
@@ -905,8 +922,9 @@ namespace MyPubgTelemetry.GUI
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Properties.Settings.Default.Squad = textBoxSquad.Text;
-            Properties.Settings.Default.Save();
+            Settings.Default.PlayerColors = JsonConvert.SerializeObject(ViewModel.PlayerColors);
+            Settings.Default.Squad = textBoxSquad.Text;
+            Settings.Default.Save();
         }
 
         private void TextBoxSquad_KeyDown(object sender, KeyEventArgs e)
@@ -1144,11 +1162,6 @@ namespace MyPubgTelemetry.GUI
 
         private void LabelMatches_Click(object sender, EventArgs e)
         {
-            object dataSource = dataGridView1.DataSource;
-            if (dataSource is BindingListView<TelemetryFile> blv)
-            {
-                Debug.WriteLine(">>>>>>>>" + blv.Sort);
-            }
         }
     }
 
