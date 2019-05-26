@@ -5,11 +5,13 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,7 +34,7 @@ namespace MyPubgTelemetry.GUI
         {
             InitializeComponent();
             InitChart();
-            InitMatchesList();
+            InitMatchesDataGridView();
             InitToolStrip();
             Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             ViewModel = new ViewModel(this);
@@ -63,7 +65,7 @@ namespace MyPubgTelemetry.GUI
             };
         }
 
-        private void InitMatchesList()
+        private void InitMatchesDataGridView()
         {
             // Visually faster repainting
             typeof(DataGridView).InvokeMember(
@@ -73,6 +75,8 @@ namespace MyPubgTelemetry.GUI
                 dataGridView1,
                 new object[] {true});
 
+            TweakColumnHeaderPadding();
+
             dataGridView1.ColumnHeadersDefaultCellStyle.SelectionBackColor = SystemColors.Control;
             dataGridView1.RowHeadersDefaultCellStyle.SelectionBackColor = SystemColors.Control;
             dataGridView1.EnableHeadersVisualStyles = false;
@@ -81,24 +85,12 @@ namespace MyPubgTelemetry.GUI
             dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView1.AllowUserToResizeRows = false;
             dataGridView1.AllowUserToResizeColumns = true;
+            dataGridView1.AllowUserToOrderColumns = true;
             dataGridView1.MultiSelect = false;
             dataGridView1.BackgroundColor = SystemColors.ControlLightLight;
             dataGridView1.RowHeadersVisible = false;
             dataGridView1.CellFormatting += delegate(object sender, DataGridViewCellFormattingEventArgs e)
             {
-                //DataGridView dgv = (DataGridView) sender;
-                //DataGridViewColumn column = dgv.Columns[e.ColumnIndex];
-                //if (column.DataPropertyName.Contains("."))
-                //{
-                //    object data = dgv.Rows[e.RowIndex].DataBoundItem;
-                //    if (data is ICustomTypeDescriptor ictd)
-                //        data = ictd.GetPropertyOwner(null);
-                //    string[] properties = column.DataPropertyName.Split('.');
-                //    for (int i = 0; i < properties.Length && data != null; i++)
-                //        data = data.GetType().GetProperty(properties[i])?.GetValue(data);
-                //    e.Value = data;
-                //}
-
                 if (e.Value is DateTime value)
                 {
                     switch (value.Kind)
@@ -160,7 +152,7 @@ namespace MyPubgTelemetry.GUI
                 SortMode = DataGridViewColumnSortMode.NotSortable,
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
                 Frozen = false,
-                DefaultCellStyle = new DataGridViewCellStyle {Format = UiConstants.ChartTitleDateFormat}
+                DefaultCellStyle = new DataGridViewCellStyle {Format = ViewModel.ChartTitleDateFormat}
             });
 
             foreach (PropertyInfo pi in typeof(MatchModelStats).GetProperties())
@@ -170,15 +162,56 @@ namespace MyPubgTelemetry.GUI
                     AddSquadStatColumn(pi);
                 }
             }
+
+            foreach (DataGridViewColumn column in dataGridView1.Columns)
+            {
+                
+                column.HeaderCell.Style.Padding = new Padding(-10);
+                column.DividerWidth = 0;
+                //column.DataGridView.ColumnHeadersDefaultCellStyle.Padding = new Padding(-10);
+            }
+        }
+
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
+        private void TweakColumnHeaderPadding()
+        {
+            try
+            {
+                DataGridViewCellStyle cellStyle = dataGridView1.ColumnHeadersDefaultCellStyle;
+                FieldInfo fi_DataGridViewCellStyle_propertyStore = cellStyle.GetType().GetField("propertyStore", BindingFlags.NonPublic | BindingFlags.Instance);
+                FieldInfo fi_DataGridViewCellStyle_PropPadding = cellStyle.GetType().GetField("PropPadding", BindingFlags.NonPublic | BindingFlags.Static);
+                int propId = (int?)fi_DataGridViewCellStyle_PropPadding?.GetValue(null) ?? -1;
+                object propertyStore = fi_DataGridViewCellStyle_propertyStore?.GetValue(cellStyle);
+                Type t_PropertyStore = propertyStore?.GetType();
+                MethodInfo mi_PropertyStore_SetPadding = t_PropertyStore?.GetMethod("SetPadding");
+                Padding padding = new Padding(-2, 0, -2, 0);
+                mi_PropertyStore_SetPadding?.Invoke(propertyStore, new object[] { propId, padding });
+                Padding gp = cellStyle.Padding;
+                Debug.WriteLine($"{gp.Left} {gp.Right} {gp.Top} {gp.Bottom}");
+            }
+            catch (Exception)
+            {
+                // unimportant attempt to tighten up the text margins in the DGV header labels
+            }
         }
 
         private void AddSquadStatColumn(PropertyInfo pi)
         {
-            string[] ignore =
+            var ignore = new HashSet<string>
             {
                 "DeathType", "KillPointsDelta", "KillPoints", "KillStreaks", "LastKillPoints", "Name", "PlayerId", "MostDamage", "RankPoints", "WinPoints",
                 "WinPointsDelta", "TeamId", "LastWinPoints"
             };
+            var rename = new Dictionary<string, string>()
+            {
+                {"DamageDealt", "Damage"},
+                {"Revives", "Revive"},
+                {"RoadKills", "RoadK"},
+                {"HeadshotKills", "HeadsK"},
+                {"VehicleDestroys", "V.Destroy"},
+                {"LongestKill", "LongestK"},
+            };
+
             Type pt = pi.PropertyType;
             string name = pi.Name;
             if (ignore.Contains(name))
@@ -186,10 +219,18 @@ namespace MyPubgTelemetry.GUI
                 return;
             }
 
-            AddStatColumn(name, name, pt);
+            string displayName = rename.GetValueOrDefault(name, name);
+            if (displayName.EndsWith("s"))
+            {
+                displayName = displayName.Substring(0, displayName.Length - 1);
+            }
+            displayName = displayName.Replace("Distance", "");
+            DebugThreadWriteLine($"name={name}, type={pt}");
+
+            AddStatColumn(displayName, name, pt, "0");
         }
 
-        private void AddStatColumn(string displayName, string dataName, Type valueType)
+        private void AddStatColumn(string displayName, string dataName, Type valueType, string format)
         {
             DataGridViewColumn col = new DataGridViewTextBoxColumn();
             col.Name = displayName;
@@ -198,6 +239,10 @@ namespace MyPubgTelemetry.GUI
             col.SortMode = DataGridViewColumnSortMode.Automatic;
             col.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
             col.Frozen = false;
+            if (format != null)
+            {
+                col.DefaultCellStyle.Format = format;
+            }
             dataGridView1.Columns.Add(col);
         }
 
@@ -238,6 +283,7 @@ namespace MyPubgTelemetry.GUI
             };
             chart1.MouseWheel += delegate(object sender, MouseEventArgs args)
             {
+                DebugThreadWriteLine("wheel delta=" + args.Delta);
                 //ChartTag tag = (ChartTag) chart1.Tag;
                 if (ModifierKeys.HasFlag(Keys.Control))
                 {
@@ -251,15 +297,20 @@ namespace MyPubgTelemetry.GUI
                         var xDiv = xLen / 4;
                         var posXStart = xax.PixelPositionToValue(args.Location.X) - xDiv;
                         var posXFinish = xax.PixelPositionToValue(args.Location.X) + xDiv;
-                        xax.ScaleView.PrivateInvoke("Zoom", posXStart, posXFinish - posXStart, DateTimeIntervalType.Number, true, true);
+                        xax.ScaleView.PrivateZoom(posXStart, posXFinish - posXStart, DateTimeIntervalType.Number, true, true);
                     }
                     else
                     {
-                        xax.ScaleView.PrivateInvoke("ZoomReset", 1, true);
+                        xax.ScaleView.PrivateZoomReset(1, true);
                     }
                 }
                 else
                 {
+                    if (!chart1.ChartAreas[0].AxisX.ScaleView.IsZoomed)
+                    {
+                        return;
+                    }
+
                     ScrollType? scrollType = null;
                     if (ModifierKeys == Keys.None)
                         scrollType = args.Delta < 0 ? ScrollType.SmallIncrement : ScrollType.SmallDecrement;
@@ -268,7 +319,6 @@ namespace MyPubgTelemetry.GUI
                     if (scrollType.HasValue)
                         chart1.ChartAreas[0].AxisX.ScaleView.Scroll(scrollType.Value);
                 }
-                DebugThreadWriteLine("wheel delta=" + args.Delta);
             };
             //chart1.ChartAreas[0].Area3DStyle.Enable3D = true;
             //chart1.ChartAreas[0].Area3DStyle.IsRightAngleAxes = false;
@@ -310,6 +360,7 @@ namespace MyPubgTelemetry.GUI
             {
                 ViewModel.PlayerColors = JsonConvert.DeserializeObject<Dictionary<string, Color>>(Settings.Default.PlayerColors);
             }
+
             if (bNoDlOnStart)
             {
                 LoadMatches();
@@ -318,6 +369,7 @@ namespace MyPubgTelemetry.GUI
             {
                 await DownloadAndRefresh();
             }
+
             comboBoxStatsFocus.SelectedIndex = 0;
         }
 
@@ -327,6 +379,7 @@ namespace MyPubgTelemetry.GUI
             {
                 return;
             }
+
             var squaddies = new HashSet<string>(ViewModel.RegexCsv.Split(textBoxSquad.Text));
             ViewModel.ReloadActive = true;
             ViewModel.Squad.Clear();
@@ -375,6 +428,7 @@ namespace MyPubgTelemetry.GUI
                 });
                 return false;
             }
+
             return true;
         }
 
@@ -389,8 +443,10 @@ namespace MyPubgTelemetry.GUI
                 {
                     dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
                 }
+
                 toolStripProgressBar1.Value = loadedCount;
             }
+
             List<Task> tasks = new List<Task>();
             for (int i = 0; i < telFiles.Count; i++)
             {
@@ -423,7 +479,7 @@ namespace MyPubgTelemetry.GUI
                 BeginInvoke((MethodInvoker) delegate()
                 {
                     DebugThreadWriteLine("Done loading metadata (UI).");
-                    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
                     toolStripProgressBar1.Visible = false;
                     for (int col = 0; col < dataGridView1.ColumnCount; col++)
                     {
@@ -561,7 +617,6 @@ namespace MyPubgTelemetry.GUI
 
                 file.PreparedData = deep ? pd : null;
 
-
                 if (squadTeamId != -1)
                 {
                     SortedSet<string> squadTeam = teams[squadTeamId];
@@ -583,7 +638,6 @@ namespace MyPubgTelemetry.GUI
                 }
             }
         }
-
 
         private static NormalizedMatch ReadMatchMetaData(TelemetryFile file)
         {
@@ -703,9 +757,9 @@ namespace MyPubgTelemetry.GUI
             return pd;
         }
 
-        private static void DebugThreadWriteLine(string msg)
+        private static void DebugThreadWriteLine(string msg, [CallerMemberName] string caller = "")
         {
-            Debug.WriteLine($"T:{Thread.CurrentThread.Name}{Thread.CurrentThread.ManagedThreadId} {msg}");
+            Debug.WriteLine($"T:{Thread.CurrentThread.Name}{Thread.CurrentThread.ManagedThreadId} C:{caller} {msg}");
         }
 
         private void ConsumePreparedDataQ(CancellationToken cancellationToken)
@@ -742,7 +796,7 @@ namespace MyPubgTelemetry.GUI
             string sdt = "";
             if (localTime.HasValue)
             {
-                sdt = localTime.Value.ToString(UiConstants.ChartTitleDateFormat);
+                sdt = localTime.Value.ToString(ViewModel.ChartTitleDateFormat);
                 sdt += " " + localTime.Value.GetTimeZoneAbbreviation();
             }
 
@@ -819,6 +873,7 @@ namespace MyPubgTelemetry.GUI
             {
                 return colors.ToList();
             }
+
             return new List<Color>();
         }
 
@@ -856,6 +911,7 @@ namespace MyPubgTelemetry.GUI
             {
                 return;
             }
+
             TelemetryDownloader downloader = new TelemetryDownloader();
             var squadSet = new HashSet<string>(ViewModel.RegexCsv.Split(textBoxSquad.Text));
             string squad = string.Join(",", squadSet);
@@ -909,7 +965,7 @@ namespace MyPubgTelemetry.GUI
         {
             if (string.IsNullOrWhiteSpace(TelemetryApp.App.ApiKey))
             {
-                BeginInvoke((MethodInvoker)delegate ()
+                BeginInvoke((MethodInvoker) delegate()
                 {
                     var msg = "Your API Key is not set. Please go to the options dialog and paste a valid API Key.";
                     toolTipBalloon.Show("", buttonOptions, 0);
@@ -917,6 +973,7 @@ namespace MyPubgTelemetry.GUI
                 });
                 return false;
             }
+
             return true;
         }
 
@@ -941,7 +998,7 @@ namespace MyPubgTelemetry.GUI
             DialogResult dialogResult = optionsForm.ShowDialog(this);
             if (dialogResult == DialogResult.OK)
             {
-               await DownloadAndRefresh();
+                await DownloadAndRefresh();
             }
         }
 
@@ -990,7 +1047,7 @@ namespace MyPubgTelemetry.GUI
             {
                 var searchSquadSet = new HashSet<string>(ViewModel.RegexCsv.Split(txt));
                 var titleSquadSet = new HashSet<string>(ViewModel.RegexCsv.Split(telemetryFile.Title));
-                bool dateMatch = telemetryFile.MatchDate?.ToLocalTime().ToString(UiConstants.ChartTitleDateFormat).Contains(txt) ?? false;
+                bool dateMatch = telemetryFile.MatchDate?.ToLocalTime().ToString(ViewModel.ChartTitleDateFormat).Contains(txt) ?? false;
                 bool matchIdMatch = telemetryFile.FileInfo.FullName.Contains(txt);
                 bool squadSetMatch = searchSquadSet.IsSubsetOf(titleSquadSet);
                 bool titleSubstringMatch = telemetryFile.Title.IndexOf(txt, StringComparison.OrdinalIgnoreCase) != -1;
@@ -1136,6 +1193,7 @@ namespace MyPubgTelemetry.GUI
                     MessageBox.Show("Export failed.", "Export failed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+
                 File.WriteAllText(filename, dataObject.GetText(TextDataFormat.CommaSeparatedValue));
             }
             finally
@@ -1144,7 +1202,6 @@ namespace MyPubgTelemetry.GUI
                 dgv.SelectionMode = selectionModeSaved;
                 dgv.ClipboardCopyMode = clipboardCopyModeSaved;
             }
-
         }
 
         private void ButtonExportCsv_Click(object sender, EventArgs e)
@@ -1163,12 +1220,15 @@ namespace MyPubgTelemetry.GUI
         private void LabelMatches_Click(object sender, EventArgs e)
         {
         }
-    }
 
-    public class UiConstants
-    {
-        public const string ChartTitleDateFormat = "ddd M/d/yy h:mm tt";
-        public const string XAxisDateFormat = "h:mm:ss tt";
+        private void TextBoxSquad_TextChanged(object sender, EventArgs e)
+        {
+            string[] squadMembers = ViewModel.RegexCsv.Split(textBoxSquad.Text);
+            ViewModel.Squad.Clear();
+            ViewModel.Squad.UnionWith(squadMembers);
+            string s = string.Join("|", ViewModel.Squad);
+            DebugThreadWriteLine("sq=" + s);
+        }
     }
 
     public class ChartTag
@@ -1200,7 +1260,7 @@ namespace MyPubgTelemetry.GUI
             //Debug.WriteLine(">>>>>>BLV2 ApplySort(PropertyDescriptor,ListSortDirection)!");
             var sort = new ListSortDescription(property, direction);
             var dateSort = new ListSortDescription(GetPropertyDescriptor("MatchDate"), ListSortDirection.Descending);
-            ListSortDescription[] sorts = { sort, dateSort };
+            ListSortDescription[] sorts = {sort, dateSort};
             ListSortDescriptionCollection newSorts = new ListSortDescriptionCollection(sorts);
             ApplySort(newSorts);
         }
@@ -1208,6 +1268,30 @@ namespace MyPubgTelemetry.GUI
         private PropertyDescriptor GetPropertyDescriptor(string propertyName)
         {
             return TypeDescriptor.GetProperties(typeof(T)).Find(propertyName, false);
+        }
+    }
+
+    public static class TelemetryGuiExtensions
+    {
+        public static void PrivateZoom(this AxisScaleView scaleView, double viewPosition, double viewSize, DateTimeIntervalType viewSizeType,
+            bool fireChangeEvents, bool saveState)
+        {
+            scaleView.PrivateInvoke("Zoom", viewPosition, viewSize, viewSizeType, fireChangeEvents, saveState);
+        }
+
+        public static void PrivateZoomReset(this AxisScaleView scaleView, int numberOfViews, bool fireChangeEvents)
+        {
+            scaleView.PrivateInvoke("ZoomReset", numberOfViews, fireChangeEvents);
+        }
+
+        private static object PrivateInvoke(this object o, string methodName, params object[] args)
+        {
+            var mi = o.GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+            if (mi != null)
+            {
+                return mi.Invoke(o, args);
+            }
+            return null;
         }
     }
 }

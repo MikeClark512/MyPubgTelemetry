@@ -84,8 +84,7 @@ namespace MyPubgTelemetry.ApiMatchModel
         // ReSharper disable once InconsistentNaming
         public long Rank { get; set; }
         public long Kills { get; set; }
-        [JsonProperty(PropertyName = "DamageDealt")]
-        public double Damage { get; set; }
+        public double DamageDealt { get; set; }
         public long Revives { get; set; }
         public long Assists { get; set; }
         public long RoadKills { get; set; }
@@ -93,12 +92,14 @@ namespace MyPubgTelemetry.ApiMatchModel
         public long HeadshotKills { get; set; }
         public long DBNOs { get; set; }
         public long VehicleDestroys { get; set; }
-        public long Boosts { get; set; }
         public long Heals { get; set; }
+        public long Boosts { get; set; }
+        public double TimeSurvived { get; set; }
         public double RideDistance { get; set; }
         public double WalkDistance { get; set; }
         public double SwimDistance { get; set; }
         public double LongestKill { get; set; }
+        public long TeamKills { get; set; }
         public long WeaponsAcquired { get; set; }
         public long KillPlace { get; set; }
         public long KillPoints { get; set; }
@@ -110,8 +111,6 @@ namespace MyPubgTelemetry.ApiMatchModel
         public string Name { get; set; }
         public string PlayerId { get; set; }
         public long RankPoints { get; set; }
-        public long TeamKills { get; set; }
-        public double TimeSurvived { get; set; }
         public long WinPlace { get; set; }
         public long WinPoints { get; set; }
         public long WinPointsDelta { get; set; }
