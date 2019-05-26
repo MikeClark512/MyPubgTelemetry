@@ -152,6 +152,7 @@
             // 
             // labelStatusFocus
             // 
+            this.labelStatusFocus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelStatusFocus.AutoSize = true;
             this.labelStatusFocus.Location = new System.Drawing.Point(569, 44);
             this.labelStatusFocus.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
@@ -162,6 +163,7 @@
             // 
             // comboBoxStatsFocus
             // 
+            this.comboBoxStatsFocus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxStatsFocus.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxStatsFocus.FormattingEnabled = true;
             this.comboBoxStatsFocus.Items.AddRange(new object[] {
@@ -196,7 +198,7 @@
             // buttonToggle
             // 
             this.buttonToggle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonToggle.Location = new System.Drawing.Point(734, 39);
+            this.buttonToggle.Location = new System.Drawing.Point(734, 40);
             this.buttonToggle.Name = "buttonToggle";
             this.buttonToggle.Size = new System.Drawing.Size(83, 23);
             this.buttonToggle.TabIndex = 7;
@@ -253,6 +255,7 @@
             this.textBoxSquad.Name = "textBoxSquad";
             this.textBoxSquad.Size = new System.Drawing.Size(930, 20);
             this.textBoxSquad.TabIndex = 0;
+            this.textBoxSquad.TextChanged += new System.EventHandler(this.TextBoxSquad_TextChanged);
             this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSquad_KeyDown);
             // 
             // labelSquad

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -44,13 +45,13 @@ namespace MyPubgTelemetry.GUI
         public bool DownloadActive
         {
             get => _downloadActive;
-            set => SetProperty(storage: ref _downloadActive, value);
+            set => SetProperty(ref _downloadActive, value);
         }
 
         public bool ReloadActive
         {
             get => _reloadActive;
-            set => SetProperty(storage: ref _reloadActive, value);
+            set => SetProperty(ref _reloadActive, value);
         }
 
         public Dictionary<string, Color> PlayerColors { get; set; } = new Dictionary<string, Color>(StringComparer.CurrentCultureIgnoreCase);
@@ -80,5 +81,8 @@ namespace MyPubgTelemetry.GUI
             }
             return PlayerColors[name] = NextPlayerColor();
         }
+
+        public const string ChartTitleDateFormat = "ddd M/d/yy h:mm tt";
+        public const string XAxisDateFormat = "h:mm:ss tt";
     }
 }

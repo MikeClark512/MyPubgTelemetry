@@ -375,16 +375,6 @@ namespace MyPubgTelemetry
             }
         }
 
-        public static object PrivateInvoke(this object o, string methodName, params object[] args)
-        {
-            var mi = o.GetType().GetMethod(methodName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (mi != null)
-            {
-                return mi.Invoke(o, args);
-            }
-            return null;
-        }
-
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool SetFileTime(SafeFileHandle hFile, IntPtr lpCreationTime, IntPtr lpLastAccessTime, IntPtr lpLastWriteTime);
