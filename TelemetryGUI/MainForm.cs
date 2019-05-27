@@ -516,7 +516,7 @@ namespace MyPubgTelemetry.GUI
                 BeginInvoke((MethodInvoker)delegate ()
                {
                    DebugThreadWriteLine("Done loading metadata (UI).");
-                   dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+//                   dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
                    toolStripProgressBar1.Visible = false;
                    for (int col = 0; col < dataGridView1.ColumnCount; col++)
                    {
@@ -540,46 +540,11 @@ namespace MyPubgTelemetry.GUI
                 rosterPlayers.IntersectWith(lowerSquaddies);
                 return rosterPlayers.Count > 0;
             });
+            file.NormalizedRoster = roster;
 
             // Foreach stat that looks numeric, sum it across each player on the roster -- even if that stat doesn't make sense as a sum stat :)
             MatchModelStats sqst = file;
-            Func<MatchModelIncluded, bool> wherePred;
-            if (ViewModel.SelectedPlayer != null)
-            {
-                wherePred = (player) => player?.Attributes?.Stats?.Name?.Equals(ViewModel.SelectedPlayer) ?? false;
-            }
-            else
-            {
-                wherePred = player => true;
-            }
-            foreach (PropertyInfo pi in typeof(MatchModelStats).GetProperties())
-            {
-                if (roster == null) break;
-                if (pi.PropertyType == typeof(long?))
-                {
-                    long? sum = roster.Players.Where(wherePred).Sum(p => (long?) pi.GetValue(p.Attributes?.Stats));
-                    pi.SetValue(sqst, sum);
-                }
-                else if (pi.PropertyType == typeof(double?))
-                {
-                    double? sum = roster.Players.Where(wherePred).Sum(p => (double?)pi.GetValue(p.Attributes?.Stats));
-                    pi.SetValue(sqst, sum);
-                }
-                else if (typeof(long).IsAssignableFrom(pi.PropertyType))
-                {
-                    long sum = roster.Players.Where(wherePred).Sum(p => (long)(pi.GetValue(p.Attributes?.Stats) ?? 0));
-                    pi.SetValue(sqst, sum);
-                }
-                else if (typeof(double).IsAssignableFrom(pi.PropertyType))
-                {
-                    double sum = roster.Players.Where(wherePred).Sum(p => (double)(pi.GetValue(p.Attributes?.Stats) ?? 0));
-                    pi.SetValue(sqst, sum);
-                }
-            }
-
-            // Don't report rank as a sum stat, just set it directly from the roster.
-            // "999" -- no matching roster was found -- fudge a value that won't overlap with real ranks.
-            sqst.Rank = roster?.Roster.Attributes.Stats.Rank ?? 999;
+            RecalcStats(file, sqst);
 
             using (var sr = file.NewMatchMetaDataReader(FileMode.Open, FileAccess.ReadWrite, FileShare.Read, out FileStream fs))
             using (var jtr = new JsonTextReader(sr))
@@ -683,6 +648,48 @@ namespace MyPubgTelemetry.GUI
                     }
                 }
             }
+        }
+
+        private void RecalcStats(TelemetryFile file, MatchModelStats sqst)
+        {
+            NormalizedRoster roster = file.NormalizedRoster;
+            Func<MatchModelIncluded, bool> wherePred;
+            if (ViewModel.SelectedPlayer != null)
+            {
+                wherePred = (player) => player?.Attributes?.Stats?.Name?.Equals(ViewModel.SelectedPlayer) ?? false;
+            }
+            else
+            {
+                wherePred = player => true;
+            }
+            foreach (PropertyInfo pi in typeof(MatchModelStats).GetProperties())
+            {
+                if (roster == null) break;
+                if (pi.PropertyType == typeof(long?))
+                {
+                    long? sum = roster.Players.Where(wherePred).Sum(p => (long?) pi.GetValue(p.Attributes?.Stats));
+                    pi.SetValue(sqst, sum);
+                }
+                else if (pi.PropertyType == typeof(double?))
+                {
+                    double? sum = roster.Players.Where(wherePred).Sum(p => (double?) pi.GetValue(p.Attributes?.Stats));
+                    pi.SetValue(sqst, sum);
+                }
+                else if (typeof(long).IsAssignableFrom(pi.PropertyType))
+                {
+                    long sum = roster.Players.Where(wherePred).Sum(p => (long) (pi.GetValue(p.Attributes?.Stats) ?? 0));
+                    pi.SetValue(sqst, sum);
+                }
+                else if (typeof(double).IsAssignableFrom(pi.PropertyType))
+                {
+                    double sum = roster.Players.Where(wherePred).Sum(p => (double) (pi.GetValue(p.Attributes?.Stats) ?? 0));
+                    pi.SetValue(sqst, sum);
+                }
+            }
+
+            // Don't report rank as a sum stat, just set it directly from the roster.
+            // "999" -- no matching roster was found -- fudge a value that won't overlap with real ranks.
+            sqst.Rank = roster?.Roster.Attributes.Stats.Rank ?? 999;
         }
 
         private static NormalizedMatch ReadMatchMetaData(TelemetryFile file)
@@ -1275,6 +1282,7 @@ namespace MyPubgTelemetry.GUI
 
         private void ComboBoxStatsFocus_SelectedIndexChanged(object sender, EventArgs e)
         {
+            
             if (ViewModel.DownloadActive || ViewModel.ReloadActive)
                 return;
             if (comboBoxStatsFocus.SelectedIndex == 0)
@@ -1285,7 +1293,25 @@ namespace MyPubgTelemetry.GUI
             {
                 ViewModel.SelectedPlayer = (string) comboBoxStatsFocus.SelectedItem;
             }
-            LoadMatches();
+            if (dataGridView1.DataSource == null)
+                return;
+
+            BindingListView<TelemetryFile> dataSource = (BindingListView<TelemetryFile>)dataGridView1.DataSource;
+            ///dataSource.Sort = "";
+            
+            dataSource.SuspendAutoFilterAndSort();
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                ObjectView<TelemetryFile> ovtf = (ObjectView<TelemetryFile>)row.DataBoundItem;
+                //ovtf.BeginEdit();
+                TelemetryFile file = ovtf.Object;
+                RecalcStats(file, file);
+                //ovtf.EndEdit();
+            }
+            dataSource.Refresh();
+            dataSource.ResumeAutoFilterAndSort();
+            //DataGridViewCell firstDisplayedCell = dataGridView1.FirstDisplayedCell;
+            //dataGridView1.FirstDisplayedCell = firstDisplayedCell;
         }
     }
 
@@ -1306,7 +1332,7 @@ namespace MyPubgTelemetry.GUI
 
         public new void ApplySort(ListSortDescriptionCollection sorts)
         {
-            //Debug.WriteLine(">>>>>>BLV2 ApplySort(ListSortDescriptionCollection)!");
+            Debug.WriteLine(">>>>>>BLV2 ApplySort(ListSortDescriptionCollection)!" + sorts.Count);
             List<ListSortDescription> sortDescList = sorts.Cast<ListSortDescription>().ToList();
             sortDescList.Add(new ListSortDescription(GetPropertyDescriptor("MatchDate"), ListSortDirection.Descending));
             ListSortDescriptionCollection newSorts = new ListSortDescriptionCollection(sortDescList.ToArray());
@@ -1315,7 +1341,7 @@ namespace MyPubgTelemetry.GUI
 
         public new void ApplySort(PropertyDescriptor property, ListSortDirection direction)
         {
-            //Debug.WriteLine(">>>>>>BLV2 ApplySort(PropertyDescriptor,ListSortDirection)!");
+            Debug.WriteLine(">>>>>>BLV2 ApplySort(PropertyDescriptor,ListSortDirection)!");
             var sort = new ListSortDescription(property, direction);
             var dateSort = new ListSortDescription(GetPropertyDescriptor("MatchDate"), ListSortDirection.Descending);
             ListSortDescription[] sorts = { sort, dateSort };
@@ -1342,6 +1368,7 @@ namespace MyPubgTelemetry.GUI
             scaleView.PrivateInvoke("ZoomReset", numberOfViews, fireChangeEvents);
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private static object PrivateInvoke(this object o, string methodName, params object[] args)
         {
             var mi = o.GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);

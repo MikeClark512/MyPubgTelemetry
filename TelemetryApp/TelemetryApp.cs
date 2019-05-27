@@ -209,6 +209,7 @@ namespace MyPubgTelemetry
         public PreparedData PreparedData { get; set; }
         public Mutex Mutex { get; } = new Mutex();
         public NormalizedMatch NormalizedMatch { get; set; }
+        public NormalizedRoster NormalizedRoster { get; set; }
 
         public TelemetryFile() { }
 
