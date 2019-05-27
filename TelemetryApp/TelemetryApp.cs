@@ -14,6 +14,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using Iesi.Collections.Generic;
 using Microsoft.Win32.SafeHandles;
 using MyPubgTelemetry.ApiMatchModel;
 using Newtonsoft.Json;
@@ -129,6 +130,12 @@ namespace MyPubgTelemetry
                 }
             }
         }
+
+        public static bool EnvBooly(string str)
+        {
+            return ToBooly(Environment.GetEnvironmentVariable(str));
+        }
+
 
         public static bool ToBooly(string str)
         {
@@ -347,6 +354,11 @@ namespace MyPubgTelemetry
             return dict.TryGetValue(key, out TValue value) ? value : defValSelector();
         }
 
+        public static LinkedHashSet<TSource> ToLinkedHashSet<TSource>(this IEnumerable<TSource> source)
+        {
+            return new LinkedHashSet<TSource>(source);
+        }
+
         public static string GetTimeZoneAbbreviation(this DateTime time)
         {
             string tz;
@@ -374,6 +386,11 @@ namespace MyPubgTelemetry
                 pin.Free();
             }
         }
+
+        //public static IEnumerable<TSource> WhereNot<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
+        //{
+        //    return source.Where(x => !predicate(x));
+        //}
 
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
