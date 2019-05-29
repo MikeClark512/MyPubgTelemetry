@@ -425,7 +425,7 @@ namespace MyPubgTelemetry.GUI
             BindingList<string> squaddies = ViewModel.Squad;
             if (squaddies.Count == 1)
             {
-                BeginInvoke((MethodInvoker)delegate
+                BeginInvoke((MethodInvoker) delegate
                 {
                     toolTipBalloon.Show("", textBoxSquad, 0);
                     var msg = "Enter some player names (case sensitive, comma separated) and then press refresh.";
@@ -433,37 +433,7 @@ namespace MyPubgTelemetry.GUI
                 });
                 return false;
             }
-
-            //ViewModel.Squad.IntersectWith(squaddies);
-            //ViewModel.Squad.UnionWith(squaddies);
-            //ViewModel.Squad.UnionWith(squaddies);
-
-            ///////// re-initialize player focus cbo 
-            //foreach (string s in ViewModel.Squad)
-            //{
-            //    if (s.Trim().Length != 0)
-            //    {
-            //        comboBoxStatsFocus.Items.Add(s);
-            //    }
-            //}
-            //comboBoxStatsFocus.SelectedIndex = 0;            //ViewModel.Squad.IntersectWith(squaddies);
-            //ViewModel.Squad.UnionWith(squaddies);
-            //ViewModel.Squad.UnionWith(squaddies);
-
-            ///////// re-initialize player focus cbo 
-            //foreach (string s in ViewModel.Squad)
-            //{
-            //    if (s.Trim().Length != 0)
-            //    {
-            //        comboBoxStatsFocus.Items.Add(s);
-            //    }
-            //}
-            //comboBoxStatsFocus.SelectedIndex = 0;
             return true;
-        }
-
-        private void ResetPlayerFocusCbo()
-        {
         }
 
         private void UpdateMatchListMetaData(List<TelemetryFile> telFiles, IEnumerable<string> squaddies, bool deep, CancellationToken cancellationToken)
@@ -533,18 +503,26 @@ namespace MyPubgTelemetry.GUI
         {
             NormalizedMatch normalizedMatch = ReadMatchMetaData(file);
             file.NormalizedMatch = normalizedMatch;
+            file.MatchDate = normalizedMatch.Model.Data.Attributes.CreatedAt;
             NormalizedRoster roster = normalizedMatch.Rosters.FirstOrDefault(r =>
             {
-                HashSet<string> rosterPlayers = r.Players.Select(p => p.Attributes.Stats.Name.ToLower()).ToHashSet();
-                HashSet<string> lowerSquaddies = squaddies.Select(s => s.ToLower()).ToHashSet();
-                rosterPlayers.IntersectWith(lowerSquaddies);
+                HashSet<string> rosterPlayers = r.Players.Select(p => p.Attributes.Stats.Name).ToHashSet(StringComparer.CurrentCultureIgnoreCase);
+                rosterPlayers.IntersectWith(squaddies);
+                file.Title = string.Join(", ", rosterPlayers);
                 return rosterPlayers.Count > 0;
+            });
+            normalizedMatch.Rosters.ForEach(x =>
+            {
+                x.Players.ForEach(p => ViewModel.AccountIds[p.Attributes.Stats.Name] = p.Attributes.Stats.PlayerId);
             });
             file.NormalizedRoster = roster;
 
             // Foreach stat that looks numeric, sum it across each player on the roster -- even if that stat doesn't make sense as a sum stat :)
             MatchModelStats sqst = file;
             RecalcStats(file, sqst);
+
+            if (!deep)
+                return;
 
             using (var sr = file.NewMatchMetaDataReader(FileMode.Open, FileAccess.ReadWrite, FileShare.Read, out FileStream fs))
             using (var jtr = new JsonTextReader(sr))
