@@ -33,7 +33,7 @@ namespace MyPubgTelemetry.ApiMatchModel
         public string TitleId { get; set; }
         public bool IsCustomMatch { get; set; }
         public string SeasonState { get; set; }
-        public DateTimeOffset CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 
     public class MatchModelLinks
@@ -75,7 +75,7 @@ namespace MyPubgTelemetry.ApiMatchModel
         public bool? Won { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public DateTimeOffset? CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
         public string Url { get; set; }
     }
 
