@@ -421,22 +421,26 @@ namespace MyPubgTelemetry.GUI
             NormalizedRoster roster = normalizedMatch.Rosters.FirstOrDefault(r =>
             {
                 HashSet<string> rosterPlayers = r.Players.Select(p => p.Attributes.Stats.Name).ToHashSet(StringComparer.CurrentCultureIgnoreCase);
-                rosterPlayers.IntersectWith(squaddies);
-                file.Title = string.Join(", ", rosterPlayers);
-                return rosterPlayers.Count > 0;
+                HashSet<string> intersection = rosterPlayers.ToHashSet();
+                intersection.IntersectWith(squaddies);
+                return intersection.Count > 0;
             });
+            // Remember account IDs to enable clickable links to stats websites.
             normalizedMatch.Rosters.ForEach(x =>
             {
                 x.Players.ForEach(p => ViewModel.AccountIds[p.Attributes.Stats.Name] = p.Attributes.Stats.PlayerId);
             });
+            if (roster != null)
+            {
+                file.Squad = roster.Players.Select(p => p.Attributes.Stats.Name).ToHashSet();
+            }
             file.NormalizedRoster = roster;
 
             // Foreach stat that looks numeric, sum it across each player on the roster -- even if that stat doesn't make sense as a sum stat :)
             MatchModelStats sqst = file;
             RecalcStats(file, sqst);
 
-            if (!deep)
-                return;
+            if (!deep) return;
 
             using (var sr = file.NewMatchMetaDataReader(FileMode.Open, FileAccess.ReadWrite, FileShare.Read, out FileStream fs))
             using (var jtr = new JsonTextReader(sr))
@@ -523,7 +527,6 @@ namespace MyPubgTelemetry.GUI
                 if (squadTeamId != -1)
                 {
                     SortedSet<string> squadTeam = teams[squadTeamId];
-                    file.Title = string.Join(", ", squadTeam);
                     file.Squad = squadTeam;
                 }
                 else
@@ -854,6 +857,23 @@ namespace MyPubgTelemetry.GUI
                 if (e.KeyCode == Keys.F)
                 {
                     buttonSearch.PerformClick();
+                }
+            }
+            else if (ModifierKeys == Keys.Alt)
+            {
+                DebugThreadWriteLine($"{e.KeyCode} {e.KeyData} {e.KeyValue} {e.Modifiers}");
+                if (e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9)
+                {
+                    string keyName = Enum.GetName(typeof(Keys), e.KeyCode);
+                    if (keyName.Length == 2) keyName = keyName.Substring(1);
+                    if (int.TryParse(keyName, out int num))
+                    {
+                        num = num - 1;
+                        if (num >= 0 && num < comboBoxStatsFocus.Items.Count)
+                        {
+                            comboBoxStatsFocus.SelectedIndex = num;
+                        }
+                    }
                 }
             }
             else if (e.KeyCode == Keys.F3)

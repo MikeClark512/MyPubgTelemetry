@@ -108,7 +108,7 @@ namespace MyPubgTelemetry.GUI
 
         public ChartHpOverTime ChartHpOverTime { get; set; }
 
-        public const string ChartTitleDateFormat = "ddd M/d/yy h:mm tt";
+        public const string ChartTitleDateFormat = "M/d/yy h:mm tt";
         public const string XAxisDateFormat = "h:mm:ss tt";
     }
 }
