@@ -74,6 +74,11 @@ namespace MyPubgTelemetry
             }
         }
 
+        public static void DebugThreadWriteLine(string msg, [CallerMemberName] string caller = "")
+        {
+            Debug.WriteLine($"T:{Thread.CurrentThread.Name}{Thread.CurrentThread.ManagedThreadId} C:{caller} {msg}");
+        }
+
         public string NormalizePlayerCsv(string csv)
         {
             List<string> strings = RegexCsv.Split(csv).ToList();

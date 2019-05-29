@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MyPubgTelemetry.GUI.Charts;
 
 // SetProperty in VolatileBindableBase uses synchronization to make sure that writes to ref'd volatiles get flushed,
 // so let's ignore the compiler warning about the runtime not respecting volatile on ref'd variables.
@@ -67,7 +68,7 @@ namespace MyPubgTelemetry.GUI
             set
             {
 
-                IList<string> newMates = RegexCsv.Split(value).Distinct().Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+                IList<string> newMates = RegexCsv.Split(value).Distinct().Where(s => !String.IsNullOrWhiteSpace(s)).ToList();
                 List<string> toAdd = new List<string>();
                 for (int i = Squad.Count - 1; i >= 1; i--)
                 {
@@ -77,43 +78,8 @@ namespace MyPubgTelemetry.GUI
                 {
                     Squad.Add(newMate);
                 }
-                //foreach (var v in values)
-                //{
-                //    if (Squad.IndexOf(v));
-                //}
-                //var i = 1;
-                //for (; i < values.Count; i++)
-                //{
-                //    if (i >= Squad.Count)
-                //    {
-                //        break;
-                //    }
-                //    Squad[i] = values[i - 1];
-                //}
-                //i--;
-                //while (values.Count >= Squad.Count)
-                //{
-                //    Squad.Add(values[i++]);
-                //}
-                //for (int i = Squad.Count - 1; i >= 1; i--)
-                //{
-                //    Squad.RemoveAt(i);
-                //}
-                //valueSet.RemoveWhere(x => x.Length == 0);
-                //HashSet<string> squadSet = Squad.ToHashSet();
-                //for (int i = Squad.Count - 1; i >= 0; i--)
-                //{
-                //    string item = Squad[i];
-                //    if (!valueSet.Contains(item))
-                //    {
-                //        Squad.RemoveAt(i);
-                //        valueSet.Remove(item);
-                //    }
-                //}
-                //squadSet.Union(valueSet);
-                //Squad.UnionWith(valueSet);
             }
-            get => string.Join(",", Squad.ToList().GetRange(1, Squad.Count));
+            get => String.Join(",", Squad.ToList().GetRange(1, Squad.Count));
         }
 
         public string SelectedPlayer { get; set; }
@@ -139,6 +105,8 @@ namespace MyPubgTelemetry.GUI
             }
             return PlayerColors[name] = NextPlayerColor();
         }
+
+        public ChartHpOverTime ChartHpOverTime { get; set; }
 
         public const string ChartTitleDateFormat = "ddd M/d/yy h:mm tt";
         public const string XAxisDateFormat = "h:mm:ss tt";
