@@ -206,7 +206,21 @@ namespace MyPubgTelemetry
     public class TelemetryFile : MatchModelStats
     {
         public FileInfo FileInfo { set; get; }
-        public string Title { set; get; }
+
+        private string _title = "";
+        public string Title
+        {
+            set => _title = value;
+            get
+            {
+                if (string.IsNullOrEmpty(_title) && Squad != null)
+                {
+                    _title = string.Join(", ", Squad);
+                }
+                return _title;
+            }
+        }
+
         public DateTime? MatchDate { get; set; }
         public ISet<string> Squad { get; set; }
         public bool TelemetryMetaDataLoaded { get; set; }
