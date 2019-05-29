@@ -29,9 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.contextMenuMatches = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tsmiPubgLookup = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -54,34 +51,13 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.toolTipBalloon = new System.Windows.Forms.ToolTip(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.contextMenuMatches.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // chart1
-            // 
-            this.chart1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea1.Name = "Default";
-            this.chart1.ChartAreas.Add(chartArea1);
-            legend1.Alignment = System.Drawing.StringAlignment.Center;
-            legend1.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend1.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Row;
-            legend1.Name = "Legend1";
-            legend1.TableStyle = System.Windows.Forms.DataVisualization.Charting.LegendTableStyle.Wide;
-            this.chart1.Legends.Add(legend1);
-            this.chart1.Location = new System.Drawing.Point(6, -1);
-            this.chart1.Name = "chart1";
-            this.chart1.Size = new System.Drawing.Size(990, 326);
-            this.chart1.TabIndex = 6;
-            this.chart1.Text = "chart1";
             // 
             // contextMenuMatches
             // 
@@ -142,19 +118,15 @@
             this.splitContainer1.Panel1.Controls.Add(this.textBoxSquad);
             this.splitContainer1.Panel1.Controls.Add(this.labelSquad);
             this.splitContainer1.Panel1.Controls.Add(this.labelMatches);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.chart1);
-            this.splitContainer1.Size = new System.Drawing.Size(996, 668);
-            this.splitContainer1.SplitterDistance = 325;
+            this.splitContainer1.Size = new System.Drawing.Size(1179, 652);
+            this.splitContainer1.SplitterDistance = 309;
             this.splitContainer1.TabIndex = 5;
             // 
             // labelStatusFocus
             // 
             this.labelStatusFocus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelStatusFocus.AutoSize = true;
-            this.labelStatusFocus.Location = new System.Drawing.Point(569, 44);
+            this.labelStatusFocus.Location = new System.Drawing.Point(752, 44);
             this.labelStatusFocus.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.labelStatusFocus.Name = "labelStatusFocus";
             this.labelStatusFocus.Size = new System.Drawing.Size(49, 13);
@@ -168,7 +140,7 @@
             this.comboBoxStatsFocus.FormattingEnabled = true;
             this.comboBoxStatsFocus.Items.AddRange(new object[] {
             "Squad (sum)"});
-            this.comboBoxStatsFocus.Location = new System.Drawing.Point(621, 40);
+            this.comboBoxStatsFocus.Location = new System.Drawing.Point(804, 40);
             this.comboBoxStatsFocus.Name = "comboBoxStatsFocus";
             this.comboBoxStatsFocus.Size = new System.Drawing.Size(107, 21);
             this.comboBoxStatsFocus.TabIndex = 9;
@@ -177,7 +149,7 @@
             // buttonExportCsv
             // 
             this.buttonExportCsv.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonExportCsv.Location = new System.Drawing.Point(823, 39);
+            this.buttonExportCsv.Location = new System.Drawing.Point(1006, 39);
             this.buttonExportCsv.Name = "buttonExportCsv";
             this.buttonExportCsv.Size = new System.Drawing.Size(83, 23);
             this.buttonExportCsv.TabIndex = 8;
@@ -188,7 +160,7 @@
             // buttonOptions
             // 
             this.buttonOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOptions.Location = new System.Drawing.Point(912, 39);
+            this.buttonOptions.Location = new System.Drawing.Point(1095, 39);
             this.buttonOptions.Name = "buttonOptions";
             this.buttonOptions.Size = new System.Drawing.Size(81, 23);
             this.buttonOptions.TabIndex = 2;
@@ -199,7 +171,7 @@
             // buttonToggle
             // 
             this.buttonToggle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonToggle.Location = new System.Drawing.Point(734, 40);
+            this.buttonToggle.Location = new System.Drawing.Point(917, 40);
             this.buttonToggle.Name = "buttonToggle";
             this.buttonToggle.Size = new System.Drawing.Size(83, 23);
             this.buttonToggle.TabIndex = 7;
@@ -220,7 +192,7 @@
             this.dataGridView1.Location = new System.Drawing.Point(0, 68);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(993, 254);
+            this.dataGridView1.Size = new System.Drawing.Size(1176, 238);
             this.dataGridView1.StandardTab = true;
             this.dataGridView1.TabIndex = 1;
             this.dataGridView1.SelectionChanged += new System.EventHandler(this.DataGridView1_SelectionChanged);
@@ -254,7 +226,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxSquad.Location = new System.Drawing.Point(63, 4);
             this.textBoxSquad.Name = "textBoxSquad";
-            this.textBoxSquad.Size = new System.Drawing.Size(930, 20);
+            this.textBoxSquad.Size = new System.Drawing.Size(1113, 20);
             this.textBoxSquad.TabIndex = 0;
             this.textBoxSquad.TextChanged += new System.EventHandler(this.TextBoxSquad_TextChanged);
             this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSquad_KeyDown);
@@ -284,9 +256,9 @@
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1,
             this.toolStripProgressBar1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 670);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 654);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1020, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1203, 22);
             this.statusStrip1.SizingGrip = false;
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
@@ -295,7 +267,7 @@
             // 
             this.toolStripStatusLabel1.Margin = new System.Windows.Forms.Padding(12, 3, 0, 2);
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(791, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(981, 17);
             this.toolStripStatusLabel1.Spring = true;
             this.toolStripStatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -313,7 +285,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1020, 692);
+            this.ClientSize = new System.Drawing.Size(1203, 676);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.splitContainer1);
             this.KeyPreview = true;
@@ -324,11 +296,10 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainForm_KeyDown);
-            ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
+            this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.contextMenuMatches.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
-            this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
@@ -340,8 +311,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.DataVisualization.Charting.Chart chart1;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Label labelMatches;
         private System.Windows.Forms.Label labelSquad;

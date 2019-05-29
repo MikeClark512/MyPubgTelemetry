@@ -11,7 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,8 +20,10 @@ using System.Windows.Forms.DataVisualization.Charting;
 using Equin.ApplicationFramework;
 using MyPubgTelemetry.ApiMatchModel;
 using MyPubgTelemetry.Downloader;
+using MyPubgTelemetry.GUI.Charts;
 using MyPubgTelemetry.GUI.Properties;
 using Newtonsoft.Json;
+using static MyPubgTelemetry.TelemetryApp;
 
 namespace MyPubgTelemetry.GUI
 {
@@ -32,12 +33,12 @@ namespace MyPubgTelemetry.GUI
 
         public MainForm()
         {
+            ViewModel = new ViewModel(this);
             InitializeComponent();
             InitChart();
             InitMatchesDataGridView();
             InitToolStrip();
             Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-            ViewModel = new ViewModel(this);
             var qts = new QueuedTaskScheduler(Environment.ProcessorCount - 1, "QTS", false, ThreadPriority.Lowest);
             ViewModel.TaskFactory = new TaskFactory(qts);
             ViewModel.MatchSearchInputBox = new InputBox { InputText = Clipboard.GetText(), Text = @"Search match IDs, dates, and player names" };
@@ -211,6 +212,7 @@ namespace MyPubgTelemetry.GUI
                 {"HeadshotKills", "HeadsK"},
                 {"VehicleDestroys", "V.Destroy"},
                 {"LongestKill", "LongestK"},
+                {"WeaponsAcquired", "Weaps"},
             };
 
             Type pt = pi.PropertyType;
@@ -249,97 +251,10 @@ namespace MyPubgTelemetry.GUI
 
         private void InitChart()
         {
-            chart1.Tag = new ChartTag();
-            chart1.Titles.Add("");
-            //chart1.Palette = ChartColorPalette.Berry;
-
-            chart1.ChartAreas[0].CursorX.IsUserEnabled = true;
-            chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
-            chart1.ChartAreas[0].CursorX.LineColor = Color.Black;
-            chart1.ChartAreas[0].CursorX.SelectionColor = Color.CornflowerBlue;
-            chart1.ChartAreas[0].CursorX.IntervalType = DateTimeIntervalType.Seconds;
-            chart1.ChartAreas[0].CursorX.Interval = 1;
-
-            chart1.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
-            chart1.ChartAreas[0].AxisX.ScrollBar.IsPositionedInside = false;
-            chart1.ChartAreas[0].AxisX.ScaleView.SmallScrollMinSize = 1;
-            chart1.ChartAreas[0].AxisX.ScaleView.SmallScrollMinSizeType = DateTimeIntervalType.Seconds;
-            chart1.ChartAreas[0].AxisX.ScaleView.SmallScrollSize = 10;
-            chart1.ChartAreas[0].AxisX.ScaleView.SmallScrollSizeType = DateTimeIntervalType.Seconds;
-            chart1.ChartAreas[0].AxisX.LabelStyle.Format = "mm'm'ss's'";
-            chart1.ChartAreas[0].AxisX.IsLabelAutoFit = true;
-            chart1.ChartAreas[0].AxisX.LabelAutoFitStyle = LabelAutoFitStyles.LabelsAngleStep30;
-            chart1.ChartAreas[0].AxisX.IntervalType = DateTimeIntervalType.Minutes;
-            chart1.ChartAreas[0].AxisX.Interval = 1;
-            chart1.ChartAreas[0].AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount;
-
-            chart1.AxisViewChanged += delegate (object sender, ViewEventArgs args)
-            {
-                chart1.ChartAreas[0].AxisX.Interval = chart1.ChartAreas[0].AxisX.Interval / 10;
-                RecalcPointLabels();
-                var scaleView = chart1.ChartAreas[0].AxisX.ScaleView;
-                double delta = scaleView.ViewMaximum - scaleView.ViewMinimum;
-                bool zoomed = chart1.ChartAreas[0].AxisX.ScaleView.IsZoomed;
-                chart1.ChartAreas[0].AxisX.Interval = zoomed ? delta * 100 : 0;
-            };
-            chart1.MouseWheel += delegate (object sender, MouseEventArgs args)
-            {
-                DebugThreadWriteLine("wheel delta=" + args.Delta);
-                //ChartTag tag = (ChartTag) chart1.Tag;
-                if (ModifierKeys.HasFlag(Keys.Control))
-                {
-                    var xax = chart1.ChartAreas[0].AxisX;
-                    //var yax = chart1.ChartAreas[0].AxisY;
-                    if (args.Delta > 0)
-                    {
-                        var xMin = xax.ScaleView.ViewMinimum;
-                        var xMax = xax.ScaleView.ViewMaximum;
-                        var xLen = xMax - xMin;
-                        var xDiv = xLen / 4;
-                        var posXStart = xax.PixelPositionToValue(args.Location.X) - xDiv;
-                        var posXFinish = xax.PixelPositionToValue(args.Location.X) + xDiv;
-                        xax.ScaleView.PrivateZoom(posXStart, posXFinish - posXStart, DateTimeIntervalType.Number, true, true);
-                    }
-                    else
-                    {
-                        xax.ScaleView.PrivateZoomReset(1, true);
-                    }
-                }
-                else
-                {
-                    if (!chart1.ChartAreas[0].AxisX.ScaleView.IsZoomed)
-                    {
-                        return;
-                    }
-
-                    ScrollType? scrollType = null;
-                    if (ModifierKeys == Keys.None)
-                        scrollType = args.Delta < 0 ? ScrollType.SmallIncrement : ScrollType.SmallDecrement;
-                    else if (ModifierKeys == Keys.Shift)
-                        scrollType = args.Delta < 0 ? ScrollType.LargeIncrement : ScrollType.LargeDecrement;
-                    if (scrollType.HasValue)
-                        chart1.ChartAreas[0].AxisX.ScaleView.Scroll(scrollType.Value);
-                }
-            };
-            //chart1.ChartAreas[0].Area3DStyle.Enable3D = true;
-            //chart1.ChartAreas[0].Area3DStyle.IsRightAngleAxes = false;
-            //chart1.ChartAreas["Default"].Area3DStyle.Inclination = 40;
-            //chart1.ChartAreas["Default"].Area3DStyle.Rotation = 15;
-            //chart1.ChartAreas["Default"].Area3DStyle.LightStyle = LightStyle.Realistic;
-            //chart1.ChartAreas["Default"].Area3DStyle.Perspective = 5;
-            //chart1.ChartAreas["Default"].Area3DStyle.PointGapDepth = 1000;
-            //chart1.ChartAreas["Default"].Area3DStyle.PointDepth = 1000;
+            ViewModel.ChartHpOverTime = new ChartHpOverTime();
+            this.splitContainer1.Panel2.Controls.Add(ViewModel.ChartHpOverTime.Chart);
         }
 
-        private void RecalcPointLabels()
-        {
-            double scaleViewSize = chart1.ChartAreas[0].AxisX.ScaleView.Size;
-            DebugThreadWriteLine("scaleViewSize " + scaleViewSize);
-            bool zoomedIn = chart1.ChartAreas[0].AxisX.ScaleView.IsZoomed; //scaleViewSize < 0.01;
-            //series.SmartLabelStyle.MaxMovingDistance = 0;
-            chart1.Series.ToList().ForEach(x => x.IsValueShownAsLabel = zoomedIn);
-            chart1.ChartAreas[0].AxisX.LabelStyle.Format = zoomedIn ? "m'm'ss's'" : "m'm'";
-        }
 
         // ReSharper disable once UnusedMember.Local
         private static object GetField(object instance, string fieldName)
@@ -356,13 +271,13 @@ namespace MyPubgTelemetry.GUI
             textBoxSquad.Text = Settings.Default.Squad.Trim();
             ViewModel.SquadCsv = textBoxSquad.Text;
             comboBoxStatsFocus.DataSource = ViewModel.Squad;
-            ViewModel.PlayerColorPalette = GetPaletteColors(chart1.Palette);
+            ViewModel.PlayerColorPalette = ViewModel.ChartHpOverTime.Chart.Palette.GetPaletteColors();
             if (!string.IsNullOrWhiteSpace(Settings.Default.PlayerColors))
             {
                 ViewModel.PlayerColors = JsonConvert.DeserializeObject<Dictionary<string, Color>>(Settings.Default.PlayerColors);
             }
 
-            if (TelemetryApp.EnvBooly("MYPUBGTELEMETRY_NODLONSTART"))
+            if (EnvBooly("MYPUBGTELEMETRY_NODLONSTART"))
             {
                 LoadMatches();
             }
@@ -386,7 +301,7 @@ namespace MyPubgTelemetry.GUI
             }
             var squaddies = new HashSet<string>(ViewModel.RegexCsv.Split(textBoxSquad.Text));
             ViewModel.ReloadActive = true;
-            var di = new DirectoryInfo(TelemetryApp.App.TelemetryDir);
+            var di = new DirectoryInfo(App.TelemetryDir);
             List<FileInfo> jsonFiles = di.GetFiles("*.json").ToList();
             jsonFiles.AddRange(di.GetFiles("*.json.gz"));
             if (jsonFiles.Count == 0)
@@ -421,7 +336,6 @@ namespace MyPubgTelemetry.GUI
         {
             //ViewModel.Squad.Clear();
 
-            object selectedItem = comboBoxStatsFocus.SelectedItem;
             BindingList<string> squaddies = ViewModel.Squad;
             if (squaddies.Count == 1)
             {
@@ -443,10 +357,10 @@ namespace MyPubgTelemetry.GUI
                 int loadedCount = telFiles.Count(x => x.TelemetryMetaDataLoaded);
                 toolStripProgressBar1.Text = $"Loaded {loadedCount} of {telFiles.Count} matches.";
                 int fi = telemetryFile.Index;
-                if (fi <= dataGridView1.DisplayedRowCount(true))
-                {
-                    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
-                }
+                //if (fi <= dataGridView1.DisplayedRowCount(true))
+                //{
+                //    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                //}
 
                 toolStripProgressBar1.Value = loadedCount;
             }
@@ -473,7 +387,7 @@ namespace MyPubgTelemetry.GUI
             {
                 BeginInvoke((MethodInvoker)delegate ()
                {
-                   dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                   //dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
                    BindingListView2<TelemetryFile> bs = (BindingListView2<TelemetryFile>) dataGridView1.DataSource;
 
                    bs.Refresh();
@@ -486,7 +400,7 @@ namespace MyPubgTelemetry.GUI
                 BeginInvoke((MethodInvoker)delegate ()
                {
                    DebugThreadWriteLine("Done loading metadata (UI).");
-//                   dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+                   dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
                    toolStripProgressBar1.Visible = false;
                    for (int col = 0; col < dataGridView1.ColumnCount; col++)
                    {
@@ -674,7 +588,7 @@ namespace MyPubgTelemetry.GUI
         {
             string mid = file.GetMatchId();
             string mmn = $"mm-{mid}.json";
-            string mmf = Path.Combine(TelemetryApp.App.MatchDir, mmn);
+            string mmf = Path.Combine(App.MatchDir, mmn);
             string jsonStr = File.ReadAllText(mmf);
             return TelemetryDownloader.NormalizeMatch(mid, jsonStr);
         }
@@ -683,7 +597,7 @@ namespace MyPubgTelemetry.GUI
         {
             string fname = file.FileInfo.Name;
 
-            fname = TelemetryApp.TelemetryFilenameToMatchId(fname);
+            fname = TelemetryFilenameToMatchId(fname);
 
             ViewModel.AccountIds.TryGetValue(user, out string accountId);
             if (accountId == null) return;
@@ -695,7 +609,7 @@ namespace MyPubgTelemetry.GUI
                 string matchId = fname;
                 string url = $"https://pubglookup.com/players/steam/{user}/matches/{matchId}";
                 DebugThreadWriteLine("url=" + url);
-                TelemetryApp.App.OpenUrlInWebBrowser($"https://pubglookup.com/players/steam/{user}/matches/{matchId}");
+                App.OpenUrlInWebBrowser($"https://pubglookup.com/players/steam/{user}/matches/{matchId}");
             });
         }
 
@@ -788,11 +702,6 @@ namespace MyPubgTelemetry.GUI
             return pd;
         }
 
-        private static void DebugThreadWriteLine(string msg, [CallerMemberName] string caller = "")
-        {
-            Debug.WriteLine($"T:{Thread.CurrentThread.Name}{Thread.CurrentThread.ManagedThreadId} C:{caller} {msg}");
-        }
-
         private void ConsumePreparedDataQ(CancellationToken cancellationToken)
         {
             while (ViewModel.PreparedDataQ.Count > 0)
@@ -808,7 +717,7 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
-        private Font DeriveFont(Font orig, int sizeAdj)
+        public Font DeriveFont(Font orig, int sizeAdj)
         {
             return new Font(orig.FontFamily, orig.Size + sizeAdj);
         }
@@ -821,103 +730,7 @@ namespace MyPubgTelemetry.GUI
                 return;
             }
 
-            ClearChart(chart1);
-
-            DateTime? localTime = pd.File?.MatchDate?.ToLocalTime();
-            string sdt = "";
-            if (localTime.HasValue)
-            {
-                sdt = localTime.Value.ToString(ViewModel.ChartTitleDateFormat);
-                sdt += " " + localTime.Value.GetTimeZoneAbbreviation();
-            }
-
-            chart1.ChartAreas[0].AxisY.Title = "HP: 0 to 100";
-            chart1.ChartAreas[0].AxisY.TitleFont = DeriveFont(chart1.ChartAreas[0].AxisY.TitleFont, 0);
-
-            chart1.ChartAreas[0].AxisX.Title = "Elapsed time since start of match (in minutes).";
-            chart1.ChartAreas[0].AxisX.TitleFont = DeriveFont(chart1.ChartAreas[0].AxisX.TitleFont, 0);
-
-            ISet<string> squad = pd.File?.Squad ?? new HashSet<string>();
-            NormalizedRoster roster =
-                pd.File?.NormalizedMatch?.Rosters?.FirstOrDefault(r => r.Players?.Any(p => squad.Contains(p?.Attributes?.Stats?.Name)) ?? false);
-            chart1.Titles[0].Text = $"HP over time for one match -- {sdt} -- Squad Rank: {roster?.Roster.Attributes.Stats.Rank}";
-            chart1.Titles[0].Font = new Font(chart1.Titles[0].Font.FontFamily, 12, FontStyle.Bold);
-
-            // Declare series first
-            foreach (string playerName in pd.PlayerToEvents.Keys)
-            {
-                var series = chart1.Series.Add(playerName);
-                series.Color = ViewModel.ColorForPlayer(playerName);
-                series.BorderWidth = 3;
-                series.ChartType = SeriesChartType.Line;
-                chart1.ChartAreas[0].AxisX.IsMarginVisible = false;
-                series.SmartLabelStyle.Enabled = true;
-                series.SmartLabelStyle.MovingDirection = LabelAlignmentStyles.Center;
-                series.LabelFormat = "#";
-                series.SmartLabelStyle.IsOverlappedHidden = true;
-                series.XValueType = ChartValueType.DateTime;
-            }
-
-            // Track player's last known HP so we can fill in a reasonable value at missing time intervals
-            var lastHps = new Dictionary<string, float>();
-            // Then add data
-            DebugThreadWriteLine("About to render " + pd.File?.FileInfo.Name);
-            DateTime t0 = pd.TimeToPlayerToEvents.Keys.FirstOrDefault().ToLocalTime();
-            foreach (var kv in pd.TimeToPlayerToEvents)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    DebugThreadWriteLine("Cancelling in foreach (var kv in timeToPlayerToEvents)");
-                    return;
-                }
-
-                TimeSpan eventTimeOffset = kv.Key.ToLocalTime().Subtract(t0);
-                DateTime dt = new DateTime(eventTimeOffset.Ticks);
-                var timePlayerToEvents = kv.Value;
-                foreach (string squadMember in pd.Squad)
-                {
-                    timePlayerToEvents.TryGetValue(squadMember, out var squadEvents);
-                    if (squadEvents != null)
-                    {
-                        chart1.Series[squadMember].Points.AddXY(dt, squadEvents.First().character.health);
-                        float minHp = squadEvents.Select(x => x.character.health).Min();
-                        lastHps[squadMember] = minHp;
-                    }
-                    else
-                    {
-                        float lastHp = lastHps.GetValueOrDefault(squadMember, () => 100);
-                        chart1.Series[squadMember].Points.AddXY(dt, lastHp);
-                    }
-                }
-            }
-
-            RecalcPointLabels();
-        }
-
-        private List<Color> GetPaletteColors(ChartColorPalette palette)
-        {
-            Type type = typeof(Chart).Assembly.GetType("System.Windows.Forms.DataVisualization.Charting.Utilities.ChartPaletteColors");
-            BindingFlags bf = BindingFlags.Static | BindingFlags.Public;
-            MethodInfo mi = type.GetMethod("GetPaletteColors", bf);
-            object ret = mi?.Invoke(null, new object[] { palette });
-            if (ret is Color[] colors)
-            {
-                return colors.ToList();
-            }
-
-            return new List<Color>();
-        }
-
-        private void ClearChart(Chart chart)
-        {
-            chart.Titles[0].Text = "";
-            chart.Series.ToList().ForEach(series => series.Points.Clear());
-            foreach (var chart1Series in chart1.Series)
-            {
-                chart1Series.Points.Clear();
-            }
-
-            chart.Series.Clear();
+            ViewModel.ChartHpOverTime.DrawData(pd, this);
         }
 
         private async void ButtonRefresh_Click(object sender, EventArgs e)
@@ -995,7 +808,7 @@ namespace MyPubgTelemetry.GUI
 
         private bool ValidateApiKey()
         {
-            if (string.IsNullOrWhiteSpace(TelemetryApp.App.ApiKey))
+            if (string.IsNullOrWhiteSpace(App.ApiKey))
             {
                 BeginInvoke((MethodInvoker)delegate ()
                {
@@ -1109,9 +922,6 @@ namespace MyPubgTelemetry.GUI
 
         private void ButtonNext_Click(object sender, EventArgs e)
         {
-            //int rot = chart1.ChartAreas[0].Area3DStyle.Rotation;
-            //rot = (rot + 5) % 180;
-            //chart1.ChartAreas[0].Area3DStyle.Rotation = rot;
             if (splitContainer1.Panel2Collapsed)
             {
                 buttonToggle.Text = "Hide Chart";
@@ -1201,7 +1011,7 @@ namespace MyPubgTelemetry.GUI
 
             ViewModel.CtsMatchSwitch?.Cancel();
             ViewModel.CtsMatchSwitch = new CancellationTokenSource();
-            ClearChart(chart1);
+            ViewModel.ChartHpOverTime.ClearChart();
 
             if (ViewModel.DownloadActive) return;
 
@@ -1275,7 +1085,7 @@ namespace MyPubgTelemetry.GUI
                 return;
 
             BindingListView<TelemetryFile> dataSource = (BindingListView<TelemetryFile>)dataGridView1.DataSource;
-            ///dataSource.Sort = "";
+            //dataSource.Sort = "";
             
             dataSource.SuspendAutoFilterAndSort();
             foreach (DataGridViewRow row in dataGridView1.Rows)
@@ -1290,6 +1100,11 @@ namespace MyPubgTelemetry.GUI
             dataSource.ResumeAutoFilterAndSort();
             //DataGridViewCell firstDisplayedCell = dataGridView1.FirstDisplayedCell;
             //dataGridView1.FirstDisplayedCell = firstDisplayedCell;
+        }
+
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            DebugThreadWriteLine("Form Size: " + this.Size);
         }
     }
 
@@ -1335,6 +1150,20 @@ namespace MyPubgTelemetry.GUI
 
     public static class TelemetryGuiExtensions
     {
+        public static List<Color> GetPaletteColors(this ChartColorPalette palette)
+        {
+            Type type = typeof(Chart).Assembly.GetType("System.Windows.Forms.DataVisualization.Charting.Utilities.ChartPaletteColors");
+            BindingFlags bf = BindingFlags.Static | BindingFlags.Public;
+            MethodInfo mi = type.GetMethod("GetPaletteColors", bf);
+            object ret = mi?.Invoke(null, new object[] { palette });
+            if (ret is Color[] colors)
+            {
+                return colors.ToList();
+            }
+
+            return new List<Color>();
+        }
+
         public static void PrivateZoom(this AxisScaleView scaleView, double viewPosition, double viewSize, DateTimeIntervalType viewSizeType,
             bool fireChangeEvents, bool saveState)
         {
