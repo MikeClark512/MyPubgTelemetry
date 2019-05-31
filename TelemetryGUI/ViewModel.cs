@@ -67,8 +67,7 @@ namespace MyPubgTelemetry.GUI
         {
             set
             {
-
-                IList<string> newMates = RegexCsv.Split(value).Distinct().Where(s => !String.IsNullOrWhiteSpace(s)).ToList();
+                IList<string> newMates = RegexCsv.Split(value).Distinct().Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
                 List<string> toAdd = new List<string>();
                 for (int i = Squad.Count - 1; i >= 1; i--)
                 {

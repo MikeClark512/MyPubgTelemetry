@@ -226,7 +226,6 @@ namespace MyPubgTelemetry.GUI
             this.textBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxLog.Font = new System.Drawing.Font("Courier New", 12F);
             this.textBoxLog.Location = new System.Drawing.Point(6, 6);
             this.textBoxLog.Multiline = true;
             this.textBoxLog.Name = "textBoxLog";
@@ -269,10 +268,11 @@ namespace MyPubgTelemetry.GUI
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
             this.ClientSize = new System.Drawing.Size(521, 320);
-            this.ControlBox = false;
             this.Controls.Add(this.tabControlOptions);
             this.Controls.Add(this.buttonOk);
             this.Controls.Add(this.buttonCancel);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "OptionsForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Options";
