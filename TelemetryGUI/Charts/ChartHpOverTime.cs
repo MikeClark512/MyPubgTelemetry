@@ -137,9 +137,10 @@ namespace MyPubgTelemetry.GUI.Charts
             chart1.ChartAreas[0].AxisX.LabelStyle.Format = zoomedIn ? "m'm'ss's'" : "m'm'";
         }
 
-        public void ClearChart()
+        public void ClearChart(string msg = "")
         {
-            chart1.Titles[0].Text = "";
+            chart1.Titles[0].Font = new Font(FontFamily.GenericSansSerif, 7, FontStyle.Italic);
+            chart1.Titles[0].Text = msg ?? "";
             chart1.Series.ToList().ForEach(series => series.Points.Clear());
             foreach (var chart1Series in chart1.Series)
             {

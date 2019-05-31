@@ -1,7 +1,7 @@
-﻿using System;
+﻿using MyPubgTelemetry.GUI.Charts;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -10,7 +10,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using MyPubgTelemetry.GUI.Charts;
 
 // SetProperty in VolatileBindableBase uses synchronization to make sure that writes to ref'd volatiles get flushed,
 // so let's ignore the compiler warning about the runtime not respecting volatile on ref'd variables.
@@ -28,7 +27,7 @@ namespace MyPubgTelemetry.GUI
 
         public InputBox MatchSearchInputBox { get; set; }
 
-        public BindingList<string> Squad { get; } = new BindingList<string>(new List<string> { "Squad (sum)" }) { AllowNew = true, AllowRemove = true };
+        public BindingList<string> Squad { get; } = new BindingList<string>(new List<string> { "Show stats for: Squad (sum)" }) { AllowNew = true, AllowRemove = true };
 
         public Regex RegexCsv { get; } = new Regex(@"\s*,\s*", RegexOptions.IgnoreCase);
 
