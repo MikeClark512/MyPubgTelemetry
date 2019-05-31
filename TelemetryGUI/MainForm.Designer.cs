@@ -1,4 +1,6 @@
-﻿namespace MyPubgTelemetry.GUI
+﻿using System.Windows.Forms;
+
+namespace MyPubgTelemetry.GUI
 {
     partial class MainForm
     {
@@ -29,34 +31,40 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.contextMenuMatches = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tsmiPubgLookup = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.tsmiOpenInFileExplorer = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiCopyMatchId = new System.Windows.Forms.ToolStripMenuItem();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.labelStatusFocus = new System.Windows.Forms.Label();
-            this.comboBoxStatsFocus = new System.Windows.Forms.ComboBox();
-            this.buttonExportCsv = new System.Windows.Forms.Button();
-            this.buttonOptions = new System.Windows.Forms.Button();
-            this.buttonToggle = new System.Windows.Forms.Button();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.buttonSearch = new System.Windows.Forms.Button();
-            this.buttonRefresh = new System.Windows.Forms.Button();
-            this.textBoxSquad = new System.Windows.Forms.TextBox();
-            this.labelSquad = new System.Windows.Forms.Label();
-            this.labelMatches = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.toolTipBalloon = new System.Windows.Forms.ToolTip(this.components);
+            this.splitContainer1 = new MyPubgTelemetry.GUI.SplitContainerEx();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.textBoxSquad = new System.Windows.Forms.ToolStripTextBox();
+            this.buttonRefresh = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButtonOptions = new System.Windows.Forms.ToolStripButton();
+            this.toolStripDropDownButton2 = new System.Windows.Forms.ToolStripDropDownButton();
+            this.hideChartToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.hideTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripDropDownButtonFile = new System.Windows.Forms.ToolStripDropDownButton();
+            this.exportCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripButtonSearch = new System.Windows.Forms.ToolStripButton();
+            this.toolStripComboBoxPlayerSelect = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.contextMenuMatches.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
-            this.statusStrip1.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // contextMenuMatches
@@ -95,170 +103,14 @@
             this.tsmiCopyMatchId.Text = "Copy Match ID";
             this.tsmiCopyMatchId.Click += new System.EventHandler(this.TsmiCopyPath_Click);
             // 
-            // splitContainer1
-            // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.splitContainer1.Location = new System.Drawing.Point(12, 12);
-            this.splitContainer1.Name = "splitContainer1";
-            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.labelStatusFocus);
-            this.splitContainer1.Panel1.Controls.Add(this.comboBoxStatsFocus);
-            this.splitContainer1.Panel1.Controls.Add(this.buttonExportCsv);
-            this.splitContainer1.Panel1.Controls.Add(this.buttonOptions);
-            this.splitContainer1.Panel1.Controls.Add(this.buttonToggle);
-            this.splitContainer1.Panel1.Controls.Add(this.dataGridView1);
-            this.splitContainer1.Panel1.Controls.Add(this.buttonSearch);
-            this.splitContainer1.Panel1.Controls.Add(this.buttonRefresh);
-            this.splitContainer1.Panel1.Controls.Add(this.textBoxSquad);
-            this.splitContainer1.Panel1.Controls.Add(this.labelSquad);
-            this.splitContainer1.Panel1.Controls.Add(this.labelMatches);
-            this.splitContainer1.Size = new System.Drawing.Size(1179, 652);
-            this.splitContainer1.SplitterDistance = 309;
-            this.splitContainer1.TabIndex = 5;
-            // 
-            // labelStatusFocus
-            // 
-            this.labelStatusFocus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelStatusFocus.AutoSize = true;
-            this.labelStatusFocus.Location = new System.Drawing.Point(752, 44);
-            this.labelStatusFocus.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
-            this.labelStatusFocus.Name = "labelStatusFocus";
-            this.labelStatusFocus.Size = new System.Drawing.Size(49, 13);
-            this.labelStatusFocus.TabIndex = 10;
-            this.labelStatusFocus.Text = "Stats for:";
-            // 
-            // comboBoxStatsFocus
-            // 
-            this.comboBoxStatsFocus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboBoxStatsFocus.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxStatsFocus.FormattingEnabled = true;
-            this.comboBoxStatsFocus.Items.AddRange(new object[] {
-            "Squad (sum)"});
-            this.comboBoxStatsFocus.Location = new System.Drawing.Point(804, 40);
-            this.comboBoxStatsFocus.Name = "comboBoxStatsFocus";
-            this.comboBoxStatsFocus.Size = new System.Drawing.Size(107, 21);
-            this.comboBoxStatsFocus.TabIndex = 9;
-            this.comboBoxStatsFocus.SelectedIndexChanged += new System.EventHandler(this.ComboBoxStatsFocus_SelectedIndexChanged);
-            // 
-            // buttonExportCsv
-            // 
-            this.buttonExportCsv.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonExportCsv.Location = new System.Drawing.Point(1006, 39);
-            this.buttonExportCsv.Name = "buttonExportCsv";
-            this.buttonExportCsv.Size = new System.Drawing.Size(83, 23);
-            this.buttonExportCsv.TabIndex = 8;
-            this.buttonExportCsv.Text = "Export CSV...";
-            this.buttonExportCsv.UseVisualStyleBackColor = true;
-            this.buttonExportCsv.Click += new System.EventHandler(this.ButtonExportCsv_Click);
-            // 
-            // buttonOptions
-            // 
-            this.buttonOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOptions.Location = new System.Drawing.Point(1095, 39);
-            this.buttonOptions.Name = "buttonOptions";
-            this.buttonOptions.Size = new System.Drawing.Size(81, 23);
-            this.buttonOptions.TabIndex = 2;
-            this.buttonOptions.Text = "&Options...";
-            this.buttonOptions.UseVisualStyleBackColor = true;
-            this.buttonOptions.Click += new System.EventHandler(this.ButtonOptions_Click);
-            // 
-            // buttonToggle
-            // 
-            this.buttonToggle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonToggle.Location = new System.Drawing.Point(917, 40);
-            this.buttonToggle.Name = "buttonToggle";
-            this.buttonToggle.Size = new System.Drawing.Size(83, 23);
-            this.buttonToggle.TabIndex = 7;
-            this.buttonToggle.Text = "Hide Chart";
-            this.buttonToggle.UseVisualStyleBackColor = true;
-            this.buttonToggle.Click += new System.EventHandler(this.ButtonNext_Click);
-            // 
-            // dataGridView1
-            // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.ContextMenuStrip = this.contextMenuMatches;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 68);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(1176, 238);
-            this.dataGridView1.StandardTab = true;
-            this.dataGridView1.TabIndex = 1;
-            this.dataGridView1.SelectionChanged += new System.EventHandler(this.DataGridView1_SelectionChanged);
-            // 
-            // buttonSearch
-            // 
-            this.buttonSearch.Image = global::MyPubgTelemetry.GUI.Properties.Resources.Search_16x;
-            this.buttonSearch.Location = new System.Drawing.Point(0, 40);
-            this.buttonSearch.Name = "buttonSearch";
-            this.buttonSearch.Size = new System.Drawing.Size(23, 22);
-            this.buttonSearch.TabIndex = 3;
-            this.buttonSearch.Text = " ";
-            this.toolTip1.SetToolTip(this.buttonSearch, "Search match metadata\r\nShortcut = Ctrl+F\r\nFind Next = F3");
-            this.buttonSearch.Click += new System.EventHandler(this.ButtonSearch_Click);
-            // 
-            // buttonRefresh
-            // 
-            this.buttonRefresh.Image = global::MyPubgTelemetry.GUI.Properties.Resources.Refresh_greyThin_16x;
-            this.buttonRefresh.Location = new System.Drawing.Point(0, 2);
-            this.buttonRefresh.Name = "buttonRefresh";
-            this.buttonRefresh.Size = new System.Drawing.Size(23, 22);
-            this.buttonRefresh.TabIndex = 4;
-            this.buttonRefresh.Text = " ";
-            this.buttonRefresh.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.toolTip1.SetToolTip(this.buttonRefresh, "Refresh matches list using squad");
-            this.buttonRefresh.Click += new System.EventHandler(this.ButtonRefresh_Click);
-            // 
-            // textBoxSquad
-            // 
-            this.textBoxSquad.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxSquad.Location = new System.Drawing.Point(63, 4);
-            this.textBoxSquad.Name = "textBoxSquad";
-            this.textBoxSquad.Size = new System.Drawing.Size(1113, 20);
-            this.textBoxSquad.TabIndex = 0;
-            this.textBoxSquad.TextChanged += new System.EventHandler(this.TextBoxSquad_TextChanged);
-            this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSquad_KeyDown);
-            // 
-            // labelSquad
-            // 
-            this.labelSquad.AutoSize = true;
-            this.labelSquad.Location = new System.Drawing.Point(22, 6);
-            this.labelSquad.Name = "labelSquad";
-            this.labelSquad.Size = new System.Drawing.Size(44, 13);
-            this.labelSquad.TabIndex = 2;
-            this.labelSquad.Text = "Squad: ";
-            this.toolTip1.SetToolTip(this.labelSquad, "Comma separated list of player names");
-            // 
-            // labelMatches
-            // 
-            this.labelMatches.AutoSize = true;
-            this.labelMatches.Location = new System.Drawing.Point(22, 45);
-            this.labelMatches.Name = "labelMatches";
-            this.labelMatches.Size = new System.Drawing.Size(51, 13);
-            this.labelMatches.TabIndex = 3;
-            this.labelMatches.Text = "Matches:";
-            this.labelMatches.Click += new System.EventHandler(this.LabelMatches_Click);
-            // 
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1,
             this.toolStripProgressBar1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 654);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 650);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1203, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1279, 22);
             this.statusStrip1.SizingGrip = false;
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
@@ -267,7 +119,7 @@
             // 
             this.toolStripStatusLabel1.Margin = new System.Windows.Forms.Padding(12, 3, 0, 2);
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(981, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(1032, 17);
             this.toolStripStatusLabel1.Spring = true;
             this.toolStripStatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -281,13 +133,184 @@
             // 
             this.toolTipBalloon.IsBalloon = true;
             // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.splitContainer1.Location = new System.Drawing.Point(3, 28);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.AutoScroll = true;
+            this.splitContainer1.Panel1.Controls.Add(this.dataGridView1);
+            this.splitContainer1.Size = new System.Drawing.Size(1276, 619);
+            this.splitContainer1.SplitterDistance = 346;
+            this.splitContainer1.TabIndex = 0;
+            // 
+            // dataGridView1
+            // 
+            this.dataGridView1.AllowUserToAddRows = false;
+            this.dataGridView1.AllowUserToDeleteRows = false;
+            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.ContextMenuStrip = this.contextMenuMatches;
+            this.dataGridView1.Location = new System.Drawing.Point(3, 10);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.ReadOnly = true;
+            this.dataGridView1.Size = new System.Drawing.Size(1270, 333);
+            this.dataGridView1.StandardTab = true;
+            this.dataGridView1.TabIndex = 3;
+            this.dataGridView1.SelectionChanged += new System.EventHandler(this.DataGridView1_SelectionChanged);
+            // 
+            // toolStrip1
+            // 
+            this.toolStrip1.AutoSize = false;
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.textBoxSquad,
+            this.buttonRefresh,
+            this.toolStripSeparator2,
+            this.toolStripButtonOptions,
+            this.toolStripDropDownButton2,
+            this.toolStripDropDownButtonFile,
+            this.toolStripButtonSearch,
+            this.toolStripComboBoxPlayerSelect,
+            this.toolStripSeparator3,
+            this.toolStripLabel1});
+            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+            this.toolStrip1.Size = new System.Drawing.Size(1279, 25);
+            this.toolStrip1.Stretch = true;
+            this.toolStrip1.TabIndex = 0;
+            this.toolStrip1.TabStop = true;
+            // 
+            // textBoxSquad
+            // 
+            this.textBoxSquad.Name = "textBoxSquad";
+            this.textBoxSquad.Size = new System.Drawing.Size(275, 25);
+            this.textBoxSquad.ToolTipText = "Player names (comma separated -- up to six -- case sensitive)";
+            this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSquad_KeyDown);
+            this.textBoxSquad.TextChanged += new System.EventHandler(this.TextBoxSquad_TextChanged);
+            // 
+            // buttonRefresh
+            // 
+            this.buttonRefresh.Image = global::MyPubgTelemetry.GUI.Properties.Resources.Refresh_greyThin_16x;
+            this.buttonRefresh.Margin = new System.Windows.Forms.Padding(3, 1, 3, 2);
+            this.buttonRefresh.Name = "buttonRefresh";
+            this.buttonRefresh.Size = new System.Drawing.Size(81, 22);
+            this.buttonRefresh.Text = "Download";
+            this.buttonRefresh.ToolTipText = "Check if new data is available online and if so, download it.";
+            this.buttonRefresh.Click += new System.EventHandler(this.ButtonRefresh_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripButtonOptions
+            // 
+            this.toolStripButtonOptions.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonOptions.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripButtonOptions.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonOptions.Image")));
+            this.toolStripButtonOptions.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonOptions.Name = "toolStripButtonOptions";
+            this.toolStripButtonOptions.Size = new System.Drawing.Size(62, 22);
+            this.toolStripButtonOptions.Text = "Options...";
+            this.toolStripButtonOptions.Click += new System.EventHandler(this.ToolStripButtonOptions_Click);
+            // 
+            // toolStripDropDownButton2
+            // 
+            this.toolStripDropDownButton2.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripDropDownButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripDropDownButton2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.hideChartToolStripMenuItem,
+            this.hideTableToolStripMenuItem});
+            this.toolStripDropDownButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton2.Image")));
+            this.toolStripDropDownButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownButton2.Name = "toolStripDropDownButton2";
+            this.toolStripDropDownButton2.Size = new System.Drawing.Size(45, 22);
+            this.toolStripDropDownButton2.Text = "View";
+            // 
+            // hideChartToolStripMenuItem
+            // 
+            this.hideChartToolStripMenuItem.Name = "hideChartToolStripMenuItem";
+            this.hideChartToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.hideChartToolStripMenuItem.Text = "Hide Chart";
+            this.hideChartToolStripMenuItem.Click += new System.EventHandler(this.HideChartToolStripMenuItem_Click);
+            // 
+            // hideTableToolStripMenuItem
+            // 
+            this.hideTableToolStripMenuItem.Name = "hideTableToolStripMenuItem";
+            this.hideTableToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.hideTableToolStripMenuItem.Text = "Hide Table";
+            this.hideTableToolStripMenuItem.Click += new System.EventHandler(this.HideTableToolStripMenuItem_Click);
+            // 
+            // toolStripDropDownButtonFile
+            // 
+            this.toolStripDropDownButtonFile.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripDropDownButtonFile.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripDropDownButtonFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exportCSVToolStripMenuItem});
+            this.toolStripDropDownButtonFile.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButtonFile.Image")));
+            this.toolStripDropDownButtonFile.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownButtonFile.Name = "toolStripDropDownButtonFile";
+            this.toolStripDropDownButtonFile.Size = new System.Drawing.Size(38, 22);
+            this.toolStripDropDownButtonFile.Text = "File";
+            // 
+            // exportCSVToolStripMenuItem
+            // 
+            this.exportCSVToolStripMenuItem.Name = "exportCSVToolStripMenuItem";
+            this.exportCSVToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.exportCSVToolStripMenuItem.Text = "Export CSV...";
+            this.exportCSVToolStripMenuItem.Click += new System.EventHandler(this.ExportCSVToolStripMenuItem_Click);
+            // 
+            // toolStripButtonSearch
+            // 
+            this.toolStripButtonSearch.Image = global::MyPubgTelemetry.GUI.Properties.Resources.Search_16x;
+            this.toolStripButtonSearch.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSearch.Name = "toolStripButtonSearch";
+            this.toolStripButtonSearch.Size = new System.Drawing.Size(110, 22);
+            this.toolStripButtonSearch.Text = "Search matches";
+            this.toolStripButtonSearch.ToolTipText = "Search the matches list for player names, dates, ID, etc.";
+            this.toolStripButtonSearch.Click += new System.EventHandler(this.ToolStripButtonSearch_Click);
+            // 
+            // toolStripComboBoxPlayerSelect
+            // 
+            this.toolStripComboBoxPlayerSelect.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripComboBoxPlayerSelect.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.toolStripComboBoxPlayerSelect.Name = "toolStripComboBoxPlayerSelect";
+            this.toolStripComboBoxPlayerSelect.Size = new System.Drawing.Size(150, 25);
+            this.toolStripComboBoxPlayerSelect.SelectedIndexChanged += new System.EventHandler(this.ToolStripComboBoxPlayerSelect_SelectedIndexChanged);
+            // 
+            // toolStripLabel1
+            // 
+            this.toolStripLabel1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(76, 22);
+            this.toolStripLabel1.Text = "Player Focus:";
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1203, 676);
-            this.Controls.Add(this.statusStrip1);
+            this.ClientSize = new System.Drawing.Size(1279, 672);
+            this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.statusStrip1);
             this.KeyPreview = true;
             this.Name = "MainForm";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Show;
@@ -298,41 +321,46 @@
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainForm_KeyDown);
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.contextMenuMatches.ResumeLayout(false);
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
-            this.statusStrip1.ResumeLayout(false);
-            this.statusStrip1.PerformLayout();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-        private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.Label labelMatches;
-        private System.Windows.Forms.Label labelSquad;
-        private System.Windows.Forms.Button buttonRefresh;
-        private System.Windows.Forms.TextBox textBoxSquad;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Button buttonOptions;
         private System.Windows.Forms.ContextMenuStrip contextMenuMatches;
         private System.Windows.Forms.ToolStripMenuItem tsmiOpenInFileExplorer;
         private System.Windows.Forms.ToolStripMenuItem tsmiCopyMatchId;
-        private System.Windows.Forms.Button buttonSearch;
-        private System.Windows.Forms.Button buttonToggle;
         private System.Windows.Forms.ToolStripMenuItem tsmiPubgLookup;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.Button buttonExportCsv;
-        private System.Windows.Forms.Label labelStatusFocus;
-        private System.Windows.Forms.ComboBox comboBoxStatsFocus;
         private System.Windows.Forms.ToolTip toolTipBalloon;
+        private DataGridView dataGridView1;
+        private ToolStrip toolStrip1;
+        private ToolStripButton buttonRefresh;
+        private ToolStripTextBox textBoxSquad;
+        private ToolStripSeparator toolStripSeparator2;
+        private ToolStripDropDownButton toolStripDropDownButton2;
+        private ToolStripMenuItem hideChartToolStripMenuItem;
+        private ToolStripMenuItem hideTableToolStripMenuItem;
+        private ToolStripButton toolStripButtonOptions;
+        private ToolStripButton toolStripButtonSearch;
+        private ToolStripDropDownButton toolStripDropDownButtonFile;
+        private ToolStripMenuItem exportCSVToolStripMenuItem;
+        private SplitContainerEx splitContainer1;
+        private ToolStripComboBox toolStripComboBoxPlayerSelect;
+        private ToolStripLabel toolStripLabel1;
+        private ToolStripSeparator toolStripSeparator3;
     }
 }
 

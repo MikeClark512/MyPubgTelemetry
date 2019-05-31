@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -19,6 +20,7 @@ namespace MyPubgTelemetry.GUI
 
         private void OptionsForm_Load(object sender, EventArgs e)
         {
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             textBoxApiKey.Text = TelemetryApp.App.ApiKey;
             ApiKeyAtLoad = TelemetryApp.App.ApiKey;
             MinimumSize = Size;

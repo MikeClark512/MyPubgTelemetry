@@ -41,25 +41,36 @@ namespace MyPubgTelemetry.GUI
             Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             var qts = new QueuedTaskScheduler(Environment.ProcessorCount - 1, "QTS", false, ThreadPriority.Lowest);
             ViewModel.TaskFactory = new TaskFactory(qts);
-            ViewModel.MatchSearchInputBox = new InputBox { InputText = Clipboard.GetText(), Text = @"Search match IDs, dates, and player names" };
+            ViewModel.MatchSearchInputBox = new InputBox {InputText = Clipboard.GetText(), Text = @"Search match IDs, dates, and player names"};
             ViewModel.PropertyChanged += (sender, args) =>
             {
                 if (args.PropertyName == "DownloadActive" || args.PropertyName == "ReloadActive")
                 {
                     bool loadingActive = ViewModel.DownloadActive || ViewModel.ReloadActive;
-                    buttonRefresh.Enabled = !loadingActive;
-                    comboBoxStatsFocus.Enabled = !loadingActive;
+                    foreach (ToolStripItem item in toolStrip1.Items)
+                    {
+                        item.Enabled = !loadingActive;
+                    }
                 }
             };
+
+            void SplitContainerOnCollapse(object sender, EventArgs args)
+            {
+                hideTableToolStripMenuItem.Checked = splitContainer1.Panel1Collapsed;
+                hideChartToolStripMenuItem.Checked = splitContainer1.Panel2Collapsed;
+            }
+
+            splitContainer1.Panel1.VisibleChanged += SplitContainerOnCollapse;
+            splitContainer1.Panel2.VisibleChanged += SplitContainerOnCollapse;
         }
 
         private void InitToolStrip()
         {
-            toolStripProgressBar1.TextChanged += delegate (object sender, EventArgs args)
+            toolStripProgressBar1.TextChanged += delegate(object sender, EventArgs args)
             {
                 toolStripStatusLabel1.Text = toolStripProgressBar1.Text;
             };
-            toolStripStatusLabel1.TextChanged += delegate (object sender, EventArgs args)
+            toolStripStatusLabel1.TextChanged += delegate(object sender, EventArgs args)
             {
                 ViewModel.LogBuffer.Append(toolStripStatusLabel1.Text.Trim());
                 ViewModel.LogBuffer.Append(Environment.NewLine);
@@ -75,7 +86,7 @@ namespace MyPubgTelemetry.GUI
                 BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty,
                 null,
                 dataGridView1,
-                new object[] { true });
+                new object[] {true});
 
             TweakColumnHeaderPadding();
 
@@ -91,7 +102,7 @@ namespace MyPubgTelemetry.GUI
             dataGridView1.MultiSelect = false;
             dataGridView1.BackgroundColor = SystemColors.ControlLightLight;
             dataGridView1.RowHeadersVisible = false;
-            dataGridView1.CellFormatting += delegate (object sender, DataGridViewCellFormattingEventArgs e)
+            dataGridView1.CellFormatting += delegate(object sender, DataGridViewCellFormattingEventArgs e)
             {
                 if (e.Value is DateTime value)
                 {
@@ -118,7 +129,7 @@ namespace MyPubgTelemetry.GUI
                 }
             };
             //dataGridView1.DataSource = _dataTable;
-            dataGridView1.KeyDown += delegate (object sender, KeyEventArgs args)
+            dataGridView1.KeyDown += delegate(object sender, KeyEventArgs args)
             {
                 switch (args.KeyCode)
                 {
@@ -127,7 +138,7 @@ namespace MyPubgTelemetry.GUI
                         break;
                 }
             };
-            dataGridView1.MouseDown += delegate (object sender, MouseEventArgs args)
+            dataGridView1.MouseDown += delegate(object sender, MouseEventArgs args)
             {
                 DataGridView.HitTestInfo hti = dataGridView1.HitTest(args.X, args.Y);
                 if (hti.RowIndex >= 0)
@@ -154,7 +165,7 @@ namespace MyPubgTelemetry.GUI
                 SortMode = DataGridViewColumnSortMode.NotSortable,
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
                 Frozen = false,
-                DefaultCellStyle = new DataGridViewCellStyle { Format = ViewModel.ChartTitleDateFormat }
+                DefaultCellStyle = new DataGridViewCellStyle {Format = ViewModel.ChartTitleDateFormat}
             });
 
             foreach (PropertyInfo pi in typeof(MatchModelStats).GetProperties())
@@ -173,27 +184,36 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
-        [SuppressMessage("ReSharper", "InconsistentNaming")]
-        private void TweakColumnHeaderPadding()
+        private async void MainForm_Load(object sender, EventArgs e)
         {
-            try
+            var path = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+            //toolStripComboBoxPlayerSelect.SelectedIndex = 0;
+            DebugThreadWriteLine("Config path = " + path);
+            textBoxSquad.Text = Settings.Default.Squad.Trim();
+            Type type = toolStripComboBoxPlayerSelect.Control.GetType();
+            type.InvokeMember("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty, null, toolStripComboBoxPlayerSelect.Control, new object[] { true });
+            ViewModel.Squad.ListChanged += (o, args) =>
             {
-                DataGridViewCellStyle cellStyle = dataGridView1.ColumnHeadersDefaultCellStyle;
-                FieldInfo fi_DataGridViewCellStyle_propertyStore =
-                    cellStyle.GetType().GetField("propertyStore", BindingFlags.NonPublic | BindingFlags.Instance);
-                FieldInfo fi_DataGridViewCellStyle_PropPadding = cellStyle.GetType().GetField("PropPadding", BindingFlags.NonPublic | BindingFlags.Static);
-                int propId = (int?)fi_DataGridViewCellStyle_PropPadding?.GetValue(null) ?? -1;
-                object propertyStore = fi_DataGridViewCellStyle_propertyStore?.GetValue(cellStyle);
-                Type t_PropertyStore = propertyStore?.GetType();
-                MethodInfo mi_PropertyStore_SetPadding = t_PropertyStore?.GetMethod("SetPadding");
-                Padding padding = new Padding(-2, 0, -2, 0);
-                mi_PropertyStore_SetPadding?.Invoke(propertyStore, new object[] { propId, padding });
-                Padding gp = cellStyle.Padding;
-                Debug.WriteLine($"{gp.Left} {gp.Right} {gp.Top} {gp.Bottom}");
+                toolStripComboBoxPlayerSelect.Items.Clear();
+                toolStripComboBoxPlayerSelect.Items.AddRange(ViewModel.Squad.Cast<object>().ToArray());
+                if (toolStripComboBoxPlayerSelect.Items.Count > 0)
+                {
+                    toolStripComboBoxPlayerSelect.SelectedIndex = 0;
+                }
+            };
+            ViewModel.SquadCsv = textBoxSquad.Text;
+            ViewModel.PlayerColorPalette = ViewModel.ChartHpOverTime.Chart.Palette.GetPaletteColors();
+            if (!string.IsNullOrWhiteSpace(Settings.Default.PlayerColors))
+            {
+                ViewModel.PlayerColors = JsonConvert.DeserializeObject<Dictionary<string, Color>>(Settings.Default.PlayerColors);
             }
-            catch (Exception)
+            if (EnvBooly("MYPUBGTELEMETRY_NODLONSTART"))
             {
-                // unimportant attempt to tighten up the text margins in the DGV header labels
+                LoadMatches();
+            }
+            else
+            {
+                await DownloadAndRefresh();
             }
         }
 
@@ -252,9 +272,8 @@ namespace MyPubgTelemetry.GUI
         private void InitChart()
         {
             ViewModel.ChartHpOverTime = new ChartHpOverTime();
-            this.splitContainer1.Panel2.Controls.Add(ViewModel.ChartHpOverTime.Chart);
+            splitContainer1.Panel2.Controls.Add(ViewModel.ChartHpOverTime.Chart);
         }
-
 
         // ReSharper disable once UnusedMember.Local
         private static object GetField(object instance, string fieldName)
@@ -262,29 +281,6 @@ namespace MyPubgTelemetry.GUI
             const BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
             var field = instance.GetType().GetField(fieldName, bindFlags);
             return field?.GetValue(instance);
-        }
-
-        private async void MainForm_Load(object sender, EventArgs e)
-        {
-            var path = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
-            DebugThreadWriteLine("Config path = " + path);
-            textBoxSquad.Text = Settings.Default.Squad.Trim();
-            ViewModel.SquadCsv = textBoxSquad.Text;
-            comboBoxStatsFocus.DataSource = ViewModel.Squad;
-            ViewModel.PlayerColorPalette = ViewModel.ChartHpOverTime.Chart.Palette.GetPaletteColors();
-            if (!string.IsNullOrWhiteSpace(Settings.Default.PlayerColors))
-            {
-                ViewModel.PlayerColors = JsonConvert.DeserializeObject<Dictionary<string, Color>>(Settings.Default.PlayerColors);
-            }
-
-            if (EnvBooly("MYPUBGTELEMETRY_NODLONSTART"))
-            {
-                LoadMatches();
-            }
-            else
-            {
-                await DownloadAndRefresh();
-            }
         }
 
         private async void LoadMatches(bool deep = false)
@@ -306,15 +302,15 @@ namespace MyPubgTelemetry.GUI
             jsonFiles.AddRange(di.GetFiles("*.json.gz"));
             if (jsonFiles.Count == 0)
             {
-                BeginInvoke((MethodInvoker)delegate ()
-               {
-                   MessageBox.Show("No telemetry files found!");
-               });
+                BeginInvoke((MethodInvoker) delegate()
+                {
+                    MessageBox.Show("No telemetry files found!");
+                });
                 ViewModel.ReloadActive = false;
                 return;
             }
 
-            List<TelemetryFile> telFiles = jsonFiles.Select(jsonFile => new TelemetryFile { FileInfo = jsonFile, Title = "" }).ToList();
+            List<TelemetryFile> telFiles = jsonFiles.Select(jsonFile => new TelemetryFile {FileInfo = jsonFile, Title = ""}).ToList();
             telFiles.Sort((x, y) => y.FileInfo.CreationTime.CompareTo(x.FileInfo.CreationTime));
             var blv = new BindingListView2<TelemetryFile>(telFiles);
             dataGridView1.DataSource = blv;
@@ -335,15 +331,19 @@ namespace MyPubgTelemetry.GUI
         private bool ValidateInputSquad()
         {
             //ViewModel.Squad.Clear();
-
             BindingList<string> squaddies = ViewModel.Squad;
+            if (squaddies.Count > 6)
+            {
+                return false;
+            }
             if (squaddies.Count == 1)
             {
                 BeginInvoke((MethodInvoker) delegate
                 {
-                    toolTipBalloon.Show("", textBoxSquad, 0);
+                    Control windowHandle = Control.FromHandle(textBoxSquad.TextBox?.Handle ?? Handle);
+                    toolTipBalloon.Show("", windowHandle, 0);
                     var msg = "Enter some player names (case sensitive, comma separated) and then press refresh.";
-                    toolTipBalloon.Show(msg, textBoxSquad, 15, textBoxSquad.Height - 5, 7500);
+                    toolTipBalloon.Show(msg, windowHandle, 15, textBoxSquad.Height - 5, 7500);
                 });
                 return false;
             }
@@ -375,41 +375,41 @@ namespace MyPubgTelemetry.GUI
                 task.ContinueWith((_) =>
                 {
                     file.TelemetryMetaDataLoaded = true;
-                    BeginInvoke((MethodInvoker)delegate
-                   {
-                       UiUpdateOneFile(file);
-                   });
+                    BeginInvoke((MethodInvoker) delegate
+                    {
+                        UiUpdateOneFile(file);
+                    });
                 }, cancellationToken);
                 tasks.Add(task);
             }
 
             ViewModel.TaskFactory.ContinueWhenAny(tasks.ToArray(), (_) =>
             {
-                BeginInvoke((MethodInvoker)delegate ()
-               {
-                   //dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
-                   BindingListView2<TelemetryFile> bs = (BindingListView2<TelemetryFile>) dataGridView1.DataSource;
+                BeginInvoke((MethodInvoker) delegate()
+                {
+                    //dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                    BindingListView2<TelemetryFile> bs = (BindingListView2<TelemetryFile>) dataGridView1.DataSource;
 
-                   bs.Refresh();
-               });
+                    bs.Refresh();
+                });
             }, cancellationToken);
 
             ViewModel.TaskFactory.ContinueWhenAll(tasks.ToArray(), (_) =>
             {
                 DebugThreadWriteLine("Done loading metadata (worker).");
-                BeginInvoke((MethodInvoker)delegate ()
-               {
-                   DebugThreadWriteLine("Done loading metadata (UI).");
-                   dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
-                   toolStripProgressBar1.Visible = false;
-                   for (int col = 0; col < dataGridView1.ColumnCount; col++)
-                   {
-                       dataGridView1.Columns[col].SortMode = DataGridViewColumnSortMode.Automatic;
-                   }
+                BeginInvoke((MethodInvoker) delegate()
+                {
+                    DebugThreadWriteLine("Done loading metadata (UI).");
+                    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+                    toolStripProgressBar1.Visible = false;
+                    for (int col = 0; col < dataGridView1.ColumnCount; col++)
+                    {
+                        dataGridView1.Columns[col].SortMode = DataGridViewColumnSortMode.Automatic;
+                    }
 
-                   dataGridView1.Sort(dataGridView1.Columns[1], ListSortDirection.Descending);
-                   ViewModel.ReloadActive = false;
-               });
+                    dataGridView1.Sort(dataGridView1.Columns[1], ListSortDirection.Descending);
+                    ViewModel.ReloadActive = false;
+                });
             }, cancellationToken);
         }
 
@@ -448,7 +448,7 @@ namespace MyPubgTelemetry.GUI
                 var teams = new Dictionary<int, SortedSet<string>>();
                 int squadTeamId = -1;
                 jtr.Read();
-                PreparedData pd = new PreparedData() { File = file };
+                PreparedData pd = new PreparedData() {File = file};
                 while (jtr.Read())
                 {
                     if (jtr.TokenType == JsonToken.EndArray)
@@ -605,7 +605,7 @@ namespace MyPubgTelemetry.GUI
             ViewModel.AccountIds.TryGetValue(user, out string accountId);
             if (accountId == null) return;
             WebClient wc = new WebClient();
-            var values = new NameValueCollection { { "region", "pc-na" }, { "player_name", user } };
+            var values = new NameValueCollection {{"region", "pc-na"}, {"player_name", user}};
             wc.UploadValues("https://pubglookup.com/search", "POST", values);
             Task.Run(() =>
             {
@@ -633,10 +633,10 @@ namespace MyPubgTelemetry.GUI
             }
             finally
             {
-                BeginInvoke((MethodInvoker)delegate ()
-               {
-                   ConsumePreparedDataQ(cancellationToken);
-               });
+                BeginInvoke((MethodInvoker) delegate()
+                {
+                    ConsumePreparedDataQ(cancellationToken);
+                });
             }
         }
 
@@ -649,7 +649,7 @@ namespace MyPubgTelemetry.GUI
 
             file.PreparedData = null;
 
-            var pd = new PreparedData() { File = file };
+            var pd = new PreparedData() {File = file};
             using (StreamReader sr = file.NewTelemetryReader())
             {
                 var events = JsonConvert.DeserializeObject<List<TelemetryEvent>>(sr.ReadToEnd());
@@ -767,7 +767,7 @@ namespace MyPubgTelemetry.GUI
                 string squad = string.Join(",", squadSet);
                 downloader.DownloadProgressEvent += (sender2, args) =>
                 {
-                    BeginInvoke((MethodInvoker)delegate ()
+                    BeginInvoke((MethodInvoker) delegate()
                     {
                         if (!args.Rewrite)
                         {
@@ -775,8 +775,8 @@ namespace MyPubgTelemetry.GUI
                         }
 
                         toolStripProgressBar1.Visible = !args.Complete;
-                        toolStripProgressBar1.Maximum = (int)args.Max;
-                        toolStripProgressBar1.Value = (int)args.Value;
+                        toolStripProgressBar1.Maximum = (int) args.Max;
+                        toolStripProgressBar1.Value = (int) args.Value;
                         toolStripStatusLabel1.Text = args.Msg;
                     });
                 };
@@ -813,12 +813,12 @@ namespace MyPubgTelemetry.GUI
         {
             if (string.IsNullOrWhiteSpace(App.ApiKey))
             {
-                BeginInvoke((MethodInvoker)delegate ()
-               {
-                   var msg = "Your API Key is not set. Please go to the options dialog and paste a valid API Key.";
-                   toolTipBalloon.Show("", buttonOptions, 0);
-                   toolTipBalloon.Show(msg, buttonOptions);
-               });
+                BeginInvoke((MethodInvoker) delegate()
+                {
+                    var msg = "Your API Key is not set. Please go to the options dialog and paste a valid API Key.";
+                    toolTipBalloon.Show("", toolStrip1, 0);
+                    toolTipBalloon.Show(msg, toolStrip1, new Point(-100, 0), 2000);
+                });
                 return false;
             }
 
@@ -842,7 +842,7 @@ namespace MyPubgTelemetry.GUI
 
         private async void ButtonOptions_Click(object sender, EventArgs e)
         {
-            var optionsForm = new OptionsForm { StartPosition = FormStartPosition.CenterParent, LogText = ViewModel.LogBuffer.ToString() };
+            var optionsForm = new OptionsForm {StartPosition = FormStartPosition.CenterParent, LogText = ViewModel.LogBuffer.ToString()};
             DialogResult dialogResult = optionsForm.ShowDialog(this);
             if (dialogResult == DialogResult.OK)
             {
@@ -856,7 +856,11 @@ namespace MyPubgTelemetry.GUI
             {
                 if (e.KeyCode == Keys.F)
                 {
-                    buttonSearch.PerformClick();
+                    toolStripButtonSearch.PerformClick();
+                }
+                else if (e.KeyCode == Keys.E)
+                {
+                    textBoxSquad.Focus();
                 }
             }
             else if (ModifierKeys == Keys.Alt)
@@ -865,13 +869,13 @@ namespace MyPubgTelemetry.GUI
                 if (e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9)
                 {
                     string keyName = Enum.GetName(typeof(Keys), e.KeyCode);
-                    if (keyName.Length == 2) keyName = keyName.Substring(1);
+                    if (keyName?.Length == 2) keyName = keyName.Substring(1);
                     if (int.TryParse(keyName, out int num))
                     {
                         num = num - 1;
-                        if (num >= 0 && num < comboBoxStatsFocus.Items.Count)
+                        if (num >= 0 && num < toolStripComboBoxPlayerSelect.Items.Count)
                         {
-                            comboBoxStatsFocus.SelectedIndex = num;
+                            toolStripComboBoxPlayerSelect.SelectedIndex = num;
                         }
                     }
                 }
@@ -882,18 +886,11 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
-        private void ButtonSearch_Click(object sender, EventArgs e)
-        {
-            var dialogResult = ViewModel.MatchSearchInputBox.ShowDialog(this);
-            if (dialogResult != DialogResult.OK) return;
-            MatchSearchNext();
-        }
-
         private void SelectMatch(TelemetryFile path)
         {
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
-                ObjectView<TelemetryFile> ovtf = (ObjectView<TelemetryFile>)row.DataBoundItem;
+                ObjectView<TelemetryFile> ovtf = (ObjectView<TelemetryFile>) row.DataBoundItem;
                 if (ovtf.Object == path)
                 {
                     row.Selected = true;
@@ -940,20 +937,6 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
-        private void ButtonNext_Click(object sender, EventArgs e)
-        {
-            if (splitContainer1.Panel2Collapsed)
-            {
-                buttonToggle.Text = "Hide Chart";
-                splitContainer1.Panel2Collapsed = false;
-            }
-            else
-            {
-                buttonToggle.Text = "Show Chart";
-                splitContainer1.Panel2Collapsed = true;
-            }
-        }
-
         private void TsmiCopyPath_Click(object sender, EventArgs e)
         {
             TelemetryFile file = GetSelectedMatch();
@@ -995,14 +978,14 @@ namespace MyPubgTelemetry.GUI
 
         private TelemetryFile MatchListGetValueAtIndex(int i)
         {
-            var dataBoundItem = (ObjectView<TelemetryFile>)dataGridView1.Rows[i].DataBoundItem;
+            var dataBoundItem = (ObjectView<TelemetryFile>) dataGridView1.Rows[i].DataBoundItem;
             return dataBoundItem.Object;
         }
 
         private static T GetPrimarySelectedValue<T>(DataGridView dgv) where T : class
         {
             DataGridViewRow row = dgv.SelectedRows.Cast<DataGridViewRow>().FirstOrDefault();
-            ObjectView<T> objectView = (ObjectView<T>)row?.DataBoundItem;
+            ObjectView<T> objectView = (ObjectView<T>) row?.DataBoundItem;
             return objectView?.Object;
         }
 
@@ -1016,7 +999,7 @@ namespace MyPubgTelemetry.GUI
         // ReSharper disable once UnusedMember.Local
         private TelemetryFile RowToTelemetryFile(DataGridViewRow row)
         {
-            ObjectView<TelemetryFile> ovtf = (ObjectView<TelemetryFile>)row.DataBoundItem;
+            ObjectView<TelemetryFile> ovtf = (ObjectView<TelemetryFile>) row.DataBoundItem;
             return ovtf.Object;
         }
 
@@ -1028,13 +1011,10 @@ namespace MyPubgTelemetry.GUI
             {
                 return;
             }
-
             ViewModel.CtsMatchSwitch?.Cancel();
             ViewModel.CtsMatchSwitch = new CancellationTokenSource();
             ViewModel.ChartHpOverTime.ClearChart();
-
             if (ViewModel.DownloadActive) return;
-
             Task.Run(() => SwitchMatch(file, ViewModel.CtsMatchSwitch.Token));
         }
 
@@ -1055,7 +1035,6 @@ namespace MyPubgTelemetry.GUI
                     MessageBox.Show("Export failed.", "Export failed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-
                 File.WriteAllText(filename, dataObject.GetText(TextDataFormat.CommaSeparatedValue));
             }
             finally
@@ -1066,7 +1045,7 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
-        private void ButtonExportCsv_Click(object sender, EventArgs e)
+        private void DoExportCsv()
         {
             SaveFileDialog dialog = new SaveFileDialog
             {
@@ -1079,38 +1058,75 @@ namespace MyPubgTelemetry.GUI
             SaveDataGridViewToCsv(dataGridView1, dialog.FileName);
         }
 
-        private void LabelMatches_Click(object sender, EventArgs e)
-        {
-        }
-
         private void TextBoxSquad_TextChanged(object sender, EventArgs e)
         {
             ViewModel.SquadCsv = textBoxSquad.Text;
         }
 
-        private void ComboBoxStatsFocus_SelectedIndexChanged(object sender, EventArgs e)
+        private void MainForm_Resize(object sender, EventArgs e)
         {
-            
+            DebugThreadWriteLine("Form Size: " + Size);
+        }
+
+        private void HideChartToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            splitContainer1.Panel2Collapsed = !splitContainer1.Panel2Collapsed;
+        }
+
+        private void HideTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            splitContainer1.Panel1Collapsed = !splitContainer1.Panel1Collapsed;
+        }
+
+        private void DoOptions()
+        {
+            var optionsForm = new OptionsForm {StartPosition = FormStartPosition.CenterParent, LogText = ViewModel.LogBuffer.ToString()};
+            DialogResult dialogResult = optionsForm.ShowDialog(this);
+            if (dialogResult == DialogResult.OK)
+            {
+                Task.Run(DownloadAndRefresh);
+            }
+        }
+
+        private void ToolStripButtonOptions_Click(object sender, EventArgs e)
+        {
+            DoOptions();
+        }
+
+        private void ExportCSVToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DoExportCsv();
+        }
+
+        private void ToolStripButtonSearch_Click(object sender, EventArgs e)
+        {
+            var dialogResult = ViewModel.MatchSearchInputBox.ShowDialog(this);
+            if (dialogResult != DialogResult.OK) return;
+            MatchSearchNext();
+        }
+
+        private void ToolStripComboBoxPlayerSelect_SelectedIndexChanged(object sender, EventArgs e)
+        {
             if (ViewModel.DownloadActive || ViewModel.ReloadActive)
                 return;
-            if (comboBoxStatsFocus.SelectedIndex == 0)
+            if (toolStripComboBoxPlayerSelect.SelectedIndex == 0)
             {
                 ViewModel.SelectedPlayer = null;
             }
             else
             {
-                ViewModel.SelectedPlayer = (string) comboBoxStatsFocus.SelectedItem;
+                ViewModel.SelectedPlayer = (string) toolStripComboBoxPlayerSelect.SelectedItem;
             }
             if (dataGridView1.DataSource == null)
                 return;
 
-            BindingListView<TelemetryFile> dataSource = (BindingListView<TelemetryFile>)dataGridView1.DataSource;
+            BindingListView<TelemetryFile> dataSource = (BindingListView<TelemetryFile>) dataGridView1.DataSource;
             //dataSource.Sort = "";
-            
+
             dataSource.SuspendAutoFilterAndSort();
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
-                ObjectView<TelemetryFile> ovtf = (ObjectView<TelemetryFile>)row.DataBoundItem;
+                ObjectView<TelemetryFile> ovtf = (ObjectView<TelemetryFile>) row.DataBoundItem;
                 //ovtf.BeginEdit();
                 TelemetryFile file = ovtf.Object;
                 RecalcStats(file, file);
@@ -1122,9 +1138,28 @@ namespace MyPubgTelemetry.GUI
             //dataGridView1.FirstDisplayedCell = firstDisplayedCell;
         }
 
-        private void MainForm_Resize(object sender, EventArgs e)
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
+        private void TweakColumnHeaderPadding()
         {
-            DebugThreadWriteLine("Form Size: " + this.Size);
+            try
+            {
+                DataGridViewCellStyle cellStyle = dataGridView1.ColumnHeadersDefaultCellStyle;
+                FieldInfo fi_DataGridViewCellStyle_propertyStore =
+                    cellStyle.GetType().GetField("propertyStore", BindingFlags.NonPublic | BindingFlags.Instance);
+                FieldInfo fi_DataGridViewCellStyle_PropPadding = cellStyle.GetType().GetField("PropPadding", BindingFlags.NonPublic | BindingFlags.Static);
+                int propId = (int?)fi_DataGridViewCellStyle_PropPadding?.GetValue(null) ?? -1;
+                object propertyStore = fi_DataGridViewCellStyle_propertyStore?.GetValue(cellStyle);
+                Type t_PropertyStore = propertyStore?.GetType();
+                MethodInfo mi_PropertyStore_SetPadding = t_PropertyStore?.GetMethod("SetPadding");
+                Padding padding = new Padding(-2, 0, -2, 0);
+                mi_PropertyStore_SetPadding?.Invoke(propertyStore, new object[] { propId, padding });
+                Padding gp = cellStyle.Padding;
+                Debug.WriteLine($"{gp.Left} {gp.Right} {gp.Top} {gp.Bottom}");
+            }
+            catch (Exception)
+            {
+                // unimportant attempt to tighten up the text margins in the DGV header labels
+            }
         }
     }
 
@@ -1157,7 +1192,7 @@ namespace MyPubgTelemetry.GUI
             Debug.WriteLine(">>>>>>BLV2 ApplySort(PropertyDescriptor,ListSortDirection)!");
             var sort = new ListSortDescription(property, direction);
             var dateSort = new ListSortDescription(GetPropertyDescriptor("MatchDate"), ListSortDirection.Descending);
-            ListSortDescription[] sorts = { sort, dateSort };
+            ListSortDescription[] sorts = {sort, dateSort};
             ListSortDescriptionCollection newSorts = new ListSortDescriptionCollection(sorts);
             ApplySort(newSorts);
         }
@@ -1168,6 +1203,7 @@ namespace MyPubgTelemetry.GUI
         }
     }
 
+
     public static class TelemetryGuiExtensions
     {
         public static List<Color> GetPaletteColors(this ChartColorPalette palette)
@@ -1175,7 +1211,7 @@ namespace MyPubgTelemetry.GUI
             Type type = typeof(Chart).Assembly.GetType("System.Windows.Forms.DataVisualization.Charting.Utilities.ChartPaletteColors");
             BindingFlags bf = BindingFlags.Static | BindingFlags.Public;
             MethodInfo mi = type.GetMethod("GetPaletteColors", bf);
-            object ret = mi?.Invoke(null, new object[] { palette });
+            object ret = mi?.Invoke(null, new object[] {palette});
             if (ret is Color[] colors)
             {
                 return colors.ToList();
