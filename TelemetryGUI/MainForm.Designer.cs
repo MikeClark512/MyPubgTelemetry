@@ -132,6 +132,8 @@ namespace MyPubgTelemetry.GUI
             // toolTipBalloon
             // 
             this.toolTipBalloon.IsBalloon = true;
+            this.toolTipBalloon.ToolTipIcon = System.Windows.Forms.ToolTipIcon.Warning;
+
             // 
             // splitContainer1
             // 

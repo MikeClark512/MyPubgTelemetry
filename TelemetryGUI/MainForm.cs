@@ -341,9 +341,11 @@ namespace MyPubgTelemetry.GUI
                 BeginInvoke((MethodInvoker) delegate
                 {
                     Control windowHandle = Control.FromHandle(textBoxSquad.TextBox?.Handle ?? Handle);
-                    toolTipBalloon.Show("", windowHandle, 0);
-                    var msg = "Enter some player names (case sensitive, comma separated) and then press refresh.";
-                    toolTipBalloon.Show(msg, windowHandle, 15, textBoxSquad.Height - 5, 7500);
+                    var msg = "Enter some player names (case sensitive, comma separated) and then press Download.";
+                    textBoxSquad.Focus();
+                    toolTipBalloon.ToolTipTitle = "Player names";
+                    toolTipBalloon.Hide(windowHandle);
+                    toolTipBalloon.Show(msg, windowHandle, 25, textBoxSquad.Bounds.Top - 70, 7500);
                 });
                 return false;
             }
@@ -409,6 +411,8 @@ namespace MyPubgTelemetry.GUI
 
                     dataGridView1.Sort(dataGridView1.Columns[1], ListSortDirection.Descending);
                     ViewModel.ReloadActive = false;
+                    dataGridView1.Rows[1].Selected = true;
+                    dataGridView1.Rows[0].Selected = true;
                 });
             }, cancellationToken);
         }
@@ -697,10 +701,7 @@ namespace MyPubgTelemetry.GUI
                 timePlayerEvents.Add(@event);
             }
 
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                file.PreparedData = pd;
-            }
+            file.PreparedData = cancellationToken.IsCancellationRequested ? null : pd;
 
             return pd;
         }
@@ -815,9 +816,9 @@ namespace MyPubgTelemetry.GUI
             {
                 BeginInvoke((MethodInvoker) delegate()
                 {
-                    var msg = "Your API Key is not set. Please go to the options dialog and paste a valid API Key.";
-                    toolTipBalloon.Show("", toolStrip1, 0);
-                    toolTipBalloon.Show(msg, toolStrip1, new Point(-100, 0), 2000);
+                    var msg = "Your API Key is not set. Click \"Options\" and paste a valid API Key.";
+                    toolTipBalloon.ToolTipTitle = "API Key";
+                    toolTipBalloon.Show(msg, toolStrip1, new Point(toolStripButtonOptions.Bounds.Location.X + 10, -75), 7500);
                 });
                 return false;
             }
@@ -1011,10 +1012,10 @@ namespace MyPubgTelemetry.GUI
             {
                 return;
             }
+            if (ViewModel.DownloadActive) return;
             ViewModel.CtsMatchSwitch?.Cancel();
             ViewModel.CtsMatchSwitch = new CancellationTokenSource();
             ViewModel.ChartHpOverTime.ClearChart();
-            if (ViewModel.DownloadActive) return;
             Task.Run(() => SwitchMatch(file, ViewModel.CtsMatchSwitch.Token));
         }
 
