@@ -1165,6 +1165,10 @@ namespace MyPubgTelemetry.GUI
             {
                 hideChartToolStripMenuItem.PerformClick();
             }
+            if (hideTableToolStripMenuItem.Checked)
+            {
+                hideTableToolStripMenuItem.PerformClick();
+            }
             splitContainer1.Orientation = Orientation.Vertical;
             splitContainer1.SplitterDistance = (int)(splitContainer1.ClientSize.Width * 0.5);
         }
@@ -1174,6 +1178,10 @@ namespace MyPubgTelemetry.GUI
             if (hideChartToolStripMenuItem.Checked)
             {
                 hideChartToolStripMenuItem.PerformClick();
+            }
+            if (hideTableToolStripMenuItem.Checked)
+            {
+                hideTableToolStripMenuItem.PerformClick();
             }
             splitContainer1.Orientation = Orientation.Horizontal;
             splitContainer1.SplitterDistance = (int)(splitContainer1.ClientSize.Height * 0.6);
