@@ -341,7 +341,7 @@ namespace MyPubgTelemetry.GUI
                 BeginInvoke((MethodInvoker)delegate
                {
                    Control windowHandle = Control.FromHandle(textBoxSquad.TextBox?.Handle ?? Handle);
-                   var msg = "Enter some player names (case sensitive, comma separated) and then press Download.";
+                   var msg = "Enter some player names (case sensitive, comma/space separated) and then press Download.";
                    textBoxSquad.Focus();
                    toolTipBalloon.ToolTipTitle = "Player names";
                    toolTipBalloon.Hide(windowHandle);
@@ -489,7 +489,7 @@ namespace MyPubgTelemetry.GUI
                         @event.victim.health -= @event.damage;
                         pd.NormalizedEvents.Add(@event);
                     }
-                    else if (@event._T == "LogPlayerPosition")
+                    else if (@event._T == "LogPlayerPosition" || @event._T == "LogHeal")
                     {
                         @event.victim = @event.character;
                         pd.NormalizedEvents.Add(@event);
@@ -670,7 +670,7 @@ namespace MyPubgTelemetry.GUI
                         @event.victim.health -= @event.damage;
                         pd.NormalizedEvents.Add(@event);
                     }
-                    else if (@event._T == "LogPlayerPosition")
+                    else if (@event._T == "LogPlayerPosition" || @event._T == "LogHeal")
                     {
                         @event.victim = @event.character;
                         pd.NormalizedEvents.Add(@event);

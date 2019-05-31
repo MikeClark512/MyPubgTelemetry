@@ -29,7 +29,7 @@ namespace MyPubgTelemetry.GUI
 
         public BindingList<string> Squad { get; } = new BindingList<string>(new List<string> { "Show stats for: Squad (sum)" }) { AllowNew = true, AllowRemove = true };
 
-        public Regex RegexCsv { get; } = new Regex(@"\s*,\s*", RegexOptions.IgnoreCase);
+        public Regex RegexCsv { get; } = new Regex(@"[,\s]+", RegexOptions.IgnoreCase);
 
         public ConcurrentDictionary<string, string> AccountIds { get; } = new ConcurrentDictionary<string, string>();
 
