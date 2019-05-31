@@ -42,29 +42,32 @@ namespace MyPubgTelemetry.GUI
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.toolTipBalloon = new System.Windows.Forms.ToolTip(this.components);
-            this.splitContainer1 = new MyPubgTelemetry.GUI.SplitContainerEx();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.textBoxSquad = new System.Windows.Forms.ToolStripTextBox();
             this.buttonRefresh = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButtonOptions = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButtonSearch = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripComboBoxPlayerFocus = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripDropDownButton2 = new System.Windows.Forms.ToolStripDropDownButton();
             this.hideChartToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hideTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.chartPositionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemChartRight = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemChartBottom = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripButtonOptions = new System.Windows.Forms.ToolStripButton();
             this.toolStripDropDownButtonFile = new System.Windows.Forms.ToolStripDropDownButton();
             this.exportCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripButtonSearch = new System.Windows.Forms.ToolStripButton();
-            this.toolStripComboBoxPlayerSelect = new System.Windows.Forms.ToolStripComboBox();
-            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.splitContainer1 = new MyPubgTelemetry.GUI.SplitContainerEx();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.contextMenuMatches.SuspendLayout();
             this.statusStrip1.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
-            this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // contextMenuMatches
@@ -119,7 +122,7 @@ namespace MyPubgTelemetry.GUI
             // 
             this.toolStripStatusLabel1.Margin = new System.Windows.Forms.Padding(12, 3, 0, 2);
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(1032, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(1050, 17);
             this.toolStripStatusLabel1.Spring = true;
             this.toolStripStatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -133,7 +136,170 @@ namespace MyPubgTelemetry.GUI
             // 
             this.toolTipBalloon.IsBalloon = true;
             this.toolTipBalloon.ToolTipIcon = System.Windows.Forms.ToolTipIcon.Warning;
-
+            // 
+            // toolStrip1
+            // 
+            this.toolStrip1.AutoSize = false;
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.textBoxSquad,
+            this.buttonRefresh,
+            this.toolStripSeparator3,
+            this.toolStripButtonSearch,
+            this.toolStripSeparator4,
+            this.toolStripComboBoxPlayerFocus,
+            this.toolStripDropDownButton2,
+            this.toolStripButtonOptions,
+            this.toolStripDropDownButtonFile,
+            this.toolStripSeparator2});
+            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+            this.toolStrip1.Size = new System.Drawing.Size(1279, 25);
+            this.toolStrip1.Stretch = true;
+            this.toolStrip1.TabIndex = 0;
+            this.toolStrip1.TabStop = true;
+            // 
+            // textBoxSquad
+            // 
+            this.textBoxSquad.Name = "textBoxSquad";
+            this.textBoxSquad.Size = new System.Drawing.Size(275, 25);
+            this.textBoxSquad.ToolTipText = "Player names (comma separated -- up to six -- case sensitive)";
+            this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSquad_KeyDown);
+            this.textBoxSquad.TextChanged += new System.EventHandler(this.TextBoxSquad_TextChanged);
+            // 
+            // buttonRefresh
+            // 
+            this.buttonRefresh.Image = global::MyPubgTelemetry.GUI.Properties.Resources.Refresh_greyThin_16x;
+            this.buttonRefresh.Margin = new System.Windows.Forms.Padding(3, 1, 3, 2);
+            this.buttonRefresh.Name = "buttonRefresh";
+            this.buttonRefresh.Size = new System.Drawing.Size(81, 22);
+            this.buttonRefresh.Text = "Download";
+            this.buttonRefresh.ToolTipText = "Check if new data is available online and if so, download it.";
+            this.buttonRefresh.Click += new System.EventHandler(this.ButtonRefresh_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripButtonSearch
+            // 
+            this.toolStripButtonSearch.Image = global::MyPubgTelemetry.GUI.Properties.Resources.Search_16x;
+            this.toolStripButtonSearch.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSearch.Name = "toolStripButtonSearch";
+            this.toolStripButtonSearch.Size = new System.Drawing.Size(110, 22);
+            this.toolStripButtonSearch.Text = "Search matches";
+            this.toolStripButtonSearch.ToolTipText = "Search the matches list for player names, dates, ID, etc.";
+            this.toolStripButtonSearch.Click += new System.EventHandler(this.ToolStripButtonSearch_Click);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripComboBoxPlayerFocus
+            // 
+            this.toolStripComboBoxPlayerFocus.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.toolStripComboBoxPlayerFocus.MergeIndex = 1;
+            this.toolStripComboBoxPlayerFocus.Name = "toolStripComboBoxPlayerFocus";
+            this.toolStripComboBoxPlayerFocus.Size = new System.Drawing.Size(175, 25);
+            this.toolStripComboBoxPlayerFocus.ToolTipText = "Select a player to show their individual statistics per match.\r\nOr, choose \"Squad" +
+    "\" to see all player statistics summed per match.";
+            this.toolStripComboBoxPlayerFocus.SelectedIndexChanged += new System.EventHandler(this.ToolStripComboBoxPlayerFocus_SelectedIndexChanged);
+            // 
+            // toolStripDropDownButton2
+            // 
+            this.toolStripDropDownButton2.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripDropDownButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripDropDownButton2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.hideChartToolStripMenuItem,
+            this.hideTableToolStripMenuItem,
+            this.chartPositionToolStripMenuItem});
+            this.toolStripDropDownButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton2.Image")));
+            this.toolStripDropDownButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownButton2.Margin = new System.Windows.Forms.Padding(5, 1, 5, 2);
+            this.toolStripDropDownButton2.Name = "toolStripDropDownButton2";
+            this.toolStripDropDownButton2.Padding = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.toolStripDropDownButton2.Size = new System.Drawing.Size(55, 22);
+            this.toolStripDropDownButton2.Text = "View";
+            // 
+            // hideChartToolStripMenuItem
+            // 
+            this.hideChartToolStripMenuItem.Name = "hideChartToolStripMenuItem";
+            this.hideChartToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.hideChartToolStripMenuItem.Text = "Hide Chart";
+            this.hideChartToolStripMenuItem.Click += new System.EventHandler(this.HideChartToolStripMenuItem_Click);
+            // 
+            // hideTableToolStripMenuItem
+            // 
+            this.hideTableToolStripMenuItem.Name = "hideTableToolStripMenuItem";
+            this.hideTableToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.hideTableToolStripMenuItem.Text = "Hide Table";
+            this.hideTableToolStripMenuItem.Click += new System.EventHandler(this.HideTableToolStripMenuItem_Click);
+            // 
+            // chartPositionToolStripMenuItem
+            // 
+            this.chartPositionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemChartRight,
+            this.toolStripMenuItemChartBottom});
+            this.chartPositionToolStripMenuItem.Name = "chartPositionToolStripMenuItem";
+            this.chartPositionToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.chartPositionToolStripMenuItem.Text = "Chart Position";
+            // 
+            // toolStripMenuItemChartRight
+            // 
+            this.toolStripMenuItemChartRight.Name = "toolStripMenuItemChartRight";
+            this.toolStripMenuItemChartRight.Size = new System.Drawing.Size(114, 22);
+            this.toolStripMenuItemChartRight.Text = "Right";
+            this.toolStripMenuItemChartRight.Click += new System.EventHandler(this.ToolStripMenuItemChartRight_Click);
+            // 
+            // toolStripMenuItemChartBottom
+            // 
+            this.toolStripMenuItemChartBottom.Name = "toolStripMenuItemChartBottom";
+            this.toolStripMenuItemChartBottom.Size = new System.Drawing.Size(114, 22);
+            this.toolStripMenuItemChartBottom.Text = "Bottom";
+            this.toolStripMenuItemChartBottom.Click += new System.EventHandler(this.ToolStripMenuItemChartBottom_Click);
+            // 
+            // toolStripButtonOptions
+            // 
+            this.toolStripButtonOptions.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonOptions.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripButtonOptions.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonOptions.Image")));
+            this.toolStripButtonOptions.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonOptions.Name = "toolStripButtonOptions";
+            this.toolStripButtonOptions.Size = new System.Drawing.Size(62, 22);
+            this.toolStripButtonOptions.Text = "Options...";
+            this.toolStripButtonOptions.Click += new System.EventHandler(this.ToolStripButtonOptions_Click);
+            // 
+            // toolStripDropDownButtonFile
+            // 
+            this.toolStripDropDownButtonFile.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripDropDownButtonFile.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripDropDownButtonFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exportCSVToolStripMenuItem});
+            this.toolStripDropDownButtonFile.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButtonFile.Image")));
+            this.toolStripDropDownButtonFile.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownButtonFile.Name = "toolStripDropDownButtonFile";
+            this.toolStripDropDownButtonFile.Padding = new System.Windows.Forms.Padding(10, 0, 10, 0);
+            this.toolStripDropDownButtonFile.Size = new System.Drawing.Size(58, 22);
+            this.toolStripDropDownButtonFile.Text = "File";
+            // 
+            // exportCSVToolStripMenuItem
+            // 
+            this.exportCSVToolStripMenuItem.Name = "exportCSVToolStripMenuItem";
+            this.exportCSVToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.exportCSVToolStripMenuItem.Text = "Export CSV...";
+            this.exportCSVToolStripMenuItem.Click += new System.EventHandler(this.ExportCSVToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripSeparator2.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
             // splitContainer1
             // 
@@ -162,148 +328,13 @@ namespace MyPubgTelemetry.GUI
             this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.ContextMenuStrip = this.contextMenuMatches;
-            this.dataGridView1.Location = new System.Drawing.Point(3, 10);
+            this.dataGridView1.Location = new System.Drawing.Point(0, 10);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(1270, 333);
+            this.dataGridView1.Size = new System.Drawing.Size(1273, 333);
             this.dataGridView1.StandardTab = true;
             this.dataGridView1.TabIndex = 3;
             this.dataGridView1.SelectionChanged += new System.EventHandler(this.DataGridView1_SelectionChanged);
-            // 
-            // toolStrip1
-            // 
-            this.toolStrip1.AutoSize = false;
-            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.textBoxSquad,
-            this.buttonRefresh,
-            this.toolStripSeparator2,
-            this.toolStripButtonOptions,
-            this.toolStripDropDownButton2,
-            this.toolStripDropDownButtonFile,
-            this.toolStripButtonSearch,
-            this.toolStripComboBoxPlayerSelect,
-            this.toolStripSeparator3,
-            this.toolStripLabel1});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
-            this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip1.Size = new System.Drawing.Size(1279, 25);
-            this.toolStrip1.Stretch = true;
-            this.toolStrip1.TabIndex = 0;
-            this.toolStrip1.TabStop = true;
-            // 
-            // textBoxSquad
-            // 
-            this.textBoxSquad.Name = "textBoxSquad";
-            this.textBoxSquad.Size = new System.Drawing.Size(275, 25);
-            this.textBoxSquad.ToolTipText = "Player names (comma separated -- up to six -- case sensitive)";
-            this.textBoxSquad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSquad_KeyDown);
-            this.textBoxSquad.TextChanged += new System.EventHandler(this.TextBoxSquad_TextChanged);
-            // 
-            // buttonRefresh
-            // 
-            this.buttonRefresh.Image = global::MyPubgTelemetry.GUI.Properties.Resources.Refresh_greyThin_16x;
-            this.buttonRefresh.Margin = new System.Windows.Forms.Padding(3, 1, 3, 2);
-            this.buttonRefresh.Name = "buttonRefresh";
-            this.buttonRefresh.Size = new System.Drawing.Size(81, 22);
-            this.buttonRefresh.Text = "Download";
-            this.buttonRefresh.ToolTipText = "Check if new data is available online and if so, download it.";
-            this.buttonRefresh.Click += new System.EventHandler(this.ButtonRefresh_Click);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripButtonOptions
-            // 
-            this.toolStripButtonOptions.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonOptions.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripButtonOptions.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonOptions.Image")));
-            this.toolStripButtonOptions.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonOptions.Name = "toolStripButtonOptions";
-            this.toolStripButtonOptions.Size = new System.Drawing.Size(62, 22);
-            this.toolStripButtonOptions.Text = "Options...";
-            this.toolStripButtonOptions.Click += new System.EventHandler(this.ToolStripButtonOptions_Click);
-            // 
-            // toolStripDropDownButton2
-            // 
-            this.toolStripDropDownButton2.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripDropDownButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripDropDownButton2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.hideChartToolStripMenuItem,
-            this.hideTableToolStripMenuItem});
-            this.toolStripDropDownButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton2.Image")));
-            this.toolStripDropDownButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripDropDownButton2.Name = "toolStripDropDownButton2";
-            this.toolStripDropDownButton2.Size = new System.Drawing.Size(45, 22);
-            this.toolStripDropDownButton2.Text = "View";
-            // 
-            // hideChartToolStripMenuItem
-            // 
-            this.hideChartToolStripMenuItem.Name = "hideChartToolStripMenuItem";
-            this.hideChartToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.hideChartToolStripMenuItem.Text = "Hide Chart";
-            this.hideChartToolStripMenuItem.Click += new System.EventHandler(this.HideChartToolStripMenuItem_Click);
-            // 
-            // hideTableToolStripMenuItem
-            // 
-            this.hideTableToolStripMenuItem.Name = "hideTableToolStripMenuItem";
-            this.hideTableToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.hideTableToolStripMenuItem.Text = "Hide Table";
-            this.hideTableToolStripMenuItem.Click += new System.EventHandler(this.HideTableToolStripMenuItem_Click);
-            // 
-            // toolStripDropDownButtonFile
-            // 
-            this.toolStripDropDownButtonFile.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripDropDownButtonFile.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripDropDownButtonFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.exportCSVToolStripMenuItem});
-            this.toolStripDropDownButtonFile.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButtonFile.Image")));
-            this.toolStripDropDownButtonFile.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripDropDownButtonFile.Name = "toolStripDropDownButtonFile";
-            this.toolStripDropDownButtonFile.Size = new System.Drawing.Size(38, 22);
-            this.toolStripDropDownButtonFile.Text = "File";
-            // 
-            // exportCSVToolStripMenuItem
-            // 
-            this.exportCSVToolStripMenuItem.Name = "exportCSVToolStripMenuItem";
-            this.exportCSVToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
-            this.exportCSVToolStripMenuItem.Text = "Export CSV...";
-            this.exportCSVToolStripMenuItem.Click += new System.EventHandler(this.ExportCSVToolStripMenuItem_Click);
-            // 
-            // toolStripButtonSearch
-            // 
-            this.toolStripButtonSearch.Image = global::MyPubgTelemetry.GUI.Properties.Resources.Search_16x;
-            this.toolStripButtonSearch.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonSearch.Name = "toolStripButtonSearch";
-            this.toolStripButtonSearch.Size = new System.Drawing.Size(110, 22);
-            this.toolStripButtonSearch.Text = "Search matches";
-            this.toolStripButtonSearch.ToolTipText = "Search the matches list for player names, dates, ID, etc.";
-            this.toolStripButtonSearch.Click += new System.EventHandler(this.ToolStripButtonSearch_Click);
-            // 
-            // toolStripComboBoxPlayerSelect
-            // 
-            this.toolStripComboBoxPlayerSelect.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripComboBoxPlayerSelect.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.toolStripComboBoxPlayerSelect.Name = "toolStripComboBoxPlayerSelect";
-            this.toolStripComboBoxPlayerSelect.Size = new System.Drawing.Size(150, 25);
-            this.toolStripComboBoxPlayerSelect.SelectedIndexChanged += new System.EventHandler(this.ToolStripComboBoxPlayerSelect_SelectedIndexChanged);
-            // 
-            // toolStripLabel1
-            // 
-            this.toolStripLabel1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(76, 22);
-            this.toolStripLabel1.Text = "Player Focus:";
-            // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
             // 
             // MainForm
             // 
@@ -325,12 +356,12 @@ namespace MyPubgTelemetry.GUI
             this.contextMenuMatches.ResumeLayout(false);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -360,9 +391,12 @@ namespace MyPubgTelemetry.GUI
         private ToolStripDropDownButton toolStripDropDownButtonFile;
         private ToolStripMenuItem exportCSVToolStripMenuItem;
         private SplitContainerEx splitContainer1;
-        private ToolStripComboBox toolStripComboBoxPlayerSelect;
-        private ToolStripLabel toolStripLabel1;
+        private ToolStripComboBox toolStripComboBoxPlayerFocus;
+        private ToolStripMenuItem chartPositionToolStripMenuItem;
+        private ToolStripMenuItem toolStripMenuItemChartBottom;
+        private ToolStripMenuItem toolStripMenuItemChartRight;
         private ToolStripSeparator toolStripSeparator3;
+        private ToolStripSeparator toolStripSeparator4;
     }
 }
 
