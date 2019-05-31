@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set pn=MyPubgTelemetry-v0.0.1
+set pn=MyPubgTelemetry-v0.0.2
 set stage=pkg\stage\%pn%
 set dist=pkg\dist
 
