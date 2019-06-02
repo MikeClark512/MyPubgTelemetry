@@ -1,6 +1,6 @@
 ## MyPubgTelemetry - A PUBG Telemetry Downloader and Stats Analyzer
 
-[![GitHub license](https://img.shields.io/github/license/MikeClark512/MyPubgTelemetry.svg?color=green)](https://github.com/MikeClark512/MyPubgTelemetry/blob/master/LICENSE) [![GitHub issues](https://img.shields.io/github/issues/MikeClark512/MyPubgTelemetry.svg)](https://github.com/MikeClark512/MyPubgTelemetry/issues)
+[![GitHub license](https://img.shields.io/github/license/MikeClark512/MyPubgTelemetry.svg?color=brightgreen)](https://github.com/MikeClark512/MyPubgTelemetry/blob/master/LICENSE) [![GitHub issues](https://img.shields.io/github/issues/MikeClark512/MyPubgTelemetry.svg)](https://github.com/MikeClark512/MyPubgTelemetry/issues)
 
 ![main](https://github.com/MikeClark512/MyPubgTelemetry/blob/master/site/screenshots/main.png)
 
