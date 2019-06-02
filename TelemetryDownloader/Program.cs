@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace MyPubgTelemetry.Downloader
 {
     class Program
     {
-        // Comma separated list of usernames. Case sensitive.
-        // Minimum one username. Maximum six.
-        public const string USERNAMES = "wckd,Celaven,Giles333,Solunth";
-
         static void Main(string[] args)
         {
+            string usernamesCsv = string.Join(",", args.Select(x => x.Trim()));
             // Increases Console.ReadLine character limit to allow pasting the full API key.
             Console.SetIn(new StreamReader(Console.OpenStandardInput(1024), Console.InputEncoding, false, 1024));
             TelemetryApp app = TelemetryApp.App;
@@ -28,7 +26,7 @@ namespace MyPubgTelemetry.Downloader
                 if (eventArgs.Rewrite) ConsoleRewrite(eventArgs.Msg);
                 else Console.WriteLine(eventArgs.Msg);
             };
-            downloader.DownloadTelemetryForPlayers(USERNAMES);
+            downloader.DownloadTelemetryForPlayers(usernamesCsv);
             if (Debugger.IsAttached)
             {
                 Console.ReadKey();
