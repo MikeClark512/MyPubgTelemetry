@@ -1,4 +1,9 @@
-﻿using System;
+﻿using Iesi.Collections.Generic;
+using Microsoft.Win32.SafeHandles;
+using MyPubgTelemetry.ApiMatchModel;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -14,11 +19,6 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using Iesi.Collections.Generic;
-using Microsoft.Win32.SafeHandles;
-using MyPubgTelemetry.ApiMatchModel;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace MyPubgTelemetry
 {
@@ -352,6 +352,17 @@ namespace MyPubgTelemetry
 
     public static class TelemetryAppExtensions
     {
+        public static HashSet<TSource> ToHashSet<TSource>(this IEnumerable<TSource> source)
+        {
+            return source.ToHashSet(null);
+        }
+
+        public static HashSet<TSource> ToHashSet<TSource>(this IEnumerable<TSource> source, IEqualityComparer<TSource> comparer)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return new HashSet<TSource>(source, comparer);
+        }
+
         public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key)
         {
             return dict.GetValueOrDefault(key, default(TValue));

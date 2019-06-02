@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-namespace MyPubgTelemetry.GUI
+﻿namespace MyPubgTelemetry.GUI
 {
     partial class OptionsForm
     {
