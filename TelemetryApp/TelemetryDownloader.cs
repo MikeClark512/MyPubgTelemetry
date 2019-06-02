@@ -1,7 +1,4 @@
-﻿using MyPubgTelemetry.ApiMatchModel;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,8 +8,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MyPubgTelemetry.ApiMatchModel;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
-namespace MyPubgTelemetry.Downloader
+namespace MyPubgTelemetry
 {
     public class TelemetryDownloader
     {
@@ -175,108 +175,6 @@ namespace MyPubgTelemetry.Downloader
                     Msg = $"[{counter}/{count}] Downloaded {uri.AbsolutePath}"
                 });
                 WriteStringToGzFile(mtOutputFilePath, pJson, matchDateTime);
-            }
-        }
-
-        public void DownloadTelemetryForPlayers(string playerNames)
-        {
-            TelemetryApp app = TelemetryApp.App;
-            List<JToken> players = app.ApiGetPlayersByNames(playerNames);
-            for (int i = 0; i < players.Count; i++)
-            {
-                JToken player = players[i];
-                string name = player.SelectToken("attributes.name").ToString();
-                List<JToken> matches = player.SelectToken("relationships.matches.data").ToList();
-                int nApiMatches = 0;
-                int cApiMatches = matches.Count;
-                int nDownloaded = 0;
-                int nCacheHits = 0;
-                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
-                {
-                    Value = i,
-                    Max = players.Count,
-                    Msg = $"\nChecking for new telemetry data for {name} ..."
-                });
-                foreach (JToken match in matches)
-                {
-                    string matchId = match["id"].ToString();
-                    DownloadTelemetryForMatchId(matchId, ++nApiMatches, cApiMatches, ref nDownloaded, ref nCacheHits);
-                }
-
-                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
-                {
-                    Value = i,
-                    Max = players.Count,
-                    Msg = "\n... telemetry data update complete."
-                });
-                string[] teleFiles = Directory.GetFiles(app.TelemetryDir, "*.json");
-                int nTeleFiles = teleFiles.Length;
-                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
-                {
-                    Value = i,
-                    Max = players.Count,
-                    Msg =
-                        $"Summary: MatchesOnline: {cApiMatches}, NewMatchesDownloaded: {nDownloaded}, AlreadyDownloaded: {nCacheHits}, TotalStored: {nTeleFiles}\n"
-                });
-            }
-        }
-
-        public void DownloadTelemetryForMatchId(string matchId, int counter, int count, ref int nDownloaded, ref int nCacheHits)
-        {
-            string mtOutputFileName = "mt-" + matchId + ".json.gz";
-            string mmOutputFileName = "mm-" + matchId + ".json";
-            string mtOutputFilePath = Path.Combine(TelemetryApp.App.TelemetryDir, mtOutputFileName);
-            string mmOutputFilePath = Path.Combine(TelemetryApp.App.MatchDir, mmOutputFileName);
-            string matchJson = null;
-            if (!File.Exists(mmOutputFilePath))
-            {
-                matchJson = PrettyPrintJson(TelemetryApp.App.ApiGetMatch(matchId));
-                TelemetryApp.FileWriteAllTextAtomic(mmOutputFilePath, matchJson);
-                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
-                {
-                    Rewrite = true,
-                    Value = counter,
-                    Max = count,
-                    Msg = $"[{counter}/{count}] Downloading match metadata."
-                });
-            }
-            else
-            {
-                matchJson = File.ReadAllText(mmOutputFilePath);
-            }
-
-            if (File.Exists(mtOutputFilePath))
-            {
-                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
-                {
-                    Rewrite = true,
-                    Value = counter,
-                    Max = count,
-                    Msg = $"[{counter}/{count}] Telemetry {matchId} already downloaded. Skip."
-                });
-                nCacheHits++;
-                return;
-            }
-
-            JObject oMatch = JObject.Parse(matchJson);
-            string telemetryId = oMatch.SelectToken("data.relationships.assets.data[0].id").Value<string>();
-            JToken oIncluded = oMatch["included"];
-            JToken oAsset = oIncluded.First(x => x["id"].Value<string>() == telemetryId);
-            string url = oAsset.SelectToken("attributes.URL").Value<string>();
-            using (Stream result = TelemetryApp.App.HttpClient.GetStreamAsync(url).Result)
-            using (var stream = new GZipStream(result, CompressionMode.Decompress))
-            {
-                Uri uri = new Uri(url);
-                DownloadProgressEvent?.Invoke(this, new DownloadProgressEventArgs
-                {
-                    Rewrite = true,
-                    Value = counter,
-                    Max = count,
-                    Msg = $"[{counter}/{count}] Downloading {uri.AbsolutePath}"
-                });
-                string pJson = PrettyPrintTelemetryJson(stream, out DateTime matchDateTime);
-                WriteStringToGzFile(mtOutputFilePath, pJson, matchDateTime);
-                nDownloaded++;
             }
         }
 

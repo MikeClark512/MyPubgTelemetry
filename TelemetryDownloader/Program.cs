@@ -26,7 +26,7 @@ namespace MyPubgTelemetry.Downloader
                 if (eventArgs.Rewrite) ConsoleRewrite(eventArgs.Msg);
                 else Console.WriteLine(eventArgs.Msg);
             };
-            downloader.DownloadTelemetryForPlayers(usernamesCsv);
+            downloader.DownloadForPlayersAsync(usernamesCsv).GetAwaiter().GetResult();
             if (Debugger.IsAttached)
             {
                 Console.ReadKey();

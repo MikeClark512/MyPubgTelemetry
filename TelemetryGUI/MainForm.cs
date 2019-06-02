@@ -1,6 +1,5 @@
 ﻿using Equin.ApplicationFramework;
 using MyPubgTelemetry.ApiMatchModel;
-using MyPubgTelemetry.Downloader;
 using MyPubgTelemetry.GUI.Charts;
 using MyPubgTelemetry.GUI.Properties;
 using Newtonsoft.Json;
