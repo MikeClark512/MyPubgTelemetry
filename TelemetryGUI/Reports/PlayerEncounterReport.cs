@@ -1,25 +1,16 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
-namespace MyPubgTelemetry.Analyzer
+namespace MyPubgTelemetry.GUI.Reports
 {
-    class Program
+    class PlayerEncounterReport
     {
-        private string _appDir;
-        const string APPNAME = "MyPubgTelemetry";
-
-        static void Main(string[] args)
-        {
-            Program program = new Program();
-            program.MMain(args);
-        }
-
         public static StreamReader GetUtf8Reader(string path)
         {
             Stream stream = new FileStream(path, FileMode.Open);
@@ -30,20 +21,16 @@ namespace MyPubgTelemetry.Analyzer
             return new StreamReader(stream, Encoding.UTF8);
         }
 
-        private void MMain(string[] args)
+        private void Report(string[] playerNames)
         {
-            _appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), APPNAME);
+            string _appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MyPubgTelemetry");
             Directory.CreateDirectory(_appDir);
             string teleDir = Path.Combine(_appDir, "telemetry_files");
-            HashSet<string> squad = new HashSet<string>();
-            squad.Add("Celaven");
-            squad.Add("wckd");
-            squad.Add("Giles333");
-            squad.Add("Solunth");
+            HashSet<string> squad = playerNames.Select(x => x.Trim()).ToHashSet();
             // map enemy playername to a set of match IDs that they were encountered in
             var enemyEncountersByMatch = new Dictionary<string, HashSet<string>>();
             string[] paths = Directory.GetFileSystemEntries(teleDir, "*.json");
-            for(int p = 0; p < paths.Length; p++)
+            for (int p = 0; p < paths.Length; p++)
             {
                 string path = paths[p];
                 //if (++matchCount > 3) break;
@@ -114,4 +101,5 @@ namespace MyPubgTelemetry.Analyzer
             }
         }
     }
+
 }
