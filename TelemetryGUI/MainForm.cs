@@ -1013,6 +1013,7 @@ namespace MyPubgTelemetry.GUI
             var file = GetSelectedMatch();
             if (file == null)
             {
+                ViewModel.ChartHpOverTime.ClearChart("");
                 return;
             }
             if (ViewModel.DownloadActive || ViewModel.ReloadActive)
@@ -1023,15 +1024,8 @@ namespace MyPubgTelemetry.GUI
             DebugThreadWriteLine("DataGridView1_SelectionChanged: " + file?.MatchDate + " " + file?.FileInfo.Name);
             ViewModel.CtsMatchSwitch?.Cancel();
             ViewModel.CtsMatchSwitch = new CancellationTokenSource();
-            if (GetSelectedMatch() == null)
-            {
-                ViewModel.ChartHpOverTime.ClearChart("");
-            }
-            else
-            {
-                ViewModel.ChartHpOverTime.ClearChart("...loading...");
-                Task.Run(() => SwitchMatch(file, ViewModel.CtsMatchSwitch.Token));
-            }
+            ViewModel.ChartHpOverTime.ClearChart("...loading...");
+            Task.Run(() => SwitchMatch(file, ViewModel.CtsMatchSwitch.Token));
         }
 
         internal static void SaveDataGridViewToCsv(DataGridView dgv, string filename)

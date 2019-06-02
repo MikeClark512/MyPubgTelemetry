@@ -7,6 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryDownloader", "Tele
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A956564C-AE8F-494B-AA33-A38DC1059C3B}"
 	ProjectSection(SolutionItems) = preProject
+		package.bat = package.bat
 		README.md = README.md
 	EndProjectSection
 EndProject
