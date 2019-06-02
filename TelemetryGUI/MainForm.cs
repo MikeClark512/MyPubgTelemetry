@@ -32,27 +32,17 @@ namespace MyPubgTelemetry.GUI
 
         public MainForm()
         {
-            ViewModel = new ViewModel(this);
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            InitViewModel();
             InitializeComponent();
             InitChart();
             InitMatchesDataGridView();
             InitToolStrip();
-            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-            var qts = new QueuedTaskScheduler(Environment.ProcessorCount - 1, "QTS", false, ThreadPriority.Lowest);
-            ViewModel.TaskFactory = new TaskFactory(qts);
-            ViewModel.MatchSearchInputBox = new InputBox { Text = @"Search match IDs, dates, and player names" };
-            ViewModel.PropertyChanged += (sender, args) =>
-            {
-                if (args.PropertyName == "DownloadActive" || args.PropertyName == "ReloadActive")
-                {
-                    bool loadingActive = ViewModel.DownloadActive || ViewModel.ReloadActive;
-                    foreach (ToolStripItem item in toolStrip1.Items)
-                    {
-                        item.Enabled = !loadingActive;
-                    }
-                }
-            };
+            InitSplitContainer();
+        }
 
+        private void InitSplitContainer()
+        {
             void SplitContainerOnCollapse(object sender, EventArgs args)
             {
                 hideTableToolStripMenuItem.Checked = splitContainer1.Panel1Collapsed;
@@ -61,6 +51,32 @@ namespace MyPubgTelemetry.GUI
 
             splitContainer1.Panel1.VisibleChanged += SplitContainerOnCollapse;
             splitContainer1.Panel2.VisibleChanged += SplitContainerOnCollapse;
+            splitContainer1.SplitterWidth = 10;
+            splitContainer1.Paint += (sender, args) =>
+            {
+                ControlPaint.DrawBorder3D(args.Graphics, splitContainer1.SplitterRectangle, Border3DStyle.Raised, Border3DSide.Top | Border3DSide.Bottom);
+            };
+        }
+
+        private void InitViewModel()
+        {
+            ViewModel = new ViewModel(this);
+            var qts = new QueuedTaskScheduler(Environment.ProcessorCount - 1, "QTS", false, ThreadPriority.Lowest);
+            ViewModel.TaskFactory = new TaskFactory(qts);
+            ViewModel.MatchSearchInputBox = new InputBox { Text = @"Search match IDs, dates, and player names" };
+            ViewModel.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == "DownloadActive" || args.PropertyName == "ReloadActive")
+                {
+                    bool loadingActive = ViewModel.DownloadActive || ViewModel.ReloadActive;
+                    dataGridView1.Visible = !loadingActive;
+                    foreach (ToolStripItem item in toolStrip1.Items)
+                    {
+                        item.Enabled = !loadingActive;
+                    }
+                }
+            };
+
         }
 
         private void InitToolStrip()
@@ -357,12 +373,11 @@ namespace MyPubgTelemetry.GUI
             {
                 int loadedCount = telFiles.Count(x => x.TelemetryMetaDataLoaded);
                 toolStripProgressBar1.Text = $"Loaded {loadedCount} of {telFiles.Count} matches.";
-                int fi = telemetryFile.Index;
+                //int fi = telemetryFile.Index;
                 //if (fi <= dataGridView1.DisplayedRowCount(true))
                 //{
                 //    dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
                 //}
-
                 toolStripProgressBar1.Value = loadedCount;
             }
 
@@ -1008,8 +1023,15 @@ namespace MyPubgTelemetry.GUI
             DebugThreadWriteLine("DataGridView1_SelectionChanged: " + file?.MatchDate + " " + file?.FileInfo.Name);
             ViewModel.CtsMatchSwitch?.Cancel();
             ViewModel.CtsMatchSwitch = new CancellationTokenSource();
-            ViewModel.ChartHpOverTime.ClearChart("...loading...");
-            Task.Run(() => SwitchMatch(file, ViewModel.CtsMatchSwitch.Token));
+            if (GetSelectedMatch() == null)
+            {
+                ViewModel.ChartHpOverTime.ClearChart("");
+            }
+            else
+            {
+                ViewModel.ChartHpOverTime.ClearChart("...loading...");
+                Task.Run(() => SwitchMatch(file, ViewModel.CtsMatchSwitch.Token));
+            }
         }
 
         internal static void SaveDataGridViewToCsv(DataGridView dgv, string filename)

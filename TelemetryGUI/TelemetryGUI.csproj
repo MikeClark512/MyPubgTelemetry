@@ -128,6 +128,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\About.rtf" />
     <None Include="Resources\Search_16x.png" />
   </ItemGroup>
   <ItemGroup>

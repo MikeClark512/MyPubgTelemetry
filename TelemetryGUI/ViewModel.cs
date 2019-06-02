@@ -27,7 +27,8 @@ namespace MyPubgTelemetry.GUI
 
         public InputBox MatchSearchInputBox { get; set; }
 
-        public BindingList<string> Squad { get; } = new BindingList<string>(new List<string> { "Show stats for: Squad (sum)" }) { AllowNew = true, AllowRemove = true };
+        public BindingList<string> Squad { get; } = new BindingList<string>(new List<string> {"Show stats for: Squad (sum)"})
+            {AllowNew = true, AllowRemove = true};
 
         public Regex RegexCsv { get; } = new Regex(@"[,\s]+", RegexOptions.IgnoreCase);
 
@@ -58,7 +59,7 @@ namespace MyPubgTelemetry.GUI
 
         public Dictionary<string, Color> PlayerColors { get; set; } = new Dictionary<string, Color>(StringComparer.CurrentCultureIgnoreCase);
 
-        private int PlayerColorCycleIndex { get; set; } = -1;
+        private int PlayerColorCycleIndex { get; set; } = 0;
 
         public List<Color> PlayerColorPalette { get; set; } = new List<Color>();
 
@@ -67,7 +68,7 @@ namespace MyPubgTelemetry.GUI
             set
             {
                 IList<string> newMates = RegexCsv.Split(value).Distinct().Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
-                List<string> toAdd = new List<string>();
+                var toAdd = new List<string>();
                 for (int i = Squad.Count - 1; i >= 1; i--)
                 {
                     Squad.RemoveAt(i);
@@ -77,7 +78,7 @@ namespace MyPubgTelemetry.GUI
                     Squad.Add(newMate);
                 }
             }
-            get => String.Join(",", Squad.ToList().GetRange(1, Squad.Count));
+            get => string.Join(",", Squad.ToList().GetRange(1, Squad.Count));
         }
 
         public string SelectedPlayer { get; set; }
@@ -88,11 +89,13 @@ namespace MyPubgTelemetry.GUI
             {
                 return Color.DeepPink;
             }
-            if (PlayerColorCycleIndex >= PlayerColorPalette.Count)
+            if (PlayerColorCycleIndex >= PlayerColorPalette.Count - 1)
             {
-                PlayerColorCycleIndex = -1;
+                PlayerColorCycleIndex = 0;
             }
-            return PlayerColorPalette[++PlayerColorCycleIndex];
+            Color color = PlayerColorPalette[PlayerColorCycleIndex];
+            PlayerColorCycleIndex++;
+            return color;
         }
 
         public Color ColorForPlayer(string name)
@@ -101,7 +104,20 @@ namespace MyPubgTelemetry.GUI
             {
                 return PlayerColors[name];
             }
-            return PlayerColors[name] = NextPlayerColor();
+            HashSet<Color> usedColors = PlayerColors.Values.ToHashSet();
+            Color nextColor = NextPlayerColor();
+            var i = 0;
+            while (usedColors.Contains(nextColor))
+            {
+                nextColor = NextPlayerColor();
+                i++;
+                if (i >= PlayerColorPalette.Count)
+                {
+                    break;
+                }
+            }
+            PlayerColors[name] = nextColor;
+            return nextColor;
         }
 
         public ChartHpOverTime ChartHpOverTime { get; set; }

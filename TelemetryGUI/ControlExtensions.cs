@@ -3,15 +3,6 @@ using System.Windows.Forms.Design;
 
 namespace MyPubgTelemetry.GUI
 {
-    public class SplitContainerEx : SplitContainer
-    {
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-            ControlPaint.DrawBorder3D(e.Graphics, SplitterRectangle, Border3DStyle.Raised, Border3DSide.Top | Border3DSide.Bottom);
-        }
-    }
-
     [ToolStripItemDesignerAvailability(ToolStripItemDesignerAvailability.ToolStrip | ToolStripItemDesignerAvailability.StatusStrip)]
     public class ToolStripLabelTextBox : MyToolStripControlHost
     {

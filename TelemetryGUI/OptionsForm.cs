@@ -32,7 +32,7 @@ namespace MyPubgTelemetry.GUI
                 Debug.WriteLine($"link {link.Name} {link.Start} {link.Length}");
             }
             textBoxLog.Text = LogText;
-            richTextBoxAbout.SelectedRtf = Properties.Resources.AboutRTF;
+            richTextBoxAbout.SelectedRtf = Properties.Resources.About;
         }
 
         private void ButtonCancel_Click(object sender, EventArgs e)

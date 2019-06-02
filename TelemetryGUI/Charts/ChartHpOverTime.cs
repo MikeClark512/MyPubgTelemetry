@@ -46,7 +46,7 @@ namespace MyPubgTelemetry.GUI.Charts
             chart1.Tag = new ChartTag();
             chart1.Titles.Add("");
             chart1.Dock = DockStyle.Fill;
-            //chart1.Palette = ChartColorPalette.Berry;
+            //chart1.Palette = ChartColorPalette.;
 
             chart1.ChartAreas[0].CursorX.IsUserEnabled = true;
             chart1.ChartAreas[0].CursorX.IsUserSelectionEnabled = true;
