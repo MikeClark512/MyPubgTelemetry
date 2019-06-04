@@ -69,7 +69,7 @@ namespace MyPubgTelemetry.GUI
                 if (args.PropertyName == "DownloadActive" || args.PropertyName == "ReloadActive")
                 {
                     bool loadingActive = ViewModel.DownloadActive || ViewModel.ReloadActive;
-                    dataGridView1.Visible = !loadingActive;
+                    //dataGridView1.Visible = !loadingActive;
                     foreach (ToolStripItem item in toolStrip1.Items)
                     {
                         item.Enabled = !loadingActive;
@@ -224,7 +224,7 @@ namespace MyPubgTelemetry.GUI
             }
             if (EnvBooly("MYPUBGTELEMETRY_NODLONSTART"))
             {
-                LoadMatches();
+                LoadMatchesFromFilesAsync();
             }
             else
             {
@@ -298,7 +298,7 @@ namespace MyPubgTelemetry.GUI
             return field?.GetValue(instance);
         }
 
-        private async void LoadMatches(bool deep = false)
+        private async void LoadMatchesFromFilesAsync(bool deep = false)
         {
             if (ViewModel.ReloadActive)
             {
@@ -327,7 +327,10 @@ namespace MyPubgTelemetry.GUI
 
             List<TelemetryFile> telFiles = jsonFiles.Select(jsonFile => new TelemetryFile { FileInfo = jsonFile, Title = "" }).ToList();
             telFiles.Sort((x, y) => y.FileInfo.CreationTime.CompareTo(x.FileInfo.CreationTime));
-            var blv = new BindingListView2<TelemetryFile>(telFiles);
+
+            var blv = new AggregateBindingListView<TelemetryFile>();
+            blv.SourceLists.Add(telFiles);
+            
             dataGridView1.DataSource = blv;
             toolStripProgressBar1.Maximum = telFiles.Count;
             toolStripProgressBar1.Value = 0;
@@ -338,9 +341,9 @@ namespace MyPubgTelemetry.GUI
                 dataGridView1.Columns[col].SortMode = DataGridViewColumnSortMode.NotSortable;
             }
 
-            ViewModel.CtsMatchMetaData?.Cancel();
-            ViewModel.CtsMatchMetaData = new CancellationTokenSource();
-            await Task.Run(() => UpdateMatchListMetaData(telFiles, squaddies, deep, ViewModel.CtsMatchMetaData.Token));
+            ViewModel.CtsMatchMetadata?.Cancel();
+            ViewModel.CtsMatchMetadata = new CancellationTokenSource();
+            await Task.Run(() => LoadMatchesFromFiles(telFiles, squaddies, deep, ViewModel.CtsMatchMetadata.Token));
         }
 
         private HashSet<string> SquadTextBoxToHashSet()
@@ -372,11 +375,11 @@ namespace MyPubgTelemetry.GUI
             return true;
         }
 
-        private void UpdateMatchListMetaData(List<TelemetryFile> telFiles, IEnumerable<string> squaddies, bool deep, CancellationToken cancellationToken)
+        private void LoadMatchesFromFiles(List<TelemetryFile> telFiles, IEnumerable<string> squaddies, bool deep, CancellationToken cancellationToken)
         {
             void UiUpdateOneFile(TelemetryFile telemetryFile)
             {
-                int loadedCount = telFiles.Count(x => x.TelemetryMetaDataLoaded);
+                int loadedCount = telFiles.Count(x => x.TelemetryMetadataLoaded);
                 toolStripProgressBar1.Text = $"Loaded {loadedCount} of {telFiles.Count} matches.";
                 //int fi = telemetryFile.Index;
                 //if (fi <= dataGridView1.DisplayedRowCount(true))
@@ -392,10 +395,10 @@ namespace MyPubgTelemetry.GUI
                 if (cancellationToken.IsCancellationRequested) break;
                 TelemetryFile file = telFiles[i];
                 file.Index = i;
-                Task task = ViewModel.TaskFactory.StartNew(() => ReadTelemetryMetaData(file, squaddies, deep), cancellationToken);
+                Task task = ViewModel.TaskFactory.StartNew(() => LoadMetadataAndTelemetryForOneMatch(file, squaddies, deep), cancellationToken);
                 task.ContinueWith((_) =>
                 {
-                    file.TelemetryMetaDataLoaded = true;
+                    file.TelemetryMetadataLoaded = true;
                     BeginInvoke((MethodInvoker)delegate
                    {
                        UiUpdateOneFile(file);
@@ -409,7 +412,7 @@ namespace MyPubgTelemetry.GUI
                 BeginInvoke((MethodInvoker)delegate ()
                {
                     //dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
-                    BindingListView2<TelemetryFile> bs = (BindingListView2<TelemetryFile>)dataGridView1.DataSource;
+                    AggregateBindingListView<TelemetryFile> bs = (AggregateBindingListView<TelemetryFile>)dataGridView1.DataSource;
 
                    bs.Refresh();
                });
@@ -435,9 +438,9 @@ namespace MyPubgTelemetry.GUI
             }, cancellationToken);
         }
 
-        private void ReadTelemetryMetaData(TelemetryFile file, IEnumerable<string> squaddies, bool deep)
+        private void LoadMetadataAndTelemetryForOneMatch(TelemetryFile file, IEnumerable<string> squaddies, bool deep)
         {
-            NormalizedMatch normalizedMatch = ReadMatchMetaData(file);
+            NormalizedMatch normalizedMatch = ReadMatchMetadataFromFile(file);
             file.NormalizedMatch = normalizedMatch;
             file.MatchDate = normalizedMatch.Model.Data.Attributes.CreatedAt;
             NormalizedRoster roster = normalizedMatch.Rosters.FirstOrDefault(r =>
@@ -447,10 +450,15 @@ namespace MyPubgTelemetry.GUI
                 intersection.IntersectWith(squaddies);
                 return intersection.Count > 0;
             });
+            var nameToPlayerIncl = new Dictionary<string, MatchModelIncluded>();
             // Remember account IDs to enable clickable links to stats websites.
             normalizedMatch.Rosters.ForEach(x =>
             {
-                x.Players.ForEach(p => ViewModel.AccountIds[p.Attributes.Stats.Name] = p.Attributes.Stats.PlayerId);
+                x.Players.ForEach(p =>
+                {
+                    ViewModel.AccountIds[p.Attributes.Stats.Name] = p.Attributes.Stats.PlayerId;
+                    nameToPlayerIncl[p.Attributes.Stats.Name] = p;
+                });
             });
             if (roster != null)
             {
@@ -464,7 +472,7 @@ namespace MyPubgTelemetry.GUI
 
             if (!deep) return;
 
-            using (var sr = file.NewMatchMetaDataReader(FileMode.Open, FileAccess.ReadWrite, FileShare.Read, out FileStream fs))
+            using (var sr = file.NewFileReader(FileMode.Open, FileAccess.ReadWrite, FileShare.Read, out FileStream fs))
             using (var jtr = new JsonTextReader(sr))
             {
                 var teams = new Dictionary<int, SortedSet<string>>();
@@ -480,44 +488,47 @@ namespace MyPubgTelemetry.GUI
 
                     var serializer = new JsonSerializer();
                     var @event = serializer.Deserialize<TelemetryEvent>(jtr);
-                    if (@event._T == "LogPlayerCreate")
+                    switch (@event._T)
                     {
-                        string player = @event.character.name;
-                        int teamId = @event.character.teamId;
-                        SortedSet<string> team = teams.GetOrAdd(teamId, () => new SortedSet<string>());
-                        team.Add(player);
-                        if (ViewModel.Squad.Contains(player))
+                        case "LogPlayerCreate":
                         {
-                            squadTeamIds.Add(teamId);
-                        }
-                    }
-                    else if (@event._T == "LogMatchStart")
-                    {
-                        file.MatchDate = @event._D;
-                    }
-                    else if (@event._T == "LogPlayerTakeDamage")
-                    {
-                        @event.character = @event.victim;
-                        @event.victim.health -= @event.damage;
-                        pd.NormalizedEvents.Add(@event);
-                    }
-                    else if (@event._T == "LogPlayerPosition" || @event._T == "LogHeal")
-                    {
-                        @event.victim = @event.character;
-                        pd.NormalizedEvents.Add(@event);
-                    }
-                    else if (@event._T == "LogPlayerKill")
-                    {
-                        if (@event.killer != null)
-                        {
-                            if (ViewModel.Squad.Contains(@event.killer.name))
+                            string player = @event.character.name;
+                            int teamId = @event.character.teamId;
+                            SortedSet<string> team = teams.GetOrAdd(teamId, () => new SortedSet<string>());
+                            team.Add(player);
+                            if (ViewModel.Squad.Contains(player))
                             {
-                                if (@event.killer.name != @event.victim.name)
-                                {
-                                    //This is now being calculated from match metadata
-                                    //file.SquadKills++;
-                                }
+                                squadTeamIds.Add(teamId);
                             }
+                            break;
+                        }
+                        case "LogMatchStart":
+                            file.MatchDate = @event._D;
+                            break;
+                        case "LogPlayerTakeDamage":
+                            @event.character = @event.victim;
+                            @event.victim.health -= @event.damage;
+                            pd.NormalizedEvents.Add(@event);
+                            break;
+                        case "LogHeal":
+                        case "LogPlayerPosition":
+                            @event.victim = @event.character;
+                            pd.NormalizedEvents.Add(@event);
+                            break;
+                        case "LogPlayerKill" when @event.killer == null || @event.victim == null:
+                            continue;
+                        case "LogPlayerKill":
+                        {
+                            if (@event.killer.name != @event.victim.name)
+                            {
+                                if (@event.damageCauserName == "ProjGrenade_C")
+                                {
+                                    nameToPlayerIncl[@event.killer.name].Attributes.Stats.XFragKills += 1;
+                                }
+                                //This is now being calculated from match metadata
+                                //file.SquadKills++;
+                            }
+                            break;
                         }
                     }
                 }
@@ -606,7 +617,7 @@ namespace MyPubgTelemetry.GUI
             sqst.Rank = roster?.Roster.Attributes.Stats.Rank ?? 999;
         }
 
-        private static NormalizedMatch ReadMatchMetaData(TelemetryFile file)
+        private static NormalizedMatch ReadMatchMetadataFromFile(TelemetryFile file)
         {
             string mid = file.GetMatchId();
             string mmn = $"mm-{mid}.json";
@@ -669,7 +680,7 @@ namespace MyPubgTelemetry.GUI
             file.PreparedData = null;
 
             var pd = new PreparedData() { File = file };
-            using (StreamReader sr = file.NewTelemetryReader())
+            using (StreamReader sr = file.NewFileReader())
             {
                 var events = JsonConvert.DeserializeObject<List<TelemetryEvent>>(sr.ReadToEnd());
                 foreach (TelemetryEvent @event in events)
@@ -756,11 +767,11 @@ namespace MyPubgTelemetry.GUI
         {
             if (ModifierKeys.HasFlag(Keys.Control))
             {
-                LoadMatches(true);
+                LoadMatchesFromFilesAsync(true);
             }
             else if (ModifierKeys.HasFlag(Keys.Shift))
             {
-                LoadMatches();
+                LoadMatchesFromFilesAsync();
             }
             else
             {
@@ -812,7 +823,7 @@ namespace MyPubgTelemetry.GUI
                 ViewModel.DownloadActive = false;
             }
 
-            LoadMatches();
+            LoadMatchesFromFilesAsync();
         }
 
         private bool PreFlight()
@@ -1131,7 +1142,7 @@ namespace MyPubgTelemetry.GUI
             if (dataGridView1.DataSource == null)
                 return;
 
-            BindingListView<TelemetryFile> dataSource = (BindingListView<TelemetryFile>)dataGridView1.DataSource;
+            AggregateBindingListView<TelemetryFile> dataSource = (AggregateBindingListView<TelemetryFile>)dataGridView1.DataSource;
             //dataSource.Sort = "";
 
             int firstDisplayedScrollingRowIndex = dataGridView1.FirstDisplayedScrollingRowIndex;
@@ -1201,16 +1212,6 @@ namespace MyPubgTelemetry.GUI
             }
             splitContainer1.Orientation = Orientation.Horizontal;
             splitContainer1.SplitterDistance = (int)(splitContainer1.ClientSize.Height * 0.6);
-        }
-
-        private void ToolStripComboBoxPlayerFocus_LocationChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void ToolStrip1_Resize(object sender, EventArgs e)
-        {
-
         }
     }
 

@@ -81,6 +81,7 @@ namespace MyPubgTelemetry.ApiMatchModel
 
     public class MatchModelStats
     {
+
         // ReSharper disable once InconsistentNaming
         public long Rank { get; set; }
         public long Kills { get; set; }
@@ -115,8 +116,11 @@ namespace MyPubgTelemetry.ApiMatchModel
         public long WinPoints { get; set; }
         public long WinPointsDelta { get; set; }
         public long TeamId { get; set; }
-        [JsonExtensionData]
-        public Dictionary<string, JToken> OtherStats { get; set; } = new Dictionary<string, JToken>();
+
+        public long XFragKills { get; set; }
+
+        //[JsonExtensionData]
+        //public Dictionary<string, JToken> OtherStats { get; set; } = new Dictionary<string, JToken>();
     }
 
     public class MatchModelIncludedRelationships

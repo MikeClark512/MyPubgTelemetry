@@ -223,16 +223,15 @@ namespace MyPubgTelemetry
 
         public DateTime? MatchDate { get; set; }
         public ISet<string> Squad { get; set; }
-        public bool TelemetryMetaDataLoaded { get; set; }
+        public bool TelemetryMetadataLoaded { get; set; }
         public int Index { get; set; }
         public PreparedData PreparedData { get; set; }
         public Mutex Mutex { get; } = new Mutex();
         public NormalizedMatch NormalizedMatch { get; set; }
         public NormalizedRoster NormalizedRoster { get; set; }
+        public int FragKills { get; set; }
 
-        public TelemetryFile() { }
-
-        public StreamReader NewTelemetryReader()
+        public StreamReader NewFileReader()
         {
             FileStream fs = new FileStream(FileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             Stream stream = new BufferedStream(fs, 1024 * 10);
@@ -244,20 +243,14 @@ namespace MyPubgTelemetry
             return streamReader;
         }
 
-        public StreamReader NewMatchMetaDataReader()
-        {
-            return NewMatchMetaDataReader(FileMode.Open, FileAccess.Read, FileShare.ReadWrite, out FileStream fs);
-        }
-
-        public StreamReader NewMatchMetaDataReader(FileMode fileMode, FileAccess fileAccess, FileShare fileShare,
+        public StreamReader NewFileReader(FileMode fileMode, FileAccess fileAccess, FileShare fileShare,
             out FileStream fileStream)
         {
             fileStream = new FileStream(FileInfo.FullName, fileMode, fileAccess, fileShare);
-            BufferedStream bufferedStream = new BufferedStream(fileStream, 1024 * 10);
-            Stream stream = bufferedStream;
+            Stream stream = new BufferedStream(fileStream, 1024 * 10);
             if (FileInfo.Name.EndsWith(".gz", StringComparison.CurrentCultureIgnoreCase))
             {
-                stream = new GZipStream(bufferedStream, CompressionMode.Decompress);
+                stream = new GZipStream(stream, CompressionMode.Decompress);
             }
             return new StreamReader(stream);
         }
@@ -289,6 +282,7 @@ namespace MyPubgTelemetry
         public TelemetryPlayer character;
         public TelemetryPlayer attacker;
         public TelemetryPlayer killer;
+        public string damageCauserName;
         public bool skip;
     }
 

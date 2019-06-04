@@ -38,7 +38,7 @@ namespace MyPubgTelemetry.GUI
 
         public CancellationTokenSource CtsMatchSwitch { get; set; }
 
-        public CancellationTokenSource CtsMatchMetaData { get; set; }
+        public CancellationTokenSource CtsMatchMetadata { get; set; }
 
         public StringBuilder LogBuffer { get; set; } = new StringBuilder();
 
