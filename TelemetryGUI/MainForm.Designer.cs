@@ -222,7 +222,7 @@ namespace MyPubgTelemetry.GUI
             this.toolStripButtonOptions.Text = "Options...";
             this.toolStripButtonOptions.Click += new System.EventHandler(this.ToolStripButtonOptions_Click);
             // 
-            // toolStripDropDownButton2
+            // toolStripDropDownButtonView
             // 
             this.toolStripDropDownButtonView.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.toolStripDropDownButtonView.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
@@ -230,7 +230,6 @@ namespace MyPubgTelemetry.GUI
             this.hideChartToolStripMenuItem,
             this.hideTableToolStripMenuItem,
             this.chartPositionToolStripMenuItem});
-            this.toolStripDropDownButtonView.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton2.Image")));
             this.toolStripDropDownButtonView.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButtonView.Margin = new System.Windows.Forms.Padding(5, 1, 5, 2);
             this.toolStripDropDownButtonView.Name = "toolStripDropDownButtonView";
@@ -349,7 +348,7 @@ namespace MyPubgTelemetry.GUI
             this.Name = "MainForm";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Show;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "PUBG Telemetry Analyzer";
+            this.Text = "MyPubgTelemetry";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainForm_KeyDown);

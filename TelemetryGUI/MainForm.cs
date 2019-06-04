@@ -310,7 +310,7 @@ namespace MyPubgTelemetry.GUI
                 ViewModel.ReloadActive = false;
                 return;
             }
-            var squaddies = new HashSet<string>(ViewModel.RegexCsv.Split(textBoxSquad.Text));
+            var squaddies = SquadTextBoxToHashSet();
             ViewModel.ReloadActive = true;
             var di = new DirectoryInfo(App.TelemetryDir);
             List<FileInfo> jsonFiles = di.GetFiles("*.json").ToList();
@@ -341,6 +341,11 @@ namespace MyPubgTelemetry.GUI
             ViewModel.CtsMatchMetaData?.Cancel();
             ViewModel.CtsMatchMetaData = new CancellationTokenSource();
             await Task.Run(() => UpdateMatchListMetaData(telFiles, squaddies, deep, ViewModel.CtsMatchMetaData.Token));
+        }
+
+        private HashSet<string> SquadTextBoxToHashSet()
+        {
+            return new HashSet<string>(ViewModel.RegexCsv.Split(textBoxSquad.Text));
         }
 
         private bool ValidateInputSquad()
@@ -463,9 +468,9 @@ namespace MyPubgTelemetry.GUI
             using (var jtr = new JsonTextReader(sr))
             {
                 var teams = new Dictionary<int, SortedSet<string>>();
-                int squadTeamId = -1;
                 jtr.Read();
                 PreparedData pd = new PreparedData() { File = file };
+                HashSet<int> squadTeamIds = new HashSet<int>();
                 while (jtr.Read())
                 {
                     if (jtr.TokenType == JsonToken.EndArray)
@@ -479,23 +484,16 @@ namespace MyPubgTelemetry.GUI
                     {
                         string player = @event.character.name;
                         int teamId = @event.character.teamId;
-                        teams.TryGetValue(teamId, out var team);
-                        if (team == null) teams[teamId] = team = new SortedSet<string>();
+                        SortedSet<string> team = teams.GetOrAdd(teamId, () => new SortedSet<string>());
                         team.Add(player);
                         if (ViewModel.Squad.Contains(player))
                         {
-                            squadTeamId = teamId;
+                            squadTeamIds.Add(teamId);
                         }
-
-                        ViewModel.AccountIds[player] = @event.character.accountId;
                     }
                     else if (@event._T == "LogMatchStart")
                     {
                         file.MatchDate = @event._D;
-                        if (!deep)
-                        {
-                            break;
-                        }
                     }
                     else if (@event._T == "LogPlayerTakeDamage")
                     {
@@ -527,8 +525,8 @@ namespace MyPubgTelemetry.GUI
                 foreach (var @event in pd.NormalizedEvents)
                 {
                     string name = @event.character.name;
-                    // Skip events that are about players that aren't in our squad.
-                    // When we start doing enemy interaction reports, might want to skip non-squad events
+                    // Skip events that are about players that haven't been listed by the user in the UI.
+                    // When we start doing enemy interaction reports, we probably can't skip non-squad events
                     if (!ViewModel.Squad.Contains(name))
                         continue;
                     pd.Squad.Add(name);
@@ -541,14 +539,18 @@ namespace MyPubgTelemetry.GUI
 
                 file.PreparedData = deep ? pd : null;
 
-                if (squadTeamId != -1)
+                if (squadTeamIds.Count <= 0)
                 {
-                    SortedSet<string> squadTeam = teams[squadTeamId];
-                    file.Squad = squadTeam;
+                    file.Title = "[No Squad Members in Match]";
                 }
-                else
+                else if (squadTeamIds.Count > 1)
                 {
-                    file.Title = "[no squad members in match]";
+                    file.Title = "[Disjoint Squad]";
+                }
+                else // Count == 1
+                {
+                    SortedSet<string> squadTeam = teams[squadTeamIds.First()];
+                    file.Squad = squadTeam;
                 }
 
                 if (file.MatchDate.HasValue)
@@ -777,8 +779,7 @@ namespace MyPubgTelemetry.GUI
                 }
 
                 TelemetryDownloader downloader = new TelemetryDownloader();
-                var squadSet = new HashSet<string>(ViewModel.RegexCsv.Split(textBoxSquad.Text));
-                string squad = string.Join(",", squadSet);
+                string squad = string.Join(",", SquadTextBoxToHashSet());
                 downloader.DownloadProgressEvent += (sender2, args) =>
                 {
                     BeginInvoke((MethodInvoker)delegate ()
