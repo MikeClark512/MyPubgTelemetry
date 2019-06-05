@@ -113,7 +113,7 @@ namespace MyPubgTelemetry.GUI
             this.toolStripProgressBar1});
             this.statusStrip1.Location = new System.Drawing.Point(0, 650);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1279, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1355, 22);
             this.statusStrip1.SizingGrip = false;
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
@@ -122,7 +122,7 @@ namespace MyPubgTelemetry.GUI
             // 
             this.toolStripStatusLabel1.Margin = new System.Windows.Forms.Padding(12, 3, 0, 2);
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(1050, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(1126, 17);
             this.toolStripStatusLabel1.Spring = true;
             this.toolStripStatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -155,7 +155,7 @@ namespace MyPubgTelemetry.GUI
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip1.Size = new System.Drawing.Size(1279, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(1355, 25);
             this.toolStrip1.Stretch = true;
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.TabStop = true;
@@ -314,7 +314,7 @@ namespace MyPubgTelemetry.GUI
             // 
             this.splitContainer1.Panel1.AutoScroll = true;
             this.splitContainer1.Panel1.Controls.Add(this.dataGridView1);
-            this.splitContainer1.Size = new System.Drawing.Size(1276, 619);
+            this.splitContainer1.Size = new System.Drawing.Size(1352, 619);
             this.splitContainer1.SplitterDistance = 346;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -331,7 +331,7 @@ namespace MyPubgTelemetry.GUI
             this.dataGridView1.Location = new System.Drawing.Point(0, 10);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(1273, 333);
+            this.dataGridView1.Size = new System.Drawing.Size(1349, 333);
             this.dataGridView1.StandardTab = true;
             this.dataGridView1.TabIndex = 3;
             this.dataGridView1.SelectionChanged += new System.EventHandler(this.DataGridView1_SelectionChanged);
@@ -340,7 +340,7 @@ namespace MyPubgTelemetry.GUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1279, 672);
+            this.ClientSize = new System.Drawing.Size(1355, 672);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.statusStrip1);

@@ -201,6 +201,13 @@ namespace MyPubgTelemetry.GUI
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
+            Rectangle screen = Screen.FromControl(this).WorkingArea;
+            if (Width > screen.Width)
+            {
+                Left = 0;
+                Width = screen.Width;
+            }
+
             var path = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
             //toolStripComboBoxPlayerSelect.SelectedIndex = 0;
             DebugThreadWriteLine("Config path = " + path);
@@ -245,9 +252,10 @@ namespace MyPubgTelemetry.GUI
                 {"Revives", "Revive"},
                 {"RoadKills", "RoadK"},
                 {"HeadshotKills", "HeadsK"},
-                {"VehicleDestroys", "V.Destroy"},
+                {"VehicleDestroys", "VehDest"},
                 {"LongestKill", "LongestK"},
                 {"WeaponsAcquired", "Weaps"},
+                {"XFragKills", "XFragK"},
             };
 
             Type pt = pi.PropertyType;
@@ -276,6 +284,11 @@ namespace MyPubgTelemetry.GUI
             col.ValueType = valueType;
             col.SortMode = DataGridViewColumnSortMode.Automatic;
             col.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            col.ToolTipText = dataName;
+            if (dataName.StartsWith("X"))
+            {
+                col.ToolTipText += "\nNote: X* stats must be calculated from telemetry,\nwhich is not implemented yet. Stay tuned.";
+            }
             col.Frozen = false;
             if (format != null)
             {

@@ -87,12 +87,13 @@ namespace MyPubgTelemetry.ApiMatchModel
         public long Kills { get; set; }
         public double DamageDealt { get; set; }
         public long Revives { get; set; }
-        public long Assists { get; set; }
-        public long RoadKills { get; set; }
-        public long KillStreaks { get; set; }
-        public long HeadshotKills { get; set; }
         public long DBNOs { get; set; }
+        public long RoadKills { get; set; }
         public long VehicleDestroys { get; set; }
+        public long HeadshotKills { get; set; }
+        public long XFragKills { get; set; }
+        public long KillStreaks { get; set; }
+        public long Assists { get; set; }
         public long Heals { get; set; }
         public long Boosts { get; set; }
         public double TimeSurvived { get; set; }
@@ -117,7 +118,6 @@ namespace MyPubgTelemetry.ApiMatchModel
         public long WinPointsDelta { get; set; }
         public long TeamId { get; set; }
 
-        public long XFragKills { get; set; }
 
         //[JsonExtensionData]
         //public Dictionary<string, JToken> OtherStats { get; set; } = new Dictionary<string, JToken>();
