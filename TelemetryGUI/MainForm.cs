@@ -456,10 +456,10 @@ namespace MyPubgTelemetry.GUI
             NormalizedMatch normalizedMatch = ReadMatchMetadataFromFile(file);
             file.NormalizedMatch = normalizedMatch;
             file.MatchDate = normalizedMatch.Model.Data.Attributes.CreatedAt;
-            NormalizedRoster roster = normalizedMatch.Rosters.FirstOrDefault(r =>
+            NormalizedRoster roster = normalizedMatch.Rosters.FirstOrDefault(aRoster =>
             {
-                HashSet<string> rosterPlayers = r.Players.Select(p => p.Attributes.Stats.Name).ToHashSet(StringComparer.CurrentCultureIgnoreCase);
-                HashSet<string> intersection = rosterPlayers.ToHashSet();
+                HashSet<string> rosterPlayers = aRoster.Players.Select(p => p.Attributes.Stats.Name).ToHashSet(StringComparer.CurrentCultureIgnoreCase);
+                HashSet<string> intersection = rosterPlayers.ToHashSet(StringComparer.CurrentCultureIgnoreCase);
                 intersection.IntersectWith(squaddies);
                 return intersection.Count > 0;
             });
@@ -475,7 +475,7 @@ namespace MyPubgTelemetry.GUI
             });
             if (roster != null)
             {
-                file.Squad = roster.Players.Select(p => p.Attributes.Stats.Name).ToHashSet();
+                file.Squad = roster.Players.Select(p => p.Attributes.Stats.Name).ToHashSet(StringComparer.CurrentCultureIgnoreCase);
             }
             file.NormalizedRoster = roster;
 
@@ -659,7 +659,7 @@ namespace MyPubgTelemetry.GUI
             });
         }
 
-        private void SwitchMatch(TelemetryFile file, CancellationToken cancellationToken)
+        private void SwitchMatchWorker(TelemetryFile file, CancellationToken cancellationToken)
         {
             try
             {
@@ -676,10 +676,7 @@ namespace MyPubgTelemetry.GUI
             }
             finally
             {
-                BeginInvoke((MethodInvoker)delegate ()
-               {
-                   ConsumePreparedDataQ(cancellationToken);
-               });
+                BeginInvoke((MethodInvoker)ConsumePreparedDataQ);
             }
         }
 
@@ -729,7 +726,7 @@ namespace MyPubgTelemetry.GUI
                 string name = @event.character.name;
                 // Skip events that are about players that aren't in our squad.
                 // When we start doing enemy interaction reports, might want to skip non-squad events
-                if (!ViewModel.Squad.Contains(name))
+                if (!ViewModel.Squad.Contains(name, StringComparer.CurrentCultureIgnoreCase))
                     continue;
                 pd.Squad.Add(name);
                 var playerEvents = pd.PlayerToEvents.GetOrAdd(name, () => new List<TelemetryEvent>());
@@ -745,7 +742,7 @@ namespace MyPubgTelemetry.GUI
             return pd;
         }
 
-        private void ConsumePreparedDataQ(CancellationToken cancellationToken)
+        private void ConsumePreparedDataQ()
         {
             while (ViewModel.PreparedDataQ.Count > 0)
             {
@@ -755,7 +752,7 @@ namespace MyPubgTelemetry.GUI
                 if (preparedData.File == selectedTf)
                 {
                     DebugThreadWriteLine("ConsumePreparedDataQ inner");
-                    ConsumePreparedData(preparedData, cancellationToken);
+                    ConsumePreparedData(preparedData);
                 }
             }
         }
@@ -765,14 +762,8 @@ namespace MyPubgTelemetry.GUI
             return new Font(orig.FontFamily, orig.Size + sizeAdj);
         }
 
-        private void ConsumePreparedData(PreparedData pd, CancellationToken cancellationToken)
+        private void ConsumePreparedData(PreparedData pd)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                DebugThreadWriteLine("Cancelling in ConsumePreparedData");
-                return;
-            }
-
             ViewModel.ChartHpOverTime.DrawData(pd, this);
         }
 
@@ -916,7 +907,7 @@ namespace MyPubgTelemetry.GUI
             }
         }
 
-        private void SelectMatch(TelemetryFile path)
+        private void SelectMatch(TelemetryFile path, bool scroll = true)
         {
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
@@ -924,7 +915,8 @@ namespace MyPubgTelemetry.GUI
                 if (ovtf.Object == path)
                 {
                     row.Selected = true;
-                    dataGridView1.FirstDisplayedScrollingRowIndex = row.Index;
+                    if (scroll)
+                        dataGridView1.FirstDisplayedScrollingRowIndex = row.Index;
                     break;
                 }
             }
@@ -1014,9 +1006,16 @@ namespace MyPubgTelemetry.GUI
 
         private static T GetPrimarySelectedValue<T>(DataGridView dgv) where T : class
         {
-            DataGridViewRow row = dgv.SelectedRows.Cast<DataGridViewRow>().FirstOrDefault();
-            ObjectView<T> objectView = (ObjectView<T>)row?.DataBoundItem;
-            return objectView?.Object;
+            for (int i = 0, s = dgv.Rows.Count; i < s; i++)
+            {
+                DataGridViewRow row = dgv.Rows[i];
+                if (row.Selected)
+                {
+                    ObjectView<T> objectView = (ObjectView<T>) row?.DataBoundItem;
+                    return objectView.Object;
+                }
+            }
+            return null;
         }
 
         private TelemetryFile GetSelectedMatch()
@@ -1035,6 +1034,16 @@ namespace MyPubgTelemetry.GUI
 
         private void DataGridView1_SelectionChanged(object sender, EventArgs e)
         {
+            LoadChartForSelectedMatch();
+        }
+
+        private int GetMatchListPrimarySelectedIndex()
+        {
+            return dataGridView1.SelectedRows.Cast<DataGridViewRow>().FirstOrDefault()?.Index ?? -1;
+        }
+
+        private void LoadChartForSelectedMatch()
+        {
             var file = GetSelectedMatch();
             if (file == null)
             {
@@ -1050,7 +1059,7 @@ namespace MyPubgTelemetry.GUI
             ViewModel.CtsMatchSwitch?.Cancel();
             ViewModel.CtsMatchSwitch = new CancellationTokenSource();
             ViewModel.ChartHpOverTime.ClearChart("...loading...");
-            Task.Run(() => SwitchMatch(file, ViewModel.CtsMatchSwitch.Token));
+            Task.Run(() => SwitchMatchWorker(file, ViewModel.CtsMatchSwitch.Token));
         }
 
         internal static void SaveDataGridViewToCsv(DataGridView dgv, string filename)
@@ -1159,6 +1168,7 @@ namespace MyPubgTelemetry.GUI
             //dataSource.Sort = "";
 
             int firstDisplayedScrollingRowIndex = dataGridView1.FirstDisplayedScrollingRowIndex;
+            TelemetryFile savedSelectedMatch = GetSelectedMatch();
             dataSource.SuspendAutoFilterAndSort();
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
@@ -1171,6 +1181,8 @@ namespace MyPubgTelemetry.GUI
             dataSource.Refresh();
             dataSource.ResumeAutoFilterAndSort();
             dataGridView1.FirstDisplayedScrollingRowIndex = firstDisplayedScrollingRowIndex;
+            dataGridView1.ClearSelection();
+            SelectMatch(savedSelectedMatch, false);
             //DataGridViewCell firstDisplayedCell = dataGridView1.FirstDisplayedCell;
             //dataGridView1.FirstDisplayedCell = firstDisplayedCell;
         }

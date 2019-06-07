@@ -269,7 +269,7 @@ namespace MyPubgTelemetry
         public IDictionary<DateTime, Dictionary<string, List<TelemetryEvent>>> TimeToPlayerToEvents { get; } =
             new SortedDictionary<DateTime, Dictionary<string, List<TelemetryEvent>>>();
         public List<TelemetryEvent> NormalizedEvents { get; } = new List<TelemetryEvent>();
-        public HashSet<string> Squad { get; } = new HashSet<string>();
+        public HashSet<string> Squad { get; } = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
         public TelemetryFile File { get; set; }
     }
 

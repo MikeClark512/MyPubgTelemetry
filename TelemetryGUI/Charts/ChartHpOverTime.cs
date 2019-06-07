@@ -155,11 +155,11 @@ namespace MyPubgTelemetry.GUI.Charts
             ClearChart();
             Chart chart1 = this.Chart;
             DateTime? localTime = pd.File?.MatchDate?.ToLocalTime();
-            string sdt = "";
+            string matchDate = "";
             if (localTime.HasValue)
             {
-                sdt = localTime.Value.ToString(ViewModel.ChartTitleDateFormat);
-                sdt += " " + localTime.Value.GetTimeZoneAbbreviation();
+                matchDate = localTime.Value.ToString(ViewModel.ChartTitleDateFormat);
+                matchDate += " " + localTime.Value.GetTimeZoneAbbreviation();
             }
 
             chart1.ChartAreas[0].AxisY.Title = "HP: 0 to 100";
@@ -171,7 +171,7 @@ namespace MyPubgTelemetry.GUI.Charts
             ISet<string> squad = pd.File?.Squad ?? new HashSet<string>();
             NormalizedRoster roster =
                 pd.File?.NormalizedMatch?.Rosters?.FirstOrDefault(r => r.Players?.Any(p => squad.Contains(p?.Attributes?.Stats?.Name)) ?? false);
-            chart1.Titles[0].Text = $"HP over time for one match -- {sdt} -- Squad Rank: {roster?.Roster.Attributes.Stats.Rank}";
+            chart1.Titles[0].Text = $"HP over time for one match -- {matchDate} -- Squad Rank: {roster?.Roster.Attributes.Stats.Rank}";
             chart1.Titles[0].Font = new Font(chart1.Titles[0].Font.FontFamily, 12, FontStyle.Bold);
 
             // Declare series first
