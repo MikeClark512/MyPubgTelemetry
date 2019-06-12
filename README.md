@@ -16,7 +16,7 @@
 1. Async/on-demand data loading is able to handle as many gigabytes of telemetry as you want to save and load
 
 ### Download and Use
-1. Download [MyPubgTelemetry-v0.0.3.zip](https://github.com/MikeClark512/MyPubgTelemetry/releases/download/v0.0.2/MyPubgTelemetry-v0.0.2.zip), extract the zip file, and run MyPubgTelemetry.GUI.exe.
+1. Download [MyPubgTelemetry-v0.0.4.zip](https://github.com/MikeClark512/MyPubgTelemetry/releases/download/v0.0.4/MyPubgTelemetry-v0.0.4.zip), extract the zip file, and run MyPubgTelemetry.GUI.exe.
 1. Obtain a [PUBG API key](https://developer.playbattlegrounds.com/) and paste it into the program's options screen.
 1. The initial telemetry download could take 10+ minutes. Subsequent refreshes will run much more quickly.
 
