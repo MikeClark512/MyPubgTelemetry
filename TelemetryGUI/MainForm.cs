@@ -239,7 +239,7 @@ namespace MyPubgTelemetry.GUI
             var ignore = new HashSet<string>
             {
                 "DeathType", "KillPointsDelta", "KillPoints", "KillStreaks", "LastKillPoints", "Name", "PlayerId", "MostDamage", "RankPoints", "WinPoints",
-                "WinPointsDelta", "TeamId", "LastWinPoints", "WinPlace", "KillPlace"
+                "WinPointsDelta", "TeamId", "LastWinPoints", "WinPlace", "KillPlace", "WeaponsAcquired"
             };
 
             Type pt = pi.PropertyType;
@@ -259,13 +259,16 @@ namespace MyPubgTelemetry.GUI
             {
                 {"DamageDealt", "Dmg"},
                 {"RoadKill", "RoadK"},
-                {"HeadshotKill", "HeadsK"},
-                {"VehicleDestroy", "VehDest"},
+                {"HeadshotKill", "HdK"},
+                {"VehicleDestroy", "VDest"},
                 {"TeamKill", "TK"},
+                {"Boost", "Bst"},
+                {"Revive", "Rev"},
                 {"LongestKill", "LK"},
-                {"WeaponsAcquired", "Weaps"},
-                {"XFragKill", "XFragK"},
+                {"WeaponsAcquired", "Weap"},
+                {"XFragKill", "FragK"},
                 {"TimeSurvived", "Time"},
+                {"Assist", "Asst"},
             };
 
             displayName = rename.GetValueOrDefault(displayName, displayName);
@@ -286,7 +289,7 @@ namespace MyPubgTelemetry.GUI
             col.ToolTipText = dataName;
             if (dataName.StartsWith("X"))
             {
-                col.ToolTipText += "\nNote: X* stats must be calculated from telemetry,\nwhich is not implemented yet. Stay tuned.";
+                col.ToolTipText += "\nNote: This stat must be calculated from telemetry,\nwhich is not implemented yet. Stay tuned.";
             }
             col.Frozen = false;
             if (format != null)
@@ -1211,7 +1214,7 @@ namespace MyPubgTelemetry.GUI
                 object propertyStore = fi_DataGridViewCellStyle_propertyStore?.GetValue(cellStyle);
                 Type t_PropertyStore = propertyStore?.GetType();
                 MethodInfo mi_PropertyStore_SetPadding = t_PropertyStore?.GetMethod("SetPadding");
-                Padding padding = new Padding(-2, 0, -2, 0);
+                Padding padding = new Padding(-3, 0, -2, 0);
                 mi_PropertyStore_SetPadding?.Invoke(propertyStore, new object[] { propId, padding });
                 Padding gp = cellStyle.Padding;
                 Debug.WriteLine($"{gp.Left} {gp.Right} {gp.Top} {gp.Bottom}");
