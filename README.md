@@ -31,3 +31,7 @@
 1. Display what map the match was played on (whaaat?)
 1. Handling for disjoint squad players
 1. Collect user feedback, implement cool features, get pull requests, do all the things!
+
+# Contact
+1. Here
+2. Discord: wikked#0463
